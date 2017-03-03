@@ -39,7 +39,7 @@ def GetYearRevenueFromDatePrice(datePrices, baseDatePrice = None, strDateFormat 
     print dates
     print prices
 
-    return carray.Multi(carray.DivArray(prices, dates), 365)
+    return carray.M(carray.DivArray(prices, dates), 365)
 
 def SlowMaxDrawdown(prices):
     '''
@@ -82,7 +82,7 @@ def FastMaxDrawdown(prices):
             continue
         j = i + 1
         while j + 1 < len(prices):
-            if prices[j] < prices[j-1] and prices[j] < prices[j+1]:
+            if prices[j] < prices[j-1] and prices[j] <= prices[j+1]:
                 if ijDrawdown is None or prices[j] < jValue:
                     iPos, iValue, jPos, jValue, ijDrawdown = i, prices[i], j, prices[j], (prices[j] - prices[i]) / prices[i]
 

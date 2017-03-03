@@ -1,75 +1,61 @@
 '''
     load data from different resources
 '''
+import cutil
 
-def LoadDataWithAllColumns(strFilePath, strColumnSeparator=",", stripBlank = True):
+def FileLoadAll(strFilePath, strColumnSeparator = None):
     '''
-    load data from the input file with all columns, use the specified column separator, and
+    load data into matrix from the input file with all columns, use the specified column separator, and
     return the load result as a matrix(2 dimension list)
     :param strFilePath: string, file path to be load
     :param strColumnSeparator: string, column separator, default ","
-    :param stripBlank: bool, flag for strip the blank character for the collum value
-    :return: list, 2 dimension list, row list with column string values which is also a list
+    :return: matrix, 2 dimension list, row list with column string values which is also a list
+    example:
+        [
+            [column11, column12, column13, ...]
+            [column21, column22, column23, ...]
+            [column31, column32, column33, ...]
+            ...
+        ]
     '''
-    rows = []
-    for strRow in open(strFilePath):
-        items = strRow.split(strColumnSeparator)
+    matrix = []
+    for row in open(strFilePath):
+        row = row.split(strColumnSeparator)
+        for i in range(0, len(row)):
+            row[i] = row[i].strip()
 
-        idx = 0
-        if stripBlank:
-            for item in items:
-                items[idx] = item.strip()
+        matrix.append(row)
 
-        rows.append(items)
+    return matrix
 
-    return rows
-
-def LoadDataWithSepcifiedColumns(strFilePath, strColumnSeparator=",", specifiedColumns = None, stripBlank = True):
+def FileLoadColumns(strFilePath, strColumns, strColumnSeparator = None):
     '''
-    load data from the input file with specified columns, use the specified column separator, and
-    return the load result as a list when only 1 column specified or matrix(2 dimension list) when
-    multi columns specified.
+    load data into matrix from the input file @strFilePath with specified @strColumns , which column separated by
+    @stringColumnSeparator
     :param strFilePath: string, file path to be load
+    :param strColumns: string, specify the column with "," separated, format like "col1,col2,...", None means all columns
     :param strColumnSeparator: string, column separator, default ","
-    :param specifiedColumns: string, specify the column with "," separated, format like "col1,col2,...", None means all columns
-    :param stripBlank: bool, flag for strip the blank character for the collum value
-    :return: list or list of list
+    :return: matrix, 2 dimension list, row list with column string values which is also a list
+    example:
+    [
+        [column11, column12, column13, ...]
+        [column21, column22, column23, ...]
+        [column31, column32, column33, ...]
+        ...
+    ]
     '''
-
-    # load all columns when none column specified
-    if specifiedColumns is None:
-        return LoadDataWithAllColumns(strFilePath, strColumnSeparator, stripBlank)
-
-    columns = ConvertItemTypeInContainer(specifiedColumns.split(","), int)
+    columns = cutil.ConvertType(strColumns.split(","), int)
     if len(columns) == 0:
-        raise Exception("specified column is not valid!")
+        raise Exception("column specified to load from file is not valid!")
 
-    if len(columns) == 1:
-        #only 1 column specified
-        row = []
-        columnIdx = columns[0]-1
-        for strRow in open(strFilePath):
-            items = strRow.split(strColumnSeparator)
-            if columnIdx < len(items):
-                row.append(items[columnIdx] if not stripBlank else items[columnIdx].strip())
-            else:
-                row.append("")
-        return row
-    else:
-        #multi columns specified
-        rows = []
-        for strRow in open(strFilePath):
-            items = strRow.split(strColumnSeparator)
+    matrix = []
+    for row in open(strFilePath):
+        row = row.split(strColumnSeparator)
 
-            columns = []
-            for columnIdx in columns:
-                columnIdx = columnIdx - 1
+        newRow = []
+        for i in range(0, len(columns)):
+            newRow.append(row[columns[i]-1].strip())
 
-                if columnIdx < len(items):
-                    columns.append(items[columnIdx] if not stripBlank else items[columnIdx].strip())
-                else:
-                    columns.append("")
+        matrix.append(newRow)
 
-            rows.append(columns)
-
-        return rows
+    return matrix
