@@ -1,11 +1,12 @@
 '''
     useful normal mathematics algorithms
 '''
+import math
 
 def Average(values):
     '''
     compute average of sample values
-    :param values: list of sample values
+    :param values: list, list of sample values
     :return: float, average of sample values
     '''
     return sum(values) / len(values)
@@ -13,7 +14,7 @@ def Average(values):
 def Variance(values):
     '''
     compute variance of sample values
-    :param values: list of sample values
+    :param values: list, list of sample values
     :return: float, variance of sample values
     '''
     #use average value of values as the expect value
@@ -28,7 +29,7 @@ def Variance(values):
 def StandardDeviation(values):
     '''
     compute standard deviation of sample values
-    :param values: list of sample values
+    :param values: list, list of sample values
     :return: float, standard deviation of sample values
     '''
     return math.sqrt(Variance(values))
@@ -36,8 +37,8 @@ def StandardDeviation(values):
 def Covariance(valuesA, valuesB):
     '''
     compute the covariance of sample valuesA and valuesB
-    :param valuesA: list of sample values A
-    :param valuesB: list of sample values B
+    :param valuesA: list, list of sample values A
+    :param valuesB: list, list of sample values B
     :return: float, covariance of sample values A and B
     '''
     if len(valuesA) != len(valuesB):
@@ -57,8 +58,8 @@ def Covariance(valuesA, valuesB):
 def Correlation(valuesA, valuesB):
     '''
     compute the correlation of sample valuesA and valuesB, using pearson correlation algorithm
-    :param valuesA:
-    :param valuesB:
+    :param valuesA: list, list of sample values A
+    :param valuesB: list, list of sample values B
     :return:
     '''
     if len(valuesA) != len(valuesB):

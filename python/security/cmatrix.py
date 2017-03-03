@@ -1,7 +1,7 @@
 '''
     useful matrix data process functions
 '''
-import array
+import carray
 
 def CreateByColumnNumber(columnNumber):
     '''
@@ -146,66 +146,85 @@ def AverageOfColumns(matrix, columns):
 
     return result
 
-def LeftShiftSubOfRow(matrix, row, subfunc = None, arg = None, start = 1, end = -1):
+def SubOnRow(matrix, row, subValue, subfunc = None, arg = None):
+    '''
+    subtract all items in @row of the @matrix with @subvalue
+    :param matrix: list, list of list, matrix which row in it to be left shift sub
+    :param row: int, row number to subtract, start from 1
+    :param subValue: object, type is same as item in the @matrix
+    :param subfunc: function, self definition for subtract operation, subfunc(a, b, arg)
+    :param arg: object, argument passed to subfunc(a, b, arg)
+    :return:list, sub result
+    '''
+    row = ExtractRow(matrix, row)
+    return array.Sub(row, subValue, subfunc, arg)
+
+def SubOnColumn(matrix, column, subValue, subfunc = None, arg = None):
+    '''
+    subtract all items in @column of the @matrix with @subvalue
+    :param matrix: list, list of list, matrix which row in it to be left shift sub
+    :param column: int, column number to subtract, start from 1
+    :param subValue: object, type is same as item in the @matrix
+    :param subfunc: function, self definition for subtract operation, subfunc(a, b, arg)
+    :param arg: object, argument passed to subfunc(a, b, arg)
+    :return:list, sub result
+    '''
+    column = ExtractColumn(matrix, column)
+    return array.Sub(column, subValue, subfunc, arg)
+
+def LeftShiftSubOnRow(matrix, row, leftValue = None, subfunc = None, arg = None):
     '''
     left shift subtract of the matrix in specific row from @start to @end, algorithm:
         result[i] = matrix[row][i] - matrix[row][i-1]
-    constraint:
-        i > 1 and end <len(matrix[row])
     :param matrix: list, list of list, matrix which row in it to be left shift sub
-    :param subfunc: funciton, self definition for subtract operation, subfunc(a, b, arg)
+    :param row: int, row number to subtract, start from 1
+    :param leftValue: object, type is same as item in the @matrix, the first item's subtractor
+    :param subfunc: function, self definition for subtract operation, subfunc(a, b, arg)
     :param arg: object, argument passed to subfunc(a, b, arg)
-    :param start: int, start pos to be sub, must be larger than 0
-    :param end: int, end pos to be sub, -1 means last pos, must be larger than start
     :return:list, sub result
     '''
     row = ExtractRow(matrix, row)
-    return array.LeftShiftSub(row, subfunc, arg, start, end)
+    return carray.LeftShiftSub(row, leftValue, subfunc, arg)
 
-def RightShiftSubOfRow(matrix, row, subfunc = None, arg = None, start = 0, end = -1):
-    '''
-    right shift subtract of the matrix in specific row from @start to @end, algorithm:
-        result[i] = matrix[row][i] - matrix[row][i-1]
-    constraint:
-        i > 1 and end <len(matrix[row])
-    :param matrix: list, list of list, matrix which row in it to be right shift sub
-    :param subfunc: funciton, self definition for subtract operation, subfunc(a, b, arg)
-    :param arg: object, argument passed to subfunc(a, b, arg)
-    :param start: int, start pos to be sub, must be larger than 0
-    :param end: int, end pos to be sub, -1 means last pos, must be larger than start
-    :return:list, sub result
-    '''
-    row = ExtractRow(matrix, row)
-    return array.RightShiftSub(row, subfunc, arg, start, end)
-
-def LeftShiftSubOfColumn(matrix, column, subfunc = None, arg = None, start = 1, end = -1):
+def LeftShiftSubOnColumn(matrix, column, leftValue = None, subfunc = None, arg = None):
     '''
     left shift subtract of the matrix in specific column from @start to @end, algorithm:
         result[i] = matrix[i][column] - matrix[i][column]
-    constraint:
-        i > 1 and end <len(matrix[row])
     :param matrix: list, list of list, matrix which row in it to be left shift sub
-    :param subfunc: funciton, self definition for subtract operation, subfunc(a, b, arg)
+    :param column: int, column number to subtract, start from 1
+    :param leftValue: object, type is same as item in the @matrix, the first item's subtractor
+    :param subfunc: function, self definition for subtract operation, subfunc(a, b, arg)
     :param arg: object, argument passed to subfunc(a, b, arg)
-    :param start: int, start pos to be sub, must be larger than 0
-    :param end: int, end pos to be sub, -1 means last pos, must be larger than start
     :return:list, sub result
     '''
     column = ExtractColumn(matrix, column)
-    return array.LeftShiftSub(column, subfunc, arg, start, end)
+    return carray.LeftShiftSub(column, leftValue, subfunc, arg)
 
-def RightShiftSubOfColumn(matrix, column, subfunc = None, arg = None, start = 0, end = -1):
+def RightShiftSubOnRow(matrix, row, rightValue = None, subfunc = None, arg = None):
+    '''
+    right shift subtract of the matrix in specific row from @start to @end, algorithm:
+        result[i] = matrix[row][i] - matrix[row][i-1]
+
+    :param matrix: list, list of list, matrix which row in it to be right shift sub
+    :param row: int, row number to subtract, start from 1
+    :param rightValue: object, type is same as item in the @matrix, the last item's subtractor
+    :param subfunc: function, self definition for subtract operation, subfunc(a, b, arg)
+    :param arg: object, argument passed to subfunc(a, b, arg)
+    :return:list, sub result
+    '''
+    row = ExtractRow(matrix, row)
+    return carray.RightShiftSub(row, rightValue, subfunc, arg)
+
+def RightShiftSubOnColumn(matrix, column, rightValue = None, subfunc = None, arg = None):
     '''
     right shift subtract of the matrix in specific column from @start to @end, algorithm:
         result[i] = matrix[i][column] - matrix[i][column]
-    constraint:
-        i > 1 and end <len(matrix[row])
     :param matrix: list, list of list, matrix which row in it to be left shift sub
-    :param subfunc: funciton, self definition for subtract operation, subfunc(a, b, arg)
+    :param column: int, column number to subtract, start from 1
+    :param rightValue: object, type is same as item in the @matrix, the last item's subtractor
+    :param subfunc: function, self definition for subtract operation, subfunc(a, b, arg)
     :param arg: object, argument passed to subfunc(a, b, arg)
-    :param start: int, start pos to be sub, must be larger than 0
-    :param end: int, end pos to be sub, -1 means last pos, must be larger than start
     :return:list, sub result
     '''
     column = ExtractColumn(matrix, column)
-    return array.RightShiftSub(column, subfunc, arg, start, end)
+    return carray.RightShiftSub(column, rightValue, subfunc, arg)
