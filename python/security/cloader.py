@@ -3,12 +3,12 @@
 '''
 import cutil
 
-def FileLoadAll(strFilePath, strColumnSeparator = None):
+def FileLoadAll(strFilePath, strColumnDelimiter = None, nSkipRows = 0):
     '''
     load data into matrix from the input file with all columns, use the specified column separator, and
     return the load result as a matrix(2 dimension list)
     :param strFilePath: string, file path to be load
-    :param strColumnSeparator: string, column separator, default ","
+    :param strColumnDelimiter: string, column delimiter, default ","
     :return: matrix, 2 dimension list, row list with column string values which is also a list
     example:
         [
@@ -20,7 +20,11 @@ def FileLoadAll(strFilePath, strColumnSeparator = None):
     '''
     matrix = []
     for row in open(strFilePath):
-        row = row.split(strColumnSeparator)
+        if nSkipRows > 0:
+            nSkipRows = nSkipRows - 1
+            continue
+
+        row = row.split(strColumnDelimiter)
         for i in range(0, len(row)):
             row[i] = row[i].strip()
 
@@ -28,13 +32,13 @@ def FileLoadAll(strFilePath, strColumnSeparator = None):
 
     return matrix
 
-def FileLoadColumns(strFilePath, strColumns, strColumnSeparator = None):
+def FileLoadColumns(strFilePath, strColumns, strColumnDelimiter = None, nSkipRows = 0):
     '''
     load data into matrix from the input file @strFilePath with specified @strColumns , which column separated by
     @stringColumnSeparator
     :param strFilePath: string, file path to be load
     :param strColumns: string, specify the column with "," separated, format like "col1,col2,...", None means all columns
-    :param strColumnSeparator: string, column separator, default ","
+    :param strColumnDelimiter: string, column delimiter, default ","
     :return: matrix, 2 dimension list, row list with column string values which is also a list
     example:
     [
@@ -50,9 +54,13 @@ def FileLoadColumns(strFilePath, strColumns, strColumnSeparator = None):
 
     matrix = []
     for row in open(strFilePath):
-        row = row.split(strColumnSeparator)
+        if nSkipRows > 0:
+            nSkipRows = nSkipRows - 1
+            continue
 
         newRow = []
+
+        row = row.split(strColumnDelimiter)
         for i in range(0, len(columns)):
             newRow.append(row[columns[i]-1].strip())
 

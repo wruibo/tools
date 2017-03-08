@@ -2,7 +2,7 @@
     useful utility functions
 '''
 
-import datetime
+import datetime, gzip, zlib
 
 def DaysBetween(strStartDate, strEndDate, strFormat = "%Y%m%d"):
     '''
@@ -43,3 +43,30 @@ def ConvertType(container, type):
         return result
     else:
         return type(container)
+
+def DateTimes(strDates, strFormat):
+    '''
+    make datetime list by input string dates list @strDates using string date format @strFormat
+    :param strDates: list, string date list
+    :param strFormat: string, date format string of the date in @strDates list
+    :return: list, convert result of string list to datetime list
+    '''
+    if isinstance(strDates, list):
+        result = []
+        for strDate in strDates:
+            result.append(datetime.datetime.strptime(strDate, strFormat))
+        return result
+    else:
+        return datetime.datetime.strptime(strDates, strFormat)
+
+def Decompress(fp, encoding):
+
+    encoding = encoding.lower()
+
+    if encoding == "gzip":
+        gz = gzip.GzipFile(fileobj=fp)
+        return gz.read()
+    elif encoding == "deflate":
+        return zlib.decompress(fp.read())
+    else:
+        raise Exception("compress encoding %s is not supported!" % (encoding))

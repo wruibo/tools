@@ -11,7 +11,7 @@ glossary:
     rm - market return rate
 '''
 
-def GetYearRevenueFromDatePrice(datePrices, baseDatePrice = None, strDateFormat = "%Y%m%d"):
+def Revenue(datePrices, baseDatePrice = None, strDateFormat = "%Y%m%d"):
     '''
     get the year revenue sequence from (date, price) sequence, where the date price sequence
     is ordered by date before-to-future
