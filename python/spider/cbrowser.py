@@ -51,8 +51,8 @@ class Vendor:
         vendor for various browsers
     '''
 
-    #vendor name
-    __name = None
+    #vendor client
+    __client = None
 
     #vendor platform
     __platform = None
@@ -64,28 +64,31 @@ class Vendor:
     __headers = {
         "chrome-pc":[
             ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"),
-            ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8")
+            ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8"),
+            ("Accept-Encoding", "gzip, deflate")
         ],
         "safari-pc":[
             ("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"),
-            ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8")
+            ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8"),
+            ("Accept-Encoding", "gzip, deflate")
         ],
         "ie-pc":[
             ("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0"),
-            ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8")
+            ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8"),
+            ("Accept-Encoding", "gzip, deflate")
         ]
     }
 
-    def __init__(self, name = "chrome", platform = "pc"):
-        self.__name = name
+    def __init__(self, client = "chrome", platform = "pc"):
+        self.__client = client
         self.__platform = platform
-        self.__key = self.__name+"-"+self.__platform
+        self.__key = self.__client+"-"+self.__platform
 
         if  not self.__headers.has_key(self.__key):
-            raise Exception("unsupport browser vendor %s/%s, must be %s" % (self.__name, self.__platform, "/".join(self.__headers.keys())))
+            raise Exception("unsupport browser vendor %s/%s, must be %s" % (self.__client, self.__platform, "/".join(self.__headers.keys())))
 
     def getName(self):
-        return self.__name
+        return self.__client
 
     def getPlatform(self):
         return self.__platform
@@ -100,12 +103,8 @@ class Cookie:
     '''
     __cookie = None
 
-
-
-
     def __init__(self):
-       __cookie = cookielib.CookieJar()
-
+        self.__cookie = cookielib.CookieJar()
 
     def getCookie(self):
         return self.__cookie
@@ -131,23 +130,36 @@ class Handler:
     def __init__(self):
         pass
 
-    class DecompressHandler(urllib2.BaseHandler):
-        def http_open(self, req):
-            pass
+    class AddHeaderHandler(urllib2.BaseHandler):
+        '''
+            add header handler for each request
+        '''
+        def __init__(self, headers):
+            self.__headers = headers
 
         def http_request(self, req):
             '''
-
+                add request headers
             :param req:
             :return:
             '''
-            req.add_header("Accept-Encoding", "gzip, deflate")
+            for header in self.__headers:
+                req.add_header(header[0], header[1])
+                req.add_unredirected_header(header[0], header[1])
 
             return req
 
+        def https_request(self, req):
+            return self.http_request(req)
+
+
+    class DecompressHandler(urllib2.BaseHandler):
+        def __init__(self):
+            pass
+
         def http_response(self, req, resp):
             '''
-
+                decompress the compressed response
             :param req:
             :param resp:
             :return:
@@ -168,52 +180,68 @@ class Handler:
 
             return resp
 
-        def http_error(self):
-            pass
+        def https_response(self, req, resp):
+            return self.http_response(req, resp)
+
 
 class Browser:
     '''
         browser simulator
     '''
-
     #browser vendor
     __vendor = None
 
     #cookie for browser
     __cookie = None
 
-    def __init__(self, name, platform):
+    def __init__(self, client, platform):
         #initialize vendor
-        self.__vendor = Vendor(name, platform)
+        self.__vendor = Vendor(client, platform)
         self.__cookie = Cookie()
 
         #initialize the urllib2
         opener = urllib2.build_opener()
 
+        #add special handlers
+        opener.add_handler(Handler.AddHeaderHandler(self.__vendor.getHeaders()))
         opener.add_handler(Handler.DecompressHandler())
-        opener.add_handler(urllib2.HTTPCookieProcessor())
+        opener.add_handler(urllib2.HTTPCookieProcessor(self.__cookie.getCookie()))
 
         urllib2.install_opener(opener)
 
-    def open(self, url, **kwargs):
-        conn = urllib2.urlopen(url)
+    def open(self, url, data = None, **kwargs):
+
+        conn = urllib2.urlopen(url, data)
         return HttpResponse(conn.geturl(), conn.getcode(), conn.msg, conn.info().headers, conn.read())
 
-
     @staticmethod
-    def create(name = "chrome", platform = "pc"):
+    def create(client = "chrome", platform = "pc"):
         '''
-        create a new browser object with specified vendor @name under @platform
+        create a new browser object with specified vendor @client under @platform
         :param name: string, browser vendor's name, "chrome", "ie", "safari", ...
         :return: Browser, browser object
         '''
-        return Browser(name, platform)
+        return Browser(client, platform)
+
+    @staticmethod
+    def default():
+        '''
+            create a default browser object
+        :return: object, default browser object
+        '''
+
+        return Browser.create()
 
 
 if __name__ == "__main__":
+    #url = "https://www.caifuqiao.cn/Product/List/productList?typeId=3&typeName=%E9%98%B3%E5%85%89%E7%A7%81%E5%8B%9F"
+    #url = "https://docs.python.org/2/library/random.html?highlight=rand#module-random"
+    #url = "http://www.baidu.com/"
+    url = "http://www.caifuqiao.cn/"
     browser = Browser.create("chrome", "pc")
     #resp = browser.open("http://www.sse.com.cn/js/common/ssesuggestdataAll.js")
-    resp = browser.open("http://www.baidu.com/")
+    #resp = browser.open("http://www.baidu.com/")
+    resp = browser.get(url)
 
     print resp.getHeader("set-cookie")
     print resp.getContent()

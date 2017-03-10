@@ -1,0 +1,6 @@
+'''
+    storage
+'''
+
+class Storage:
+    pass
