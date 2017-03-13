@@ -1,9 +1,8 @@
 '''
     crawl security data from different source
 '''
-from spider.cbrowser import Browser
-from spider.cparser import Parser
-
+from cbrowser import Browser
+from cparser import Parser
 
 class Spider:
     '''

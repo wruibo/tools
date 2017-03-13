@@ -3,7 +3,6 @@
 '''
 import re
 
-
 class Helper:
     def __init__(self):
         pass
@@ -12,7 +11,7 @@ class Helper:
     def charset(content):
         regex = re.compile('charset=["]*([a-zA-Z-0-9]+)["]*', re.IGNORECASE)
         result = regex.search(content)
-        if (result):
+        if result is not None:
             return result.group(1)
 
         return None
@@ -31,3 +30,34 @@ class Helper:
             return content.decode(charset, 'ignore')
         finally:
             return content
+
+    @staticmethod
+    def rootUrl(url):
+        '''
+            parse absolute path url from @url
+        :param url: string, base url will be parsed from
+        :return: string, base url of @url
+        '''
+        regex = re.compile(r'(^[^/]+//[^/]+/?)', re.IGNORECASE)
+        result = regex.search(url)
+        if result is not None:
+            url = result.group(1)
+            if (url[-1] != u'/'):
+                url += u'/'
+            return url
+        return None
+
+    @staticmethod
+    def relativeUrl(url):
+        '''
+            parse current relative url from @url
+        :param url: string, complete url
+        :return: string, relative url parsed
+        '''
+        regex = re.compile(r'(.*/)[^/]+$')
+
+        result = regex.search(url)
+        if result is not None:
+            return result.group(1)
+
+        return url

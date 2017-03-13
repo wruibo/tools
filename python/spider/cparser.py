@@ -3,18 +3,19 @@
 '''
 import re
 
+from chelper import Helper
 
 class Link:
     '''
         link for url in the http response content
     '''
-    def __init__(self, type, url, title = None):
-        self.__type = type
+    def __init__(self, tag, url, title = None):
+        self.__tag = tag
         self.__url = url
         self.__title = title
 
-    def type(self):
-        return self.__type
+    def tag(self):
+        return self.__tag
 
     def url(self):
         return self.__url
@@ -23,61 +24,53 @@ class Link:
         return self.__title
 
 
+class Pattern:
+    '''
+        regex pattern for parsing job
+    '''
+    __patterns = {
+        "href":[
+            ur'<a.* href="([^"]+)"[^>]*>'
+        ],
+
+        "img":[
+            ur'<img.* src="([^"]+)"[^>]*>'
+        ]
+    }
+
+    def __init__(self):
+        pass
+
+    def patterns(self):
+        '''
+            get the compiled patterns
+        :return: dict, compiled patterns, structure like the @__patterns
+        '''
+        compiledPatterns = {}
+
+        for key, regs in self.__patterns.items():
+            if not compiledPatterns.has_key(key):
+                compiledPatterns[key] = []
+            for reg in regs:
+                regex = re.compile(reg, re.IGNORECASE)
+                compiledPatterns[key].append(regex)
+
+        return compiledPatterns
+
 class Parser:
     '''
         default parser for parse hyperlinks from http response content
     '''
-    #url type of the parser to parse
-    __type = None
-    #url filter regex pattern for filter
-    __filter = None
-    #link parse regex pattern for parsing the url with @__type
-    __pattern = None
 
-    # dictionary, parsers index by the url regex pattern, like:
-    # {pattern1:[parser1, parser2, ...], pattern1:[parser1, parser2, ...]}
-    __parsers = []
-
-    def __init__(self, type = None, pattern = None, filter = None):
-        self.__type = type
-
-        if pattern is not None:
-            self.__pattern = re.compile(pattern, re.IGNORECASE)
-
-        if filter is not None:
-            self.__filter = re.compile(pattern, re.IGNORECASE)
+    def __init__(self):
+        #initialze the regex patterns for parseing url from http response content
+        self.__patterns = Pattern().patterns()
 
     @staticmethod
-    def default():
-        '''
-            generate a default parser object for links parser
-        :return:
-        '''
-        parser = Parser()
+    def create():
+        return Parser()
 
-        parser.addParser(Parser("href", ur'<a.* href="([^"]+)"[^>]*>'))
-        parser.addParser(Parser("img", ur'<img.* src="([^"]+)"[^>]*>'))
-
-        return parser
-
-    def addPattern(self, type, pattern, filter = None):
-        '''
-            add link parse @pattern for @type content link, url match @filter will be ignored
-        :param pattern: string, link parsing regex pattern
-        :param filter: string,  ignored url pattern
-        :return:
-        '''
-        self.__parsers.append(Parser(type, pattern, filter))
-
-    def addParser(self, parser):
-        '''
-          add a @parser for url @pattern
-        :param parser: object, parser object
-        :return:
-        '''
-        self.__parsers.append(parser)
-
-    def parse(self, url, content):
+    def parse(self, url, content, charset = None):
         '''
             default parse method for parsing hyperlinks from response @content
         :param url: string, request url
@@ -86,36 +79,45 @@ class Parser:
         :return: list, links parsed, with @Link object in the list
         '''
 
-        baseurl = self.baseurl(url)
+        rootUrl = Helper.rootUrl(url) #root url path
+        relativeUrl = Helper.relativeUrl(url) #current url path
+
+        #parse the charset from content if needed
+        if charset is None:
+            charset = Helper.charset(content)
+
+        #convert @content's charset to unicode
+        content = Helper.unicode(content, charset)
 
         links = []
 
-        if self.__pattern is not None:
-            #parse links use self parse pattern
-            result = self.__pattern.findall(content)
-            for link in result:
-                if link.startwith(u'/'):
-                    link = baseurl + link
-                links.append(Link(self.__type, link))
-
-        for parser in self.__parsers:
-            links = links + parser.parse(url, content)
+        for tag, patterns in self.__patterns.items():
+            for pattern in patterns:
+                urls = pattern.findall(content)
+                for url in urls:
+                    if  url.startswith("/"):
+                        links.append(Link(tag, rootUrl+url[1:].encode(charset, 'ignore')))
+                    else:
+                        links.append(Link(tag, relativeUrl+url.encode(charset, 'ignore')))
 
         return links
 
-    @staticmethod
-    def baseurl(url):
-        '''
-            parse base url from @url
-        :param url: string, base url will be parsed from
-        :return: string, base url of @url
-        '''
-        regex = re.compile(ur'(^[^/]+//[^/]+/?)', re.IGNORECASE)
-        result = regex.search(url)
-        if (result):
-            url = result.group(1)
-            if (url[-1] != u'/'):
-                url += u'/'
-            return url
-        return None
 
+if __name__ == "__main__":
+    from cbrowser import Browser
+
+    url = "https://www.caifuqiao.cn/"
+
+
+    browser = Browser.create()
+
+    response = browser.open(url)
+
+    content = response.getContent()
+
+    parser = Parser()
+
+    links = parser.parse(url, content)
+
+    for link in links:
+        print link.tag()+":"+link.url()

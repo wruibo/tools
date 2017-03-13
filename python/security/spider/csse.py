@@ -4,7 +4,7 @@ import sys
 sys.path.append("../")
 sys.path.append("../../")
 
-from spider.cspider import *
+from spider.cspider import Spider
 
 class SSE(Spider):
     urls = {

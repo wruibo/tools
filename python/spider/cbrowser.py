@@ -223,16 +223,6 @@ class Browser:
         '''
         return Browser(client, platform)
 
-    @staticmethod
-    def default():
-        '''
-            create a default browser object
-        :return: object, default browser object
-        '''
-
-        return Browser.create()
-
-
 if __name__ == "__main__":
     #url = "https://www.caifuqiao.cn/Product/List/productList?typeId=3&typeName=%E9%98%B3%E5%85%89%E7%A7%81%E5%8B%9F"
     #url = "https://docs.python.org/2/library/random.html?highlight=rand#module-random"
