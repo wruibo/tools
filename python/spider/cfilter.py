@@ -1,14 +1,107 @@
 '''
     filter for urls to crawl
 '''
+import re, os, json
 
-class Filter:
+from chelper import Helper
 
+from cserializer import Serializer
+
+
+class Filter(Serializer):
+    '''
+        filter base class
+    '''
 
     def __init__(self):
         pass
 
-    @staticmethod
-    def create():
-        return Filter()
+    def accept(self, url):
+        pass
 
+    def deny(self, url):
+        pass
+
+    @staticmethod
+    def default():
+        return DefaultFilter()
+
+class DefaultFilter(Filter):
+    '''
+        default filter for url with preferred white list
+    '''
+    #white list regex pattern for filter
+    __white_list = []
+
+    #black list regex pattern for filter
+    __black_list = []
+
+    def __init__(self):
+        pass
+
+    def accept(self, url):
+        #accept if @url is in the white list
+        for pattern in self.__white_list:
+            result = re.match(pattern, url, re.IGNORECASE)
+            if result is not None:
+                return True
+
+        #accept if @url is not in the black list
+        for pattern in self.__black_list:
+            result = re.match(pattern, url, re.IGNORECASE)
+            if result is not None:
+                return False
+
+        return True
+
+    def deny(self, url):
+        #do not deny if @url is in the white list
+        for pattern in self.__white_list:
+            result = re.match(pattern, url, re.IGNORECASE)
+            if result is not None:
+                return False
+
+        #deny if @url is in the black list
+        for pattern in self.__black_list:
+            result = re.match(pattern, url, re.IGNORECASE)
+            if result is not None:
+                return True
+
+        return False
+
+    def serialize(self, path):
+        #combine the black&white list into a dictionary
+        data = {"black_list":self.__black_list, "white_list":self.__white_list}
+
+        Helper.makedirs(path)
+
+        json.dump(data, open(path, "w"))
+
+    def unserialize(self, path):
+        if os.path.isfile(path):
+            data = json.load(open(path, "r"))
+            if isinstance(data, dict):
+                self.__black_list = data.get("black_list", [])
+                self.__white_list = data.get("white_list", [])
+
+    def add_white_pattern(self, pattern):
+        self.__white_list.append(pattern)
+
+    def add_black_pattern(self, pattern):
+        self.__black_list.append(pattern)
+
+
+if __name__ == "__main__":
+    filter = Filter.default()
+    filter.add_black_pattern("http://wwww.baidu.com/")
+    filter.add_black_pattern("http://wwww.abc.com/")
+    filter.add_white_pattern("http://www.caifuqiao.com/")
+    filter.add_white_pattern("http://www.caifuqiao.cn/")
+
+    file_path = "/tmp/spider/filter"
+    filter.serialize(file_path)
+
+    filter1 = Filter.default()
+    filter1.unserialize(file_path)
+
+    print filter1

@@ -4,10 +4,13 @@
 from cbrowser import Browser
 from cparser import Parser
 
+
 class Spider:
     '''
-        spider base class
+        spider class
     '''
+    __workingDir = None #working directory for current spider
+
     __browser = None
 
     __parser = None
@@ -23,18 +26,29 @@ class Spider:
         self.__browser = Browser.default()
         self.__parser = Parser.default()
 
+    @staticmethod
+    def create(workingDir):
+        return Spider()
 
-    def run(self):
+
+
+    def start(self):
         pass
 
-    def get(self, url, **kwargs):
-        return self.__browser.open(url, None, **kwargs)
+    def stop(self):
+        pass
 
-    def post(self, url, data, **kwargs):
-        return self.__browser.open(url, data, **kwargs)
+    def _fun(self):
+        pass
+
+
+
 
 
 if __name__ == "__main__":
+
+    spider = Spider.create("abc")
+
     browser = Browser.default()
     parser = Parser.default()
 

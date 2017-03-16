@@ -8,3 +8,11 @@ class Extractor:
 
     def extract(self, content):
         pass
+
+class ExtractorMgr(Extractor):
+
+    def load(self, extractor, filter):
+        pass
+
+    def extract(self, content):
+        pass
