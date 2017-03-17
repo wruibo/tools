@@ -22,9 +22,6 @@ class Filter(Serializer):
     def deny(self, url):
         pass
 
-    @staticmethod
-    def default():
-        return DefaultFilter()
 
 class DefaultFilter(Filter):
     '''

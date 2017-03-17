@@ -63,11 +63,16 @@ class Context:
     #number for unserialize context records
     __ITEM_NUM = 4
 
-    def __init__(self):
+    def __init__(self, interval = None):
+        self.__repeat = 0
+        self.__interval = interval  # crawl interval in seconds
+
         self.__crawled = False  # crawled flag
         self.__crawledtm = None  # last crawled timestamp
-        self.__interval = None  # crawl interval in seconds
         self.__next_crawltm = None # next crawl timestamp
+
+        self._resp_code = None #http response code
+        self._resp_msg = None #http response message
 
     def crawled(self, flag = None):
         if flag is not None:
@@ -130,6 +135,9 @@ class ContextLink:
             self.__context = c
         else:
             return self.__context
+
+    def updatetm(self):
+        pass
 
     def str(self, spliter = "|", s = None):
         if s is not None:

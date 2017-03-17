@@ -3,6 +3,7 @@
 '''
 import re, os
 
+
 class Helper:
     def __init__(self):
         pass
@@ -85,7 +86,12 @@ class Helper:
         return path
 
     @staticmethod
-    def is_url(path):
+    def is_remote_path(path):
+        '''
+            detect whether @path is remote url, like: http://..., ftp://..., file://...
+        :param path: string, path to detect
+        :return: boolean
+        '''
         result = re.match(r'^\w+://.*', path, re.IGNORECASE)
         if result is not None:
             return True
@@ -93,15 +99,29 @@ class Helper:
         return False
 
     @staticmethod
+    def is_local_path(path):
+        '''
+            detect whether @path is local path, like: /tmp/abc, tmp/abc, ...
+        :param path: string, path to detect
+        :return: boolean
+        '''
+        return not Helper.is_remote_path(path)
+
+    @staticmethod
     def is_absolute_path(path):
+        '''
+        detect whether @path is an absolute path, like: /tmp/abc, /lib/abc, ...
+        :param path: string, path to detect
+        :return: boolean
+        '''
         return path.startswith("/")
 
     @staticmethod
     def is_relative_path(path):
         '''
-            detect whether the @url is an relative
-        :param url:
-        :return:
+            detect whether @path is an relative path, like: tmp/abc, lib/abc, ....
+        :param path: string, path to detect
+        :return: boolean
         '''
         return not (Helper.is_url(path) or Helper.is_absolute_path(path))
 
@@ -119,21 +139,27 @@ class Helper:
         if path is None:
             return ref
 
-        if Helper.is_relative_path(path):
-            return Helper.current_path(ref) + path
-        elif Helper.is_absolute_path(path):
-            return Helper.root_path(ref) + path[1:]
-        else:
-            return path #path is url
+        if Helper.is_remote_path(path):
+            return path
+
+        while ref[-1] == "/":
+            ref = ref[:-1]
+
+        while path[0] == "/":
+            path = path[1:]
+
+        return ref + "/" + path
 
     @staticmethod
     def makedirs(path):
         dirname = os.path.dirname(path)
-        if not os.path.exists(path):
+        if not os.path.exists(dirname):
             os.makedirs(dirname)
 
     @staticmethod
     def write2file(path, str, mode = "w"):
+        Helper.makedirs(path)
+
         f = open(path, mode)
         f.write(str)
         f.close()

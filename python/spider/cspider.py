@@ -1,7 +1,7 @@
 '''
     crawl security data from different source
 '''
-from cbrowser import Browser
+from ccrawler import Browser
 from cparser import Parser
 
 

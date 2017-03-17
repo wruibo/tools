@@ -126,7 +126,7 @@ class ParserMgr(Parser):
         return links
 
 if __name__ == "__main__":
-    from cbrowser import Browser
+    from ccrawler import Browser
 
     url = "https://www.caifuqiao.cn/"
 
