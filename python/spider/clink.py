@@ -6,144 +6,104 @@ from chelper import Helper
 
 class Link:
     '''
-        link for url in the http response content
+        link class for spider
     '''
-    #number for unserialize
-    __ITEM_NUM = 5
 
-    def __init__(self, tag = None, path = None, ref = None):
-        self.__tag = tag
-        self.__path = path
-        self.__ref = ref
-        self.__url = Helper.combine_path(ref, path)
-        self.__protocol = Helper.protocol(self.__url)
+    class Config:
+        def __init__(self, retry_count=1, crawl_period=None):
+            '''
+                initialize link crawl configure
+            :param retry_count: int, retry count when crawl failed
+            :param crawl_period: int, crawl period in seconds
+            '''
+            self.__retry_count = retry_count  # retry count when crawl failed
+            self.__crawl_period = crawl_period  # crawl period in seconds for next crawl action
 
-    def tag(self, t = None):
-        if t is not None:
-            self.__tag = t
-        else:
-            return self.__tag
+        def retry_count(self, rc=None):
+            if rc is not None:
+                self.__retry_count = rc
+            else:
+                return self.__retry_count
 
-    def path(self, p = None):
-        if p is not None:
-            self.__path = p
-        else:
-            return self.__path
+        def crawl_period(self, cp=None):
+            if cp is not None:
+                self.__crawl_period = cp
+            else:
+                return self.__crawl_period
 
-    def ref(self, r = None):
-        if r is not None:
-            self.__ref = r
-        else:
-            return self.__ref
+    class Context:
+        '''
+            crawl context for link
+        '''
 
-    def url(self, u = None):
+        def __init__(self, crawl_time, response_code, response_message, content_file):
+            '''
+                initialize context of link for a crawl action
+            :param crawl_time: int, unix timestamp for the link crawl action
+            :param response_code: string, http response code
+            :param response_message: string, response message
+            :param content_file: string, content file path
+            '''
+            self.__crawl_time = crawl_time
+            self.__response_code = response_code
+            self.__response_message = response_message
+            self.__content_file = content_file
+
+        def crawl_time(self, ct=None):
+            if ct is not None:
+                self.__crawl_time = ct
+            else:
+                return self.__crawl_time
+
+        def response_code(self, rc=None):
+            if rc is not None:
+                self.__response_code = rc
+            else:
+                return self.__response_code
+
+        def response_message(self, rm=None):
+            if rm is not None:
+                self.__response_message = rm
+            else:
+                return self.__response_message
+
+        def content_file(self, cf=None):
+            if cf is not None:
+                self.__content_file = cf
+            else:
+                return self.__content_file
+
+    def __init__(self, uri, config, *contexts):
+        '''
+            initialize instance with @uri, @config and its crawl @context
+        :param uri: object, Uri object
+        :param config: object, Config object
+        :param contexts: tupple, Context object in the tupple
+        '''
+        self.__uri = uri
+        self.__config = config
+
+        self.__contexts = []
+        if contexts is not None:
+            self.__contexts.append(contexts)
+
+    def uri(self, u = None):
         if u is not None:
-            self.__url = u
+            self.__uri = u
         else:
-            return self.__url
+            return self.__uri
 
-    def protocol(self, p = None):
-        if p is not None:
-            self.__protocol = p
+    def config(self, c = None):
+        if c is not None:
+            self.__config = c
         else:
-            return self.__protocol
+            return self.__config
 
-    def str(self, spliter = ",", s = None):
-        if s is not None:
-            objs = Helper.objsplit(spliter, s)
-            if len(objs) == self.__ITEM_NUM:
-                self.__protocol, self.__tag, self.__ref, self.__path, self.__url = objs
-        else:
-            return Helper.strjoin(spliter, self.__protocol,  self.__tag, self.__ref, self.__path, self.__url)
-
-class Context:
-    '''
-        crawl context for link
-    '''
-    #number for unserialize context records
-    __ITEM_NUM = 4
-
-    def __init__(self, interval = None):
-        self.__repeat = 0
-        self.__interval = interval  # crawl interval in seconds
-
-        self.__crawled = False  # crawled flag
-        self.__crawledtm = None  # last crawled timestamp
-        self.__next_crawltm = None # next crawl timestamp
-
-        self._resp_code = None #http response code
-        self._resp_msg = None #http response message
-
-    def crawled(self, flag = None):
-        if flag is not None:
-           self.__crawled = flag
-        else:
-            return self.__crawled
-
-    def crawltm(self, tm = None):
-        if tm is not None:
-            self.__crawledtm = tm
-
-            #update next crawl timestamp
-            if self.__interval is not None:
-                self.__next_crawltm = self.__crawledtm + self.__interval
-        else:
-            return self.__crawledtm
-
-    def interval(self, seconds = None):
-        if seconds is not None:
-            self.__interval = seconds
-
-            #update next crawl timestamp
-            if self.__crawledtm is not None:
-                self.__next_crawltm = self.__crawledtm + self.__interval
-        else:
-            return self.__interval
-
-    def next_crawltm(self, tm = None):
-        if tm is not None:
-            self.__next_crawltm = tm
-        else:
-            return self.__next_crawltm
-
-    def str(self, spliter = ",", s = None):
-        if s is not None:
-            objs = Helper.objsplit(spliter, s)
-            if len(objs) == self.__ITEM_NUM:
-                self.__crawled, self.__crawledtm, self.__interval, self.__next_crawltm = objs
-        else:
-            return Helper.strjoin(spliter, self.__crawled, self.__crawledtm, self.__interval, self.__next_crawltm)
-
-
-class ContextLink:
-    '''
-        context link for link database
-    '''
-
-    def __init__(self, link = Link(), context = Context()):
-        self.__link = link
-        self.__context = context
-
-    def link(self, l = None):
-        if l is not None:
-            self.__link = l
-        else:
-            return self.__link
-
-    def context(self, c = None):
+    def contexts(self, c = None):
         if c is not None:
             self.__context = c
         else:
             return self.__context
 
-    def updatetm(self):
-        pass
-
-    def str(self, spliter = "|", s = None):
-        if s is not None:
-            strs = s.split(spliter)
-            if len(strs) == 2:
-                self.__link.str(",", strs[0])
-                self.__context.str(",", strs[1])
-        else:
-            return spliter.join([self.__link.str(","), self.__context.str(",")])
+    def add_context(self, c):
+        self.__context.append(c)

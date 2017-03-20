@@ -1,49 +1,43 @@
 '''
     crawl security data from different source
 '''
-from ccrawler import Browser
-from cparser import Parser
+import time, threading
+
+from ccrawler import *
+from cparser import *
+from clinkdb import *
+from cstorage import *
+from cextractor import *
 
 
-class Spider:
+class Spider(threading.Thread):
     '''
         spider class
     '''
-    __workingDir = None #working directory for current spider
 
-    __browser = None
+    def __init__(self, name):
+        threading.Thread.__init__(self)
 
-    __parser = None
+        self.__name = name
 
-    __extractor = None
+        self.__crawler_manager = CrawlerMgr()
+        self.__parser_manager = ParserMgr()
+        self.__link_manager = LinkMgr()
+        self.__storage_manager = StorageMgr()
+        self.__extractor_manager = ExtractorMgr()
 
-    __storage = None
-
-    def __init__(self, **kwargs):
-        client = kwargs.get("client", "chrome")
-        platform = kwargs.get("platform", "pc")
-
-        self.__browser = Browser.default()
-        self.__parser = Parser.default()
-
-    @staticmethod
-    def create(workingDir):
-        return Spider()
-
-
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
-    def _fun(self):
-        pass
+    def run(self):
+        while True:
+            print "run"
+            import thread
+            import time
+            time.sleep()
 
 
 
 
+class SpiderMgr:
+    pass
 
 if __name__ == "__main__":
 

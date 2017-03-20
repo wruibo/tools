@@ -36,6 +36,12 @@ class DefaultFilter(Filter):
     def __init__(self):
         pass
 
+    def add_white_pattern(self, pattern):
+        self.__white_list.append(pattern)
+
+    def add_black_pattern(self, pattern):
+        self.__black_list.append(pattern)
+
     def accept(self, url):
         #accept if @url is in the white list
         for pattern in self.__white_list:
@@ -66,26 +72,20 @@ class DefaultFilter(Filter):
 
         return False
 
-    def serialize(self, path):
+    def serialize(self, file):
         #combine the black&white list into a dictionary
         data = {"black_list":self.__black_list, "white_list":self.__white_list}
 
-        Helper.makedirs(path)
+        Helper.makedirs(file)
 
-        json.dump(data, open(path, "w"))
+        json.dump(data, open(file, "w"))
 
-    def unserialize(self, path):
-        if os.path.isfile(path):
-            data = json.load(open(path, "r"))
+    def unserialize(self, file):
+        if os.path.isfile(file):
+            data = json.load(open(file, "r"))
             if isinstance(data, dict):
                 self.__black_list = data.get("black_list", [])
                 self.__white_list = data.get("white_list", [])
-
-    def add_white_pattern(self, pattern):
-        self.__white_list.append(pattern)
-
-    def add_black_pattern(self, pattern):
-        self.__black_list.append(pattern)
 
 
 if __name__ == "__main__":

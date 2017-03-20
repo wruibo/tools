@@ -1,11 +1,14 @@
 '''
     link database for crawling
 '''
+import json, time
+import pickle
 
+from clink import Link
+from chttp import Http
 from chelper import Helper
 from cfilter import DefaultFilter
 from cserializer import Serializer
-from clink import Link, Context, ContextLink
 
 
 class LinkDB:
@@ -16,13 +19,33 @@ class LinkDB:
     def __init__(self):
         pass
 
-    def add(self, link):
+    def store(self, uri, response = None):
+        '''
+        store link into database
+        :param uri: object, Uri object
+        :param response: object, Http Response object
+        :return: object, key of stored link
+        '''
+        pass
+
+    def get(self, key):
+        '''
+            get a link object by specified key
+        :return: object, Link object or None
+        '''
         pass
 
     def next(self):
         '''
-            next link to crawl
-        :return: object, Link object
+            get next link in database
+        :return: object, Link object or None
+        '''
+        pass
+
+    def reset(self):
+        '''
+             reset cursor to the first link record
+        :return:
         '''
         pass
 
@@ -31,84 +54,106 @@ class DefaultLinkDB(LinkDB, Serializer):
     '''
         default link database using memory as self defined database
     '''
-    #links for crawling, with ContextLink object in the list
-    __clinks = []
+    #current cursor of link position in link list
+    __cursor = 0
 
-    #next link position in link list
-    __next = 0
+    #links for crawling, with Link object in the list
+    __links = []
 
-    def add(self, clink):
-        self.__clinks.append(clink)
+    #index for find a link in @__links, <key:md5 of url, value:index of array @__links>
+    __index = {}
+
+    def __init__(self):
+        pass
+
+    def store(self, uri, response = None):
+        '''
+            store the uri into database
+        :param uri: object, Uri object
+        :param response: object, Http Response Object
+        :return: tuple, (key: key of stored uri, id: id of stored uri)
+        '''
+        key = Helper.md5(uri.url())
+
+        if not self.__index.has_key(key):
+            self.__links.append(Link(uri, None, None))
+            self.__index[key] = len(self.__links) - 1
+
+        id = self.__index.get(key)
+        if response is not None:
+            self.__links[id].add_context(Link.Context(time.time(), response.code(), response.message(), None))
+
+        return (key, id)
+
+    def get(self, key):
+        '''
+            get Link from database by specified key
+        :param key: string, md5 of url
+        :return: object, Link object or None
+        '''
+        id = self.__index.get(key, None)
+        if id is not None:
+            return self.__links[id]
+
+        return None
 
     def next(self):
-        if self.__next < len(self.__clinks):
-            #fetch current link
-            link = self.__clinks[self.__next].link()
+        '''
+            get next link object by cursor
+        :return: object, Link object or None
+        '''
+        if self.__cursor < len(self.__links):
+            #next link
+            link = self.__links[self.__cursor]
 
-            #move position to next link
-            self.__next += 1
+            #move cursor
+            self.__cursor += 1
 
             return link
 
         return None
 
-    def update(self, idx, code, tm):
-        pass
-
-    def serialize(self, path):
-        strs = []
-        for link in self.__clinks:
-            strs.append(link.str(","))
-
-        Helper.write2file(path, "\n".join(strs))
-
-    def unserialize(self, path):
-        strs = Helper.readfromfile(path).split("\n")
-
-        for str in strs:
-            self.__clinks.append(ContextLink(str))
-
-
-class LinkMgr(Serializer):
-    #link database instance for spider
-    __linkdb = None
-    #link filter for add-in links
-    __filter = None
-
-    def __init__(self):
-        pass
-
-    def load(self, linkdb = DefaultLinkDB(), filter = DefaultFilter()):
-        self.__linkdb = linkdb
-        self.__filter = filter
-
-    def add_white_pattern(self, pattern):
-        self.__filter.add_white_pattern(pattern)
-
-    def add_black_pattern(self, pattern):
-        self.__filter.add_black_pattern(pattern)
-
-    def add(self, clink):
+    def reset(self):
         '''
-            add ContextLink object @link into linkd database
-        :param link: object, ContextLink object
+            reset cursor to the first link record
         :return:
         '''
-        if self.__linkdb is None:
-            return
+        self.__cursor = 0
 
-        #only accept url will be add into the link database
-        if self.__filter is not None and self.__filter.accept(clink.link().url()):
-            self.__linkdb.add(clink)
+    def serialize(self, file):
+        pass
+
+    def unserialize(self, file):
+        pass
+
+
+class LinkMgr(LinkDB, Serializer):
+    def __init__(self, filter = DefaultFilter(), linkdb = DefaultLinkDB()):
+        # link filter for new links
+        self.__filter = filter
+
+        # link database instance for spider
+        self.__linkdb = linkdb
+
+    def filter(self, f = None):
+        if f is not None:
+            self.__filter = f
+        else:
+            return self.__filter
+
+    def store(self, uri, response = None):
+        if self.__filter.accept(uri.url()):
+            self.__linkdb.store(uri, response)
+
+    def get(self, key):
+        return self.__linkdb.get(key)
 
     def next(self):
-        if self.__linkdb is None:
-            return
-
         return self.__linkdb.next()
 
-    def update(self, idx, code, tm):
-        pass
+    def reset(self):
+        return self.__linkdb.reset()
+
 
     def serialize(self, path):
         if self.__linkdb is not None:
