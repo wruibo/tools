@@ -5,17 +5,16 @@ import cookielib
 
 from chelper import Helper
 
-class Http:
-    '''
-        data structure used for http protocol
-    '''
 
+class Protocol:
+    '''
+        base class for different internet protocols
+    '''
     class Uri:
         '''
             uri class
         '''
-
-        def __init__(self, url, ref):
+        def __init__(self, url, ref=""):
             self.__url = url
             self.__ref = ref
             self.__protocol = Helper.protocol(self.__url)
@@ -38,6 +37,35 @@ class Http:
             else:
                 return self.__protocol
 
+    class Response:
+        '''
+            base class for all sub response class
+        '''
+        __content = ""  # string, response content
+
+        def __init__(self, content = ""):
+            '''
+                initialize response instance
+            :param content: string, content
+            '''
+            if content is not None:
+                self.__content = content
+
+        def content(self, c = None):
+            if c is not None:
+                self.__content = c
+            else:
+                return self.__content
+
+    def __init__(self):
+        pass
+
+
+class Http(Protocol):
+    '''
+        data structure used for http protocol
+    '''
+
     class Cookie:
         '''
             cookie for a session
@@ -47,7 +75,7 @@ class Http:
         def __init__(self):
             self.__cookie = cookielib.CookieJar()
 
-        def getCookie(self):
+        def cookie(self):
             return self.__cookie
 
     class Session:
@@ -63,27 +91,18 @@ class Http:
         def __init__(self):
             pass
 
-    class Request:
-        '''
-            structure for holding the http request messages
-        '''
-        __url = None #string, request url
-
-        def __init__(self):
-            pass
-
-    class Response:
+    class Response(Protocol.Response):
         '''
             structure for holding the http request's response
         '''
-        __url = None #sring, request url
-        __code = None #string, response code
-        __msg = None #string, response message
         __headers = [] #string list, response headers
-        __content = None #string, response content
 
-        def __init__(self, url, code, msg, headers, content):
-            self.__url, self.__code, self.__msg, self.__headers, self.__content = url, code, msg, headers, content
+        def __init__(self, code, msg, headers = [], content = ""):
+            Protocol.Response.__init__(self, content)
+            self.__code, self.__msg = code, msg
+
+            if headers is not None:
+                self.__headers = headers
 
         def url(self, u = None):
             if u is not None:
@@ -123,8 +142,3 @@ class Http:
 
                 return values
 
-        def content(self, c = None):
-            if c is not None:
-                self.__content = c
-            else:
-                return self.__content

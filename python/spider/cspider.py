@@ -26,17 +26,33 @@ class Spider(threading.Thread):
         self.__storage_manager = StorageMgr()
         self.__extractor_manager = ExtractorMgr()
 
+    def need_crawl(self, config, context):
+        pass
+
     def run(self):
-        while True:
-            print "run"
-            import thread
-            import time
-            time.sleep()
+
+        #get next link may be need crawling
+        link = self.__link_manager.next()
+        while link is not None:
+            #base information of current link
+            uri = link.uri()
+            config = link.config()
+            context = link.last_context()
+
+            #check if current link need crawling
+            if self.need_crawl(config, context):
+                self.__crawler_manager.crawl(uri)
+
+            #process next link
+            link = self.__link_manager.next()
+
+
 
 
 
 
 class SpiderMgr:
+
     pass
 
 if __name__ == "__main__":

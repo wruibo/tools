@@ -5,7 +5,8 @@
 import urllib2, cookielib, gzip, zlib
 from StringIO import StringIO
 
-from chttp import Http
+from clogger import logger
+from cprotocol import Http
 from chelper import Helper
 
 
@@ -13,11 +14,48 @@ class Crawler:
     '''
         crawler base class
     '''
-    def __init__(self):
-        pass
+    #uri filter for crawling job
+    __filter = None
+
+    def __init__(self, filter = None):
+        '''
+            initialize crawler instance with uri filter
+        :param filter:
+        '''
+        self.__filter = filter
+
+    def filter(self, f = None):
+        if f is not None:
+            self.__filter = f
+        else:
+            return self.__filter
 
     def crawl(self, uri):
-        pass
+        '''
+            crawl wrapper for @_crawl method
+        :param uri: object, @Uri class object
+        :return: object, crawl response content
+        '''
+        if self.__filter is None or self.__filter.accept(uri.url()):
+            response = self._crawl(uri)
+
+            logger.info("crawler: crawling %s, response content length: %d bytes.", uri.url(), len(response.content()))
+
+            return response
+        else:
+            logger.info("crawler: crawling %s, skipped by filter.", uri.url())
+
+        return None
+
+    def _crawl(self, uri):
+        '''
+            crawl method that subclass must be implemented
+        :param uri: object, @Uri class object
+        :return:object, crawl response content
+        '''
+        logger.warning("crawler: unimplemented crawl method, nothing will be done.")
+
+        return None
 
 
 class HttpCrawler(Crawler):
@@ -65,13 +103,13 @@ class HttpCrawler(Crawler):
                 raise Exception("unsupport browser vendor %s/%s, must be %s" % (
                 self.__client, self.__platform, "/".join(self.__headers.keys())))
 
-        def getName(self):
+        def client(self):
             return self.__client
 
-        def getPlatform(self):
+        def platform(self):
             return self.__platform
 
-        def getHeaders(self):
+        def headers(self):
             return self.__headers[self.__key]
 
     class Handler:
@@ -145,31 +183,33 @@ class HttpCrawler(Crawler):
     #cookie for browser
     __cookie = None
 
-    def __init__(self, client = "chrome", platform = "pc"):
+    def __init__(self, client = "chrome", platform = "pc", filter = None):
+        Crawler.__init__(self, filter)
+
         #initialize vendor
-        self.__vendor = DefaultCrawler.Vendor(client, platform)
+        self.__vendor = HttpCrawler.Vendor(client, platform)
         self.__cookie = Http.Cookie()
 
         #initialize the urllib2
         opener = urllib2.build_opener()
 
         #add special handlers
-        opener.add_handler(HttpCrawler.Handler.AddHeaderHandler(self.__vendor.getHeaders()))
+        opener.add_handler(HttpCrawler.Handler.AddHeaderHandler(self.__vendor.headers()))
         opener.add_handler(HttpCrawler.Handler.DecompressHandler())
-        opener.add_handler(urllib2.HTTPCookieProcessor(self.__cookie.getCookie()))
+        opener.add_handler(urllib2.HTTPCookieProcessor(self.__cookie.cookie()))
 
         urllib2.install_opener(opener)
 
-    def crawl(self, uri):
+    def _crawl(self, uri):
         protocol = uri.protocol().lower()
         if protocol != "http" and protocol != "https":
             return None
 
         conn = urllib2.urlopen(uri.url())
-        return Http.Response(conn.geturl(), conn.getcode(), conn.msg, conn.info().headers, conn.read())
+        return Http.Response(conn.getcode(), conn.msg, conn.info().headers, conn.read())
 
 
-class CrawlerMgr(Crawler):
+class CrawlerMgr:
     '''
         crawler manager for all supported crawlers
     '''
@@ -185,8 +225,7 @@ class CrawlerMgr(Crawler):
 
         crawler = self.__crawlers.get(protocol, None)
         if not crawler:
-            from cexpt import ExpUnsupportedProtocol
-            raise ExpUnsupportedProtocol("unsupported protocol: " + protocol + ", url: " + uri.url())
+           logger.warning("crawler: unsupported protocol: " + protocol + ", url: " + uri.url())
 
         return crawler.crawl(uri)
 
@@ -194,14 +233,14 @@ class CrawlerMgr(Crawler):
 
 
 if __name__ == "__main__":
+    crawler_manager = CrawlerMgr()
+    crawler_manager.load("http", HttpCrawler())
+    crawler_manager.load("https", HttpCrawler())
+
     #url = "https://www.caifuqiao.cn/Product/List/productList?typeId=3&typeName=%E9%98%B3%E5%85%89%E7%A7%81%E5%8B%9F"
     #url = "https://docs.python.org/2/library/random.html?highlight=rand#module-random"
-    #url = "http://www.baidu.com/"
-    url = "http://www.caifuqiao.cn/"
-    crawler = HttpCrawler()
+    url = "http://www.baidu.com/"
+    #url = "http://www.caifuqiao.cn/"
     #resp = crawler.open("http://www.sse.com.cn/js/common/ssesuggestdataAll.js")
     #resp = crawler.open("http://www.baidu.com/")
-    resp = crawler.crawl(url)
-
-    print resp.header("set-cookie")
-    print resp.content()
+    resp = crawler_manager.crawl(Http.Uri(url))

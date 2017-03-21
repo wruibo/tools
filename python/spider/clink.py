@@ -1,6 +1,8 @@
 '''
     link data for crawling
 '''
+import sys
+
 from chelper import Helper
 
 
@@ -10,7 +12,7 @@ class Link:
     '''
 
     class Config:
-        def __init__(self, retry_count=1, crawl_period=None):
+        def __init__(self, retry_count = 1, crawl_period = sys.maxint):
             '''
                 initialize link crawl configure
             :param retry_count: int, retry count when crawl failed
@@ -99,11 +101,16 @@ class Link:
         else:
             return self.__config
 
-    def contexts(self, c = None):
-        if c is not None:
-            self.__context = c
+    def contexts(self, cs = None):
+        if cs is not None:
+            self.__contexts = cs
         else:
             return self.__context
+
+    def last_context(self):
+        if len(self.__contexts) > 0:
+            return self.__contexts[-1]
+        return None
 
     def add_context(self, c):
         self.__context.append(c)

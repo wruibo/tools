@@ -5,7 +5,7 @@ import json, time
 import pickle
 
 from clink import Link
-from chttp import Http
+from cprotocol import Http
 from chelper import Helper
 from cfilter import DefaultFilter
 from cserializer import Serializer

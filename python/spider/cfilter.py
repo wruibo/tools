@@ -8,7 +8,7 @@ from chelper import Helper
 from cserializer import Serializer
 
 
-class Filter(Serializer):
+class Filter:
     '''
         filter base class
     '''
@@ -19,11 +19,8 @@ class Filter(Serializer):
     def accept(self, url):
         pass
 
-    def deny(self, url):
-        pass
 
-
-class DefaultFilter(Filter):
+class DefaultFilter(Filter, Serializer):
     '''
         default filter for url with preferred white list
     '''
@@ -35,12 +32,6 @@ class DefaultFilter(Filter):
 
     def __init__(self):
         pass
-
-    def add_white_pattern(self, pattern):
-        self.__white_list.append(pattern)
-
-    def add_black_pattern(self, pattern):
-        self.__black_list.append(pattern)
 
     def accept(self, url):
         #accept if @url is in the white list
@@ -57,20 +48,11 @@ class DefaultFilter(Filter):
 
         return True
 
-    def deny(self, url):
-        #do not deny if @url is in the white list
-        for pattern in self.__white_list:
-            result = re.match(pattern, url, re.IGNORECASE)
-            if result is not None:
-                return False
+    def add_white_pattern(self, pattern):
+        self.__white_list.append(pattern)
 
-        #deny if @url is in the black list
-        for pattern in self.__black_list:
-            result = re.match(pattern, url, re.IGNORECASE)
-            if result is not None:
-                return True
-
-        return False
+    def add_black_pattern(self, pattern):
+        self.__black_list.append(pattern)
 
     def serialize(self, file):
         #combine the black&white list into a dictionary
@@ -89,7 +71,7 @@ class DefaultFilter(Filter):
 
 
 if __name__ == "__main__":
-    filter = Filter.default()
+    filter = DefaultFilter()
     filter.add_black_pattern("http://wwww.baidu.com/")
     filter.add_black_pattern("http://wwww.abc.com/")
     filter.add_white_pattern("http://www.caifuqiao.com/")
@@ -98,7 +80,7 @@ if __name__ == "__main__":
     file_path = "/tmp/spider/filter"
     filter.serialize(file_path)
 
-    filter1 = Filter.default()
+    filter1 = DefaultFilter()
     filter1.unserialize(file_path)
 
     print filter1

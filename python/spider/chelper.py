@@ -133,19 +133,19 @@ class Helper:
         :param url: string, url correspond with @ref
         :return: string, combined url
         '''
-        if ref is None:
+        if ref is None or path == "":
             return path
 
-        if path is None:
+        if path is None or path == "":
             return ref
 
         if Helper.is_remote_path(path):
             return path
 
-        while ref[-1] == "/":
+        while len(ref) > 0 and ref[-1] == "/":
             ref = ref[:-1]
 
-        while path[0] == "/":
+        while len(path) > 0 and path[0] == "/":
             path = path[1:]
 
         return ref + "/" + path
