@@ -5,82 +5,104 @@ import re, os, json
 
 from chelper import Helper
 
-from cserializer import Serializer
+from clauncher import Launcher
 
 
-class Filter:
+class Filter(Launcher):
     '''
-        filter base class
+        filter base class, use white list rules
     '''
+    def __init__(self, name, workdir):
+        Launcher.__init__(self, name, workdir)
 
-    def __init__(self):
+    def filter(self, str):
+        '''
+            test @str is pass or denied by the filter
+        :param str: string, string to be test
+        :return: boolean, True - @str is denied by filter, False-@str is passed by filter
+        '''
+        return True
+
+    def accept(self, *cond):
+        '''
+            add a condition object @cond into the filter
+        :param cond: tuple, filter condition objects
+        :return:
+        '''
         pass
 
-    def accept(self, url):
-        pass
 
-
-class DefaultFilter(Filter, Serializer):
+class DefaultFilter(Filter):
     '''
         default filter for url with preferred white list
     '''
-    #white list regex pattern for filter
-    __white_list = []
+    #regex patterns for white list
+    __patterns = []
 
-    #black list regex pattern for filter
-    __black_list = []
+    #compiled patterns
+    __cpatterns = []
 
-    def __init__(self):
-        pass
+    def __init__(self, name, workdir):
+        Filter.__init__(self, name, workdir)
 
-    def accept(self, url):
+    def launch(self):
+        '''
+            load filter patterns from file
+        :return:
+        '''
+        if not Helper.exists(self.workdir(), self.name()):
+            return
+
+        file = Helper.open(self.workdir(), self.name(), "r")
+        if file is not None:
+            self.__patterns = json.load(file)
+            for pattern in self.__patterns:
+                self.__cpatterns.append(re.compile(pattern, re.IGNORECASE))
+
+
+    def shutdown(self):
+        '''
+            save filter patterns to file
+        :return:
+        '''
+        file = Helper.open(self.workdir(), self.name(), "w")
+        json.dump(self.__patterns, file)
+        file.close()
+
+
+    def filter(self, str):
         #accept if @url is in the white list
-        for pattern in self.__white_list:
-            result = re.match(pattern, url, re.IGNORECASE)
+        for cpattern in self.__cpatterns:
+            result = cpattern.match(str)
             if result is not None:
                 return True
 
-        #accept if @url is not in the black list
-        for pattern in self.__black_list:
-            result = re.match(pattern, url, re.IGNORECASE)
-            if result is not None:
-                return False
+        return False
 
-        return True
+    def accept(self, *patterns):
+        if len(patterns) > 0:
+            for pattern in patterns:
+                if not self.exists(pattern):
+                    self.__patterns.append(pattern)
+                    self.__cpatterns.append(re.compile(pattern, re.IGNORECASE))
+        else:
+            return self.__patterns
 
-    def add_white_pattern(self, pattern):
-        self.__white_list.append(pattern)
+    def exists(self, pattern):
+        for p in self.__patterns:
+            if p == pattern:
+                return True
 
-    def add_black_pattern(self, pattern):
-        self.__black_list.append(pattern)
-
-    def serialize(self, file):
-        #combine the black&white list into a dictionary
-        data = {"black_list":self.__black_list, "white_list":self.__white_list}
-
-        Helper.makedirs(file)
-
-        json.dump(data, open(file, "w"))
-
-    def unserialize(self, file):
-        if os.path.isfile(file):
-            data = json.load(open(file, "r"))
-            if isinstance(data, dict):
-                self.__black_list = data.get("black_list", [])
-                self.__white_list = data.get("white_list", [])
-
+        return False
 
 if __name__ == "__main__":
-    filter = DefaultFilter()
-    filter.add_black_pattern("http://wwww.baidu.com/")
-    filter.add_black_pattern("http://wwww.abc.com/")
-    filter.add_white_pattern("http://www.caifuqiao.com/")
-    filter.add_white_pattern("http://www.caifuqiao.cn/")
+    filter = DefaultFilter("filter1", "/tmp/spider2/filter")
+    filter.launch()
 
-    file_path = "/tmp/spider/filter"
-    filter.serialize(file_path)
+    filter.accept("http://www.baidu.com/a", "http://wwww.caifuqiao.cn/.*")
 
-    filter1 = DefaultFilter()
-    filter1.unserialize(file_path)
+    print filter.filter("http://www.baidu.com/")
+    print filter.filter("http://www.baidu.com/a/b")
+    print filter.filter("http://www.baidu1.com/")
 
-    print filter1
+    filter.shutdown()

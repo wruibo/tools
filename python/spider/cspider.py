@@ -5,28 +5,33 @@ import time, threading
 
 from ccrawler import *
 from cparser import *
-from clinkdb import *
+from clinker import *
 from cstorage import *
 from cextractor import *
+from clauncher import *
 
 
-class Spider(threading.Thread):
+class Spider(threading.Thread, Launcher):
     '''
         spider class
     '''
 
-    def __init__(self, name):
+    def __init__(self, name, workdir):
+        Launcher.__init__(name, workdir)
         threading.Thread.__init__(self)
 
         self.__name = name
 
         self.__crawler_manager = CrawlerMgr()
         self.__parser_manager = ParserMgr()
-        self.__link_manager = LinkMgr()
+        self.__linker_manager = LinkerMgr()
         self.__storage_manager = StorageMgr()
         self.__extractor_manager = ExtractorMgr()
 
-    def need_crawl(self, config, context):
+    def launch(self):
+        pass
+
+    def shutdown(self):
         pass
 
     def run(self):
@@ -47,12 +52,7 @@ class Spider(threading.Thread):
             link = self.__link_manager.next()
 
 
-
-
-
-
 class SpiderMgr:
-
     pass
 
 if __name__ == "__main__":

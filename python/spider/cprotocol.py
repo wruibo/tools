@@ -37,6 +37,15 @@ class Protocol:
             else:
                 return self.__protocol
 
+        def encode(self):
+            return {"url":self.__url, "ref":self.__ref, "protocol":self.__protocol}
+
+        def decode(self, obj):
+            if isinstance(obj, dict):
+                self.__url = str(obj.get("url", self.__url))
+                self.__ref = str(obj.get("ref", self.__ref))
+                self.__protocol = str(obj.get("protocol", self.__protocol))
+
     class Response:
         '''
             base class for all sub response class

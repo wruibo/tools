@@ -150,7 +150,7 @@ class ParserMgr:
         :param parser: object, Parser object for parse links
         :return:
         '''
-        self.__parsers.append((parser))
+        self.__parsers.append(parser)
 
     def parse(self, uri, content):
         '''

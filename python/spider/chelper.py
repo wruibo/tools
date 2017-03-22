@@ -1,7 +1,7 @@
 '''
     useful functions for spider
 '''
-import re, os
+import re, os, sys
 
 
 class Helper:
@@ -155,6 +155,18 @@ class Helper:
         dirname = os.path.dirname(path)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
+
+    @staticmethod
+    def exists(dir, fname):
+        fpath = dir + "/" +fname
+        return os.path.isfile(fpath)
+
+    @staticmethod
+    def open(dir, fname, mode):
+        fpath = dir + "/" + fname
+        Helper.makedirs(fpath)
+
+        return open(fpath, mode)
 
     @staticmethod
     def write2file(path, str, mode = "w"):
