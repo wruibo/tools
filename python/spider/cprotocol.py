@@ -14,7 +14,7 @@ class Protocol:
         '''
             uri class
         '''
-        def __init__(self, url, ref=""):
+        def __init__(self, url = "", ref = ""):
             self.__url = url
             self.__ref = ref
             self.__protocol = Helper.protocol(self.__url)
@@ -45,6 +45,7 @@ class Protocol:
                 self.__url = str(obj.get("url", self.__url))
                 self.__ref = str(obj.get("ref", self.__ref))
                 self.__protocol = str(obj.get("protocol", self.__protocol))
+            return self
 
     class Response:
         '''

@@ -143,7 +143,7 @@ class ParserMgr:
         # parsers in the manager, list of parsers
         self.__parsers = []
 
-    def load(self, parser):
+    def register(self, parser):
         '''
             load a new @parser with @filter for specified url into manager
         :param filter: object, Filter object for specified url to parse links
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     content = response.content()
 
     parsermgr = ParserMgr()
-    parsermgr.load(DefaultParser())
+    parsermgr.register(DefaultParser())
 
     links = parsermgr.parse(uri, content)
 

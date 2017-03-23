@@ -3,28 +3,23 @@
 '''
 
 from clogger import logger
+from clauncher import Launcher
+from cfilter import DefaultFilter
 
-class Extractor:
+class Extractor(Launcher):
     '''
         base class for all extractor
     '''
-    #filter for extract job
-    __filter = None
-
-    def __init__(self, name, filter = None):
+    def __init__(self, workdir, name, filter):
         '''
             initialize extractor instance with @filter
         :param name: string, extractor name, unique identifier for the extractor instance
         :param filter: object, @Filter for uri
         '''
-        self.__name = name
-        self.__filter = filter
+        Launcher.__init__(workdir, name)
 
-    def name(self, n = None):
-        if n is not None:
-            self.__name = n
-        else:
-            return self.__name
+        # filter for extract job
+        self.__filter = filter
 
     def extract(self, uri, content):
         '''
@@ -54,6 +49,11 @@ class Extractor:
         logger.warning("extractor: unimplemented extract method, nothing will be done.")
 
         return None
+
+
+class TextExtractor(Extractor):
+    def __init__(self, workdir, name):
+        pass
 
 
 class ExtractorMgr:

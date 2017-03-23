@@ -42,8 +42,8 @@ class DefaultFilter(Filter):
     #compiled patterns
     __cpatterns = []
 
-    def __init__(self, name, workdir):
-        Filter.__init__(self, name, workdir)
+    def __init__(self, workdir, name):
+        Filter.__init__(self, workdir, name)
 
     def launch(self):
         '''
@@ -75,9 +75,9 @@ class DefaultFilter(Filter):
         for cpattern in self.__cpatterns:
             result = cpattern.match(str)
             if result is not None:
-                return True
+                return False
 
-        return False
+        return True
 
     def accept(self, *patterns):
         if len(patterns) > 0:
@@ -96,7 +96,7 @@ class DefaultFilter(Filter):
         return False
 
 if __name__ == "__main__":
-    filter = DefaultFilter("filter1", "/tmp/spider2/filter")
+    filter = DefaultFilter("/tmp/spider2/filter", "filter1")
     filter.launch()
 
     filter.accept("http://www.baidu.com/a", "http://wwww.caifuqiao.cn/.*")
