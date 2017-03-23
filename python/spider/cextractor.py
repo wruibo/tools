@@ -10,16 +10,19 @@ class Extractor(Launcher):
     '''
         base class for all extractor
     '''
-    def __init__(self, workdir, name, filter):
+    def __init__(self, workdir, name):
         '''
             initialize extractor instance with @filter
         :param name: string, extractor name, unique identifier for the extractor instance
-        :param filter: object, @Filter for uri
         '''
         Launcher.__init__(workdir, name)
 
-        # filter for extract job
-        self.__filter = filter
+
+    def accept(self, *cond):
+        self._accept(*cond)
+
+    def match(self, uri):
+        return self._match(uri)
 
     def extract(self, uri, content):
         '''
@@ -28,7 +31,7 @@ class Extractor(Launcher):
         :param content: string, content of @uri
         :return: object, extract result object or None
         '''
-        if self.__filter is None or self.__filter.accept(uri.url()):
+        if self.match(uri):
             result = self._extract(uri, content)
 
             logger.info("extractor: extract data from %s, completed.", uri.url())
@@ -38,6 +41,12 @@ class Extractor(Launcher):
             logger.info("extractor: extract data form %s, skipped by filter.", uri.url())
 
         return None
+
+    def _accept(self, *cond):
+        pass
+
+    def _match(self, uri):
+        return False
 
     def _extract(self, uri, content):
         '''
@@ -53,8 +62,34 @@ class Extractor(Launcher):
 
 class TextExtractor(Extractor):
     def __init__(self, workdir, name):
+        Extractor.__init__(workdir, name)
+
+        self.__filter = DefaultFilter()
+
+    def _accept(self, *cond):
+        self.__filter.accept(*cond)
+
+    def _match(self, uri):
+        return not self.__filter.filter(uri.url())
+
+    def _extract(self, uri, content):
         pass
 
+
+class ImageExtractor(Extractor):
+    def __init__(self, workdir, name):
+        Extractor.__init__(workdir, name)
+
+        self.__filter = DefaultFilter()
+
+    def _accept(self, *cond):
+        self.__filter.accept(*cond)
+
+    def _match(self, uri):
+        return not self.__filter.filter(uri.url())
+
+    def _extract(self, uri, content):
+        pass
 
 class ExtractorMgr:
     '''
