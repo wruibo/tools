@@ -4,7 +4,8 @@
 
 from clogger import logger
 from clauncher import Launcher
-from cfilter import DefaultFilter
+from cfilter import WhiteListFilter
+
 
 class Extractor(Launcher):
     '''
@@ -15,14 +16,19 @@ class Extractor(Launcher):
             initialize extractor instance with @filter
         :param name: string, extractor name, unique identifier for the extractor instance
         '''
-        Launcher.__init__(workdir, name)
+        Launcher.__init__(self, workdir, name)
 
+    def launch(self):
+        self._launch()
 
-    def accept(self, *cond):
-        self._accept(*cond)
+    def shutdown(self):
+        self._shutdown()
 
-    def match(self, uri):
-        return self._match(uri)
+    def filter(self, *cond):
+        self._filter(*cond)
+
+    def accept(self, uri):
+        return self._accept(uri)
 
     def extract(self, uri, content):
         '''
@@ -31,21 +37,30 @@ class Extractor(Launcher):
         :param content: string, content of @uri
         :return: object, extract result object or None
         '''
-        if self.match(uri):
+        if self.accept(uri):
+            stime = time.time()
             result = self._extract(uri, content)
+            etime = time.time()
 
-            logger.info("extractor: extract data from %s, completed.", uri.url())
+            logger.info("%s: extract data from %s completed. time used: %fs", self.name(), uri.url(), etime-stime)
 
             return result
         else:
-            logger.info("extractor: extract data form %s, skipped by filter.", uri.url())
+            logger.info("%s: extract data form %s, skipped by filter.", self.name(), uri.url())
 
         return None
 
-    def _accept(self, *cond):
-        pass
+    def _launch(self):
+        logger.warning("extractor: unimplemented launch method, nothing will be done.")
 
-    def _match(self, uri):
+    def _shutdown(self):
+        logger.warning("extractor: unimplemented shutdown method, nothing will be done.")
+
+    def _filter(self, *cond):
+        logger.warning("extractor: unimplemented filter method, nothing will be done.")
+
+    def _accept(self, uri):
+        logger.warning("extractor: unimplemented accept method, default not accepted.")
         return False
 
     def _extract(self, uri, content):
@@ -61,43 +76,56 @@ class Extractor(Launcher):
 
 
 class TextExtractor(Extractor):
-    def __init__(self, workdir, name):
-        Extractor.__init__(workdir, name)
+    '''
+        example for extract text from response content
+    '''
 
-        self.__filter = DefaultFilter()
+    def __init__(self, workdir, name = "text_extractor"):
+        Extractor.__init__(self, workdir, name)
 
-    def _accept(self, *cond):
-        self.__filter.accept(*cond)
+        self.__filter = WhiteListFilter(workdir, "filter")
 
-    def _match(self, uri):
-        return not self.__filter.filter(uri.url())
+    def _launch(self):
+        self.__filter.launch()
 
-    def _extract(self, uri, content):
-        pass
+    def _shutdown(self):
+        self.__filter.shutdown()
 
+    def _filter(self, *cond):
+        self.__filter.filter(*cond)
 
-class ImageExtractor(Extractor):
-    def __init__(self, workdir, name):
-        Extractor.__init__(workdir, name)
-
-        self.__filter = DefaultFilter()
-
-    def _accept(self, *cond):
-        self.__filter.accept(*cond)
-
-    def _match(self, uri):
-        return not self.__filter.filter(uri.url())
+    def _accept(self, uri):
+        return self.__filter.accept(uri.url())
 
     def _extract(self, uri, content):
-        pass
+        import re
 
-class ExtractorMgr:
+        text = ""
+        pattern = re.compile(r">([^<>]*)<", re.IGNORECASE)
+        results = pattern.findall(content)
+        for result in results:
+            text += result
+
+        return text
+
+
+class ExtractorMgr(Launcher):
     '''
         extractor manager for extractors
     '''
-    def __init__(self):
+    def __init__(self, workdir, name = "extractor_manager"):
+        Launcher.__init__(self, workdir, name)
+
         #array for holding all extractors for response content
         self.__extractors = []
+
+    def launch(self):
+        for extractor in self.__extractors:
+            extractor.launch()
+
+    def shutdown(self):
+        for extractor in self.__extractors:
+            extractor.shutdown()
 
     def register(self, extractor):
         '''
@@ -121,3 +149,31 @@ class ExtractorMgr:
                 result.append((extractor.name(), data))
 
         return result
+
+    @staticmethod
+    def default(workdir = "./extractor", name = "exractor_manager"):
+        extractor_manager = ExtractorMgr(workdir, name)
+
+        text_extractor = TextExtractor(workdir)
+        text_extractor.filter(".*")
+
+        extractor_manager.register(text_extractor)
+
+        return extractor_manager
+
+if __name__ == "__main__":
+    from ccrawler import *
+    from cprotocol import Uri
+
+    crawler_manager = CrawlerMgr.default("/tmp/spider/crawler")
+
+    uri = Uri("http://news.xinhuanet.com/world/2017-03/23/c_1120683317.htm")
+    resp = crawler_manager.crawl(uri)
+
+    extractor_manager = ExtractorMgr.default("/tmp/spider/extractor")
+
+    extractor_manager.launch()
+
+    result = extractor_manager.extract(uri, resp.content())
+
+    extractor_manager.shutdown()

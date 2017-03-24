@@ -1,32 +1,36 @@
 '''
     parser for parsing hyperlink from http response
 '''
-import re
+import re, time
 
 from clogger import logger
 from chelper import Helper
-from cprotocol import Protocol
+from cprotocol import Uri
+from clauncher import Launcher
+from cfilter import WhiteListFilter
 
 
-class Parser:
+class Parser(Launcher):
     '''
         parser base class
     '''
-    #uri filter for parsing job
-    __filter = None
-
-    def __init__(self, filter = None):
+    def __init__(self, workdir, name):
         '''
             initialize the parse instance
-        :param filter: object, filter object for uri
         '''
-        self.__filter = filter
+        Launcher.__init__(self, workdir, name)
 
-    def filter(self, f = None):
-        if f is not None:
-            self.__filter = f
-        else:
-            return self.__filter
+    def launch(self):
+        self._launch()
+
+    def shutdown(self):
+        self._shutdown()
+
+    def filter(self, *cond):
+        self._filter(*cond)
+
+    def accept(self, uri):
+        return self._accept(uri)
 
     def parse(self, uri, content):
         '''
@@ -35,19 +39,30 @@ class Parser:
         :param content: string, content for the @url
         :return: list, list with @Uri objects
         '''
-        links = []
-        if self.__filter is None or self.__filter.accept(uri.url()):
+        if self.accept(uri):
+            stime = time.time()
             links = self._parse(uri, content)
-            if links is None:
-                links = []
+            etime = time.time()
 
-            logger.info("parser: parsing %s, %d links parsed.", uri.url(), len(links))
-
+            logger.info("%s: parsing %s completed. links: %d, time used: %fs", self.name(), uri.url(), len(links), etime-stime)
             return links
         else:
-            logger.info("parser: parsing %s, skipped by filter.", uri.url())
+            logger.info("%s: parsing %s, skipped by filter.", self.name(), uri.url())
 
-        return links
+        return []
+
+    def _launch(self):
+        logger.warning("parser: unimplemented launch method, nothing will be done.")
+
+    def _shutdown(self):
+        logger.warning("parser: unimplemented shutdown method, nothing will be done.")
+
+    def _filter(self, *cond):
+        logger.warning("parser: unimplemented filter method, nothing will be done.")
+
+    def _accept(self, uri):
+        logger.warning("parser: unimplemented accept method, default not accepted.")
+        return False
 
     def _parse(self, uri, content):
         '''
@@ -65,8 +80,22 @@ class AParser(Parser):
     '''
         uri parser for tag "a"
     '''
-    def __init__(self):
-        pass
+    def __init__(self, workdir, name = "a_parser"):
+        Parser.__init__(self, workdir, name)
+
+        self.__filter = WhiteListFilter(workdir, "filter")
+
+    def _launch(self):
+        self.__filter.launch()
+
+    def _shutdown(self):
+        self.__filter.shutdown()
+
+    def _filter(self, *cond):
+        self.__filter.filter(*cond)
+
+    def _accept(self, uri):
+        return self.__filter.accept(uri.url())
 
     def _parse(self, uri, content):
 
@@ -80,7 +109,7 @@ class AParser(Parser):
         urls = regex.findall(content)
         for url in urls:
             url = Helper.combine_path(uri.url(), url)
-            links.append(Protocol.Uri(url, ref))
+            links.append(Uri(url, ref))
 
         return links
 
@@ -89,8 +118,22 @@ class ImageParser(Parser):
     '''
         link parser for tag "img"
     '''
-    def __init__(self):
-        pass
+    def __init__(self, workdir, name = "image_parser"):
+        Parser.__init__(self, workdir, name)
+
+        self.__filter = WhiteListFilter(workdir, "filter")
+
+    def _launch(self):
+        self.__filter.launch()
+
+    def _shutdown(self):
+        self.__filter.shutdown()
+
+    def _filter(self, *cond):
+        self.__filter.filter(*cond)
+
+    def _accept(self, uri):
+        return self.__filter.accept(uri.url())
 
     def _parse(self, uri, content):
         # regex for parsing "img" tag's links
@@ -103,45 +146,28 @@ class ImageParser(Parser):
         urls = regex.findall(content)
         for url in urls:
             url = Helper.combine_path(uri.url(), url)
-            links.append(Protocol.Uri(url, ref))
+            links.append(Uri(url, ref))
 
         return links
 
 
-class DefaultParser(Parser):
-    '''
-        default parser for parse hyperlinks from http response content
-    '''
-    __parsers = []
-
-    def __init__(self, filter = None):
-        Parser.__init__(self, filter)
-
-        self.__parsers.append(AParser())
-        self.__parsers.append(ImageParser())
-
-    def _parse(self, uri, content):
-        '''
-            default parse method for parsing hyperlinks from response @content
-        :param uri: string, request uri
-        :param content: string, http response content of @uri
-        :return: list, links parsed, with @Uri object in the list
-        '''
-        links = []
-
-        for parser in self.__parsers:
-            links += parser.parse(uri, content)
-
-        return links
-
-
-class ParserMgr:
+class ParserMgr(Launcher):
     '''
         parser manager
     '''
-    def __init__(self):
+    def __init__(self, workdir, name = "parser_manager"):
+        Launcher.__init__(self, workdir, name)
+
         # parsers in the manager, list of parsers
         self.__parsers = []
+
+    def launch(self):
+        for parser in self.__parsers:
+            parser.launch()
+
+    def shutdown(self):
+        for parser in self.__parsers:
+            parser.shutdown()
 
     def register(self, parser):
         '''
@@ -166,19 +192,31 @@ class ParserMgr:
 
         return links
 
+    @staticmethod
+    def default(workdir, name = "parser_manager"):
+        parser_manager = ParserMgr(workdir, name)
+
+        a_parser = AParser(workdir)
+        a_parser.filter(r".*")
+        parser_manager.register(a_parser)
+
+        image_parser = ImageParser(workdir)
+        image_parser.filter(r".*")
+        parser_manager.register(image_parser)
+
+        return parser_manager
+
 if __name__ == "__main__":
-    from ccrawler import HttpCrawler
+    from ccrawler import *
+    from cprotocol import Uri
 
-    uri = Protocol.Uri("https://www.caifuqiao.cn/")
+    crawler_manager = CrawlerMgr.default("/tmp/spider/crawler")
 
-    crawler = HttpCrawler()
-    response = crawler.crawl(uri)
-    content = response.content()
+    uri = Uri("http://news.xinhuanet.com/world/2017-03/23/c_1120683317.htm")
+    resp = crawler_manager.crawl(uri)
 
-    parsermgr = ParserMgr()
-    parsermgr.register(DefaultParser())
-
-    links = parsermgr.parse(uri, content)
+    parser_manager = ParserMgr.default("/tmp/spider/parser")
+    links = parser_manager.parse(uri, resp.content())
 
     for link in links:
         print link.url()

@@ -7,17 +7,17 @@ class Storage:
     def __init__(self):
         pass
 
-    def store(self, name, data):
+    def store(self, storable):
+        pass
+
+
+class MysqlStorage(Storage):
+    def store(self, storable):
         pass
 
 
 class JsonFileStorage(Storage):
 
-    def store(self, name, data):
-        pass
-
-
-class MysqlStorage(Storage):
     def store(self, name, data):
         pass
 

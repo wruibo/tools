@@ -1,15 +1,13 @@
 '''
     link database for crawling
 '''
-import re, sys, json, time, pickle
+import re, sys, json, time
 
+from cprotocol import Uri
 from clogger import logger
-from cprotocol import Http
 from chelper import Helper
 from clauncher import Launcher
-from cfilter import DefaultFilter
-from cserializer import Serializer
-
+from cfilter import WhiteListFilter
 
 class CConfig:
     def __init__(self, is_origin = False, crawl_period = sys.maxint):
@@ -89,6 +87,7 @@ class PConfig:
 
         return self
 
+
 class PConfigs:
     def __init__(self):
         self.__configs = []
@@ -130,12 +129,14 @@ class PConfigs:
 
         return self
 
+
 class CStatus:
     '''
         crawl status class for a link
     '''
     def __init__(self):
         pass
+
 
 class CContext:
     '''
@@ -173,6 +174,7 @@ class CContext:
                 self.__extras = {}
 
         return self
+
 
 class CContexts:
     def __init__(self):
@@ -233,7 +235,7 @@ class CLink:
 
     def decode(self, obj):
         if isinstance(obj, dict):
-            self.__uri = Protocol.Uri().decode(obj.get("uri", {}))
+            self.__uri = Uri().decode(obj.get("uri", {}))
             self.__contexts = CContexts().decode(obj.get("contexts", []))
 
         return self
@@ -357,21 +359,21 @@ class Linker(Launcher):
         #shutdown sub class instance
         self._shutdown()
 
-    def filter(self, uri):
-        '''
-            test if the uri is filtered by linker
-        :param uri: uri, Uri obejct
-        :return: boolean
-        '''
-        return self._filter(uri)
-
-    def accept(self, *cond):
+    def filter(self, *cond):
         '''
             add accept condition for linker
         :param cond: object, filter accept condition
         :return:
         '''
-        self._accept(*cond)
+        self._filter(*cond)
+
+    def accept(self, uri):
+        '''
+            test if the uri is accept by linker
+        :param uri: uri, Uri obejct
+        :return: boolean
+        '''
+        return self._accept(uri)
 
     def config(self, pattern, config):
         '''
@@ -389,31 +391,31 @@ class Linker(Launcher):
         :param extras: dict, extras message for uri
         :return: object, key of stored link
         '''
-        key = None
-
-        if not self.filter(uri):
+        if self.accept(uri):
+            stime = time.time()
             key = self._push(uri, **extras)
-            logger.info("linker: push link %s, completed.", uri.url())
+            etime = time.time()
+
+            logger.info("linker: push link %s completed. time used:%fs", uri.url(), etime-stime)
+            return key
         else:
             logger.info("linker: push link %s, skipped by filter.", uri.url())
 
-        return key
+        return None
 
     def pull(self, uri = None):
         '''
             get a link object by specified key
         :return: object, Link object or None
         '''
-        if uri is not None:
-            logger.info("Linker: pull link of url: %s...", uri.url())
-
+        stime = time.time()
         link = self._pull(uri)
+        etime = time.time()
 
         if link is not None:
-            logger.info("linker: pull link: %s, pulled.", link.uri().url())
+            logger.info("linker: pull link: %s completed. time used: %fs", link.uri().url(), etime-stime)
         else:
             logger.info("linker: pull link: none, nothing pulled.")
-
 
         return link
 
@@ -440,23 +442,23 @@ class Linker(Launcher):
         '''
         logger.warning("linker: unimplemented shutdown method, nothing will be done.")
 
-    def _filter(self, uri):
-        '''
-            test if the uri is filtered by linker, subclass must implement this method
-        :param uri: uri, Uri obejct
-        :return: boolean
-        '''
-        logger.warning("linker: unimplemented filter method, default filtered.")
-
-        return True
-
-    def _accept(self, *cond):
+    def _filter(self, *cond):
         '''
             add accept condition for linker
         :param cond: object, filter accept condition, subclass must implement this method
         :return:
         '''
-        logger.warning("linker: unimplemented accept method, nothing will be done.")
+        logger.warning("linker: unimplemented filter method, nothing will be done.")
+
+    def _accept(self, uri):
+        '''
+            test if the uri is filtered by linker, subclass must implement this method
+        :param uri: uri, Uri obejct
+        :return: boolean
+        '''
+        logger.warning("linker: unimplemented accept method, default denied.")
+
+        return False
 
     def _config(self, pattern, config):
         '''
@@ -482,7 +484,7 @@ class Linker(Launcher):
             get a link object by specified key
         :return: object, Link object or None
         '''
-        logger.warning("linker: unimplemented get method, nothing will be done.")
+        logger.warning("linker: unimplemented pull method, nothing will be done.")
 
         return None
 
@@ -501,7 +503,7 @@ class DefaultLinker(Linker):
     __CONFIG_FILE_NAME = "configs"
     __LINKS_FILE_NAME = "links"
 
-    def __init__(self, workdir, name):
+    def __init__(self, workdir, name = "default_linker"):
         '''
             initialize linker instance with @filter
         :param filter: object, Filter object
@@ -509,7 +511,7 @@ class DefaultLinker(Linker):
         Linker.__init__(self, workdir, name)
 
         #filter for link
-        self.__filter = DefaultFilter(workdir, "filter")
+        self.__filter = WhiteListFilter(workdir, "filter")
         # crawl configure for specified uri pattern
         self.__configs = PConfigs()
         # links for crawling, with Link object in the list
@@ -564,11 +566,11 @@ class DefaultLinker(Linker):
         json.dump(self.__links.encode(), flinks)
         flinks.close()
 
-    def _accept(self, *cond):
-        return self.__filter.accept(*cond)
+    def _filter(self, *cond):
+        return self.__filter.filter(*cond)
 
-    def _filter(self, uri):
-        return self.__filter.filter(uri.url())
+    def _accept(self, uri):
+        return self.__filter.accept(uri.url())
 
     def _config(self, pattern, config):
         '''
@@ -631,25 +633,6 @@ class LinkerMgr(Launcher):
         #there is only 1 linker in manager, default none
         self.__linker = None
 
-    def register(self, linker):
-        '''
-            load @linker into linker manager, replace current linker
-        :param linker: object, linker to be loaded
-        :return: object, old linker or None
-        '''
-        old = self.__linker
-
-        self.__linker = linker
-        if self.__linker is not None:
-            logger.info("linker manager: register new linker %s.", self.__linker.name())
-        else:
-            if old is None:
-                logger.warning("linker manager: linker is none, no linker registered.")
-            else:
-                logger.warning("linker manager: linker is none, old linker %s is unregistered.", old.name())
-
-        return old
-
     def launch(self):
         '''
             launch linker manager
@@ -675,17 +658,36 @@ class LinkerMgr(Launcher):
         #shutdown registered linker
         self.__linker.shutdown()
 
-    def accept(self, *cond):
+    def register(self, linker):
+        '''
+            load @linker into linker manager, replace current linker
+        :param linker: object, linker to be loaded
+        :return: object, old linker or None
+        '''
+        old = self.__linker
+
+        self.__linker = linker
+        if self.__linker is not None:
+            logger.info("linker manager: register new linker %s.", self.__linker.name())
+        else:
+            if old is None:
+                logger.warning("linker manager: linker is none, no linker registered.")
+            else:
+                logger.warning("linker manager: linker is none, old linker %s is unregistered.", old.name())
+
+        return old
+
+    def filter(self, *cond):
         '''
             add accept condition for linker
         :param cond: object, filter accept condition
         :return:
         '''
         if self.__linker is None:
-            logger.error("linker manager: there is no linker registered. invoke accept failed.")
+            logger.error("linker manager: there is no linker registered. invoke filter failed.")
             return
 
-        self.__linker.accept(*cond)
+        self.__linker.filter(*cond)
 
     def config(self, pattern, config):
         '''
@@ -721,22 +723,29 @@ class LinkerMgr(Launcher):
 
         self.__linker.reset()
 
+    @staticmethod
+    def default(workdir = "./linker", name = "linker_manager"):
+        linker_manager = LinkerMgr(workdir, name)
+
+        default_linker = DefaultLinker(workdir, "default_linker")
+        default_linker.filter(r".*")
+
+        linker_manager.register(default_linker)
+
+        return linker_manager
+
 if __name__ == "__main__":
-    from cprotocol import Protocol
+    linker_manager = LinkerMgr.default("/tmp/spider/linker")
 
-    linker_manager = LinkerMgr("/tmp/spider3/linkermgr", "mylinkermgr")
-    linker_manager.register(DefaultLinker("/tmp/spider3/linker", "mylinker"))
-
-    linker_manager.accept("http://www.baidu.com/.*")
-    linker_manager.config("http://www.baidu.com/.*", CConfig(True, 5))
+    linker_manager.config(r".*", CConfig(True, 5))
 
     linker_manager.launch()
     linker_manager.reset()
 
-    linker_manager.push(Protocol.Uri("http://www.baidu.com/1"), code=200, message="OK")
-    linker_manager.push(Protocol.Uri("http://www.baidu.com/2"), code=404, message="Not Found")
-    linker_manager.push(Protocol.Uri("http://www.baidu.com/3"), code=501, message="Internal Server Error")
-    linker_manager.push(Protocol.Uri("http://www.baidu.com/4/5"), code=501, message="Internal Server Error")
+    linker_manager.push(Uri("http://www.baidu.com/1"), code=200, message="OK")
+    linker_manager.push(Uri("http://www.baidu.com/2"), code=404, message="Not Found")
+    linker_manager.push(Uri("http://www.baidu.com/3"), code=501, message="Internal Server Error")
+    linker_manager.push(Uri("http://www.baidu.com/4/5"), code=501, message="Internal Server Error")
 
     time.sleep(6)
 
@@ -747,11 +756,4 @@ if __name__ == "__main__":
 
 
     linker_manager.shutdown()
-
-    linker_manager1 = LinkerMgr("/tmp/spider3/linkermgr", "mylinkermgr")
-    linker_manager1.register(DefaultLinker("/tmp/spider3/linker", "mylinker"))
-
-    linker_manager1.launch()
-
-    linker_manager1.shutdown()
 
