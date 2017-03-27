@@ -231,8 +231,16 @@ class HttpCrawler(Crawler):
         if protocol != "http" and protocol != "https":
             return None
 
-        conn = urllib2.urlopen(uri.url())
-        return HttpResponse(conn.getcode(), conn.msg, conn.info().headers, conn.read())
+        resp = HttpResponse()
+
+        try:
+            conn = urllib2.urlopen(uri.url())
+        except Exception, e:
+            pass
+        else:
+            resp = HttpResponse(conn.getcode(), conn.msg, conn.info().headers, conn.read())
+
+        return resp
 
 
 class CrawlerMgr(Launcher):
@@ -243,7 +251,7 @@ class CrawlerMgr(Launcher):
     def __init__(self, workdir, name="crawler_manager"):
         Launcher.__init__(self, workdir, name)
 
-        self.__crawlers = {}
+        self.__crawlers = []
 
     def launch(self):
         for crawler in self.__crawlers:
@@ -253,17 +261,17 @@ class CrawlerMgr(Launcher):
         for crawler in self.__crawlers:
             crawler.shutdown()
 
-    def register(self, protocol, crawler):
-        self.__crawlers[protocol.lower()] = crawler
+    def register(self, crawler):
+        self.__crawlers.append(crawler)
 
     def crawl(self, uri):
-        protocol = uri.protocol().lower()
 
-        crawler = self.__crawlers.get(protocol, None)
-        if crawler is not None:
-            return crawler.crawl(uri)
+        for crawler in self.__crawlers:
+            resp = crawler.crawl(uri)
+            if resp is not None:
+                return resp
 
-        logger.warning("crawler: unsupported protocol: " + protocol + ", url: " + uri.url())
+        logger.warning("crawler: there is no satisfied crawler for url: " + uri.url())
         return None
 
     @staticmethod
@@ -271,12 +279,12 @@ class CrawlerMgr(Launcher):
         crawler_manager = CrawlerMgr(workdir, name)
 
         http_crawler = HttpCrawler(workdir, "http_crawler")
-        http_crawler.filter(".*")
-        crawler_manager.register("http", http_crawler)
+        http_crawler.filter("^http://.*")
+        crawler_manager.register(http_crawler)
 
         https_crawler = HttpCrawler(workdir, "https_crawler")
-        https_crawler.filter(".*")
-        crawler_manager.register("https", https_crawler)
+        https_crawler.filter("^https://.*")
+        crawler_manager.register(https_crawler)
 
         return crawler_manager
 

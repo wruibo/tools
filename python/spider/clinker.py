@@ -57,7 +57,7 @@ class PConfig:
         if self.__cpattern.match(uri.url()):
             return self.__config
         else:
-            return None
+            return CConfig()
 
     def config(self, pattern = None, config = None):
         if pattern is not None and config is not None:
@@ -96,7 +96,7 @@ class PConfigs:
         for config in self.__configs:
             if config.match(uri) is not None:
                 #return matched configure
-                return config
+                return config.config()
 
         #return default configure
         return CConfig()
@@ -130,20 +130,12 @@ class PConfigs:
         return self
 
 
-class CStatus:
-    '''
-        crawl status class for a link
-    '''
-    def __init__(self):
-        pass
-
-
 class CContext:
     '''
         crawl context for link
     '''
 
-    def __init__(self, **extras):
+    def __init__(self, extras = {}):
         '''
             initialize context of link for a crawl action
         :param extras: dict, extras message for context
@@ -157,7 +149,7 @@ class CContext:
         else:
             return self.__tm
 
-    def extras(self, **e):
+    def extras(self, e):
         if e is not None:
             self.__extras = e
         else:
@@ -240,7 +232,6 @@ class CLink:
 
         return self
 
-
 class CLinks:
     def __init__(self):
         # current cursor of link position in link list
@@ -258,7 +249,38 @@ class CLinks:
         '''
         return Helper.md5(uri.url())
 
-    def push(self, uri, **extras):
+    def push(self, uri):
+        '''
+            push new links to linker
+        :param uri:
+        :return:
+        '''
+        key = self._key(uri)
+
+        if not self.__index.has_key(key):
+            self.__links.append(CLink(uri))
+            self.__index[key] = len(self.__links) - 1
+
+        return key
+
+
+    def pull(self):
+        '''
+            pull a link object from link list
+        :return: object, @CLink object or None
+        '''
+        #pull next link by cursor
+        if self.__cursor < len(self.__links):
+            link = self.__links[self.__cursor]
+            self.__cursor += 1
+            return link
+        else:
+            #reset cursor to head
+            self.__cursor = 0
+
+        return None
+
+    def update(self, uri, extras):
         '''
             push an uri into the end of link list
         :param uri: object, @Uri object
@@ -268,52 +290,14 @@ class CLinks:
         #use url md5 as index key
         key = self._key(uri)
 
-        if not self.__index.has_key(key):
-            # new link for linker
-            link = CLink(uri)
-            link.contexts(CContext(**extras))
-
-            #add to the end of link list
-            self.__links.append(link)
-
-            #create index for current uri
-            self.__index[key] = len(self.__links) - 1
-        else:
+        if self.__index.has_key(key):
             #old link for linker
             id = self.__index.get(key)
 
             #update link config and context
-            self.__links[id].contexts(CContext(**extras))
+            self.__links[id].contexts(CContext(extras))
 
         return key
-
-    def pull(self, uri = None):
-        '''
-            pull a link object from link list with specified @uri, or pull next
-        link by cursor when @uri is not specified
-        :param uri: object, @Uri object, or None
-        :return: object, @CLink object or None
-        '''
-        if uri is not None:
-            #pull link of specified uri
-            key = self._key(uri)
-            return self.__index.get(key, None)
-        else:
-            #pull next link by cursor
-            if self.__cursor < len(self.__links):
-                link = self.__links[self.__cursor]
-                self.__cursor += 1
-                return link
-
-        return None
-
-
-    def reset(self):
-        '''
-            reset cursor to head of links list
-        :return:
-        '''
-        self.__cursor = 0
 
     def encode(self):
         links = []
@@ -384,16 +368,15 @@ class Linker(Launcher):
         '''
         self._config(pattern, config)
 
-    def push(self, uri, **extras):
+    def push(self, uri):
         '''
             push a uri into link database
         :param uri: object, Uri object
-        :param extras: dict, extras message for uri
         :return: object, key of stored link
         '''
         if self.accept(uri):
             stime = time.time()
-            key = self._push(uri, **extras)
+            key = self._push(uri)
             etime = time.time()
 
             logger.info("linker: push link %s completed. time used:%fs", uri.url(), etime-stime)
@@ -403,13 +386,13 @@ class Linker(Launcher):
 
         return None
 
-    def pull(self, uri = None):
+    def pull(self):
         '''
             get a link object by specified key
         :return: object, Link object or None
         '''
         stime = time.time()
-        link = self._pull(uri)
+        link = self._pull()
         etime = time.time()
 
         if link is not None:
@@ -419,14 +402,18 @@ class Linker(Launcher):
 
         return link
 
-    def reset(self):
+    def update(self, uri, extras):
         '''
-             reset cursor to the first link record
+            push a uri into link database
+        :param uri: object, Uri object
+        :param extras: dict, extras message for uri
         :return:
         '''
-        self._reset()
+        stime = time.time()
+        self._update(uri, extras)
+        etime = time.time()
 
-        logger.info("linker: reset linker. next link cursor will be moved to head.")
+        logger.info("linker: update link %s completed. time used:%fs", uri.url(), etime-stime)
 
     def _launch(self):
         '''
@@ -469,7 +456,7 @@ class Linker(Launcher):
         '''
         logger.warning("linker: unimplemented config method, nothing will be done.")
 
-    def _push(self, uri, **extras):
+    def _push(self, uri):
         '''
             push a uri into link database, subclass must implement this method
         :param uri: object, Uri object
@@ -479,7 +466,7 @@ class Linker(Launcher):
         logger.warning("linker: unimplemented push method, nothing will be done.")
         return None
 
-    def _pull(self, uri = None):
+    def _pull(self):
         '''
             get a link object by specified key
         :return: object, Link object or None
@@ -488,12 +475,14 @@ class Linker(Launcher):
 
         return None
 
-    def _reset(self):
+    def _update(self, uri, extras):
         '''
-             reset cursor to the first link record
+            udpate uri context
+        :param uri: object, Uri object
+        :param extras: dict, extras message for uri
         :return:
         '''
-        logger.warning("linker: unimplemented reset method, nothing will be done.")
+        logger.warning("linker: unimplemented update method, nothing will be done.")
 
 
 class DefaultLinker(Linker):
@@ -581,46 +570,46 @@ class DefaultLinker(Linker):
         '''
         self.__configs.add(pattern, config)
 
-    def _push(self, uri, **extras):
+    def _push(self, uri):
         '''
             store the uri into database
         :param uri: object, Uri object
         :param extras: dict, extras message for uri
         :return: string, key of uri
         '''
-        return self.__links.push(uri, **extras)
+        return self.__links.push(uri)
 
-    def _pull(self, uri = None):
+    def _pull(self):
         '''
             pull Link from database by specified uri
         :param uri: object, Uri object
         :return: object, Link object or None
         '''
-        link = self.__links.pull(uri)
+        link = self.__links.pull()
 
-        if uri is None:
-            #pull the next link need crawling
-            while link is not None:
-                config = self.__configs.match(link.uri()).config()
-                context = link.contexts().last()
+        #pull the next link need crawling
+        while link is not None:
+            config = self.__configs.match(link.uri())
+            context = link.contexts().last()
 
-                #crawl period, need to crawl
-                if context is not None and context.tm() + config.crawl_period() < time.time():
-                    break
-                else:
-                    logger.info("default linker: pull link: %s, skipped for crawling period not satisfied.", link.uri().url())
+            #crawl period, need to crawl
+            if context is None or context.tm() + config.crawl_period() < time.time():
+                break
+            else:
+                logger.info("default linker: pull link: %s, skipped for crawling period not satisfied.", link.uri().url())
 
-                link = self.__links.pull()
+            link = self.__links.pull()
 
         return link
 
-    def _reset(self):
+    def _update(self, uri, extras):
         '''
-            reset cursor to the first link record
+            update context of uri
+        :param uri:
+        :param extras:
         :return:
         '''
-        self.__links.reset()
-
+        self.__links.update(uri, extras)
 
 class LinkerMgr(Launcher):
     '''
@@ -702,26 +691,32 @@ class LinkerMgr(Launcher):
 
         self.__linker.config(pattern, config)
 
-    def push(self, uri, **extras):
+    def push(self, uri):
+        '''
+            push a new uri to linker
+        :param uri:
+        :return:
+        '''
         if self.__linker is None:
             logger.error("linker manager: there is no linker registered. invoke push failed.")
             return None
 
-        return self.__linker.push(uri, **extras)
+        return self.__linker.push(uri)
 
-    def pull(self, uri = None):
+    def pull(self):
         if self.__linker is None:
             logger.error("linker manager: there is no linker registered. invoke pull failed.")
             return None
 
-        return self.__linker.pull(uri)
+        return self.__linker.pull()
 
-    def reset(self):
+
+    def update(self, uri, extras):
         if self.__linker is None:
-            logger.error("linker manager: there is no linker registered. invoke reset failed.")
+            logger.error("linker manager: there is no linker registered. invoke update failed.")
             return None
 
-        self.__linker.reset()
+        return self.__linker.update(uri, extras)
 
     @staticmethod
     def default(workdir = "./linker", name = "linker_manager"):
@@ -740,19 +735,16 @@ if __name__ == "__main__":
     linker_manager.config(r".*", CConfig(True, 5))
 
     linker_manager.launch()
-    linker_manager.reset()
 
-    linker_manager.push(Uri("http://www.baidu.com/1"), code=200, message="OK")
-    linker_manager.push(Uri("http://www.baidu.com/2"), code=404, message="Not Found")
-    linker_manager.push(Uri("http://www.baidu.com/3"), code=501, message="Internal Server Error")
-    linker_manager.push(Uri("http://www.baidu.com/4/5"), code=501, message="Internal Server Error")
-
-    time.sleep(6)
+    linker_manager.push(Uri("http://www.baidu.com/1"))
+    linker_manager.push(Uri("http://www.baidu.com/2"))
+    linker_manager.push(Uri("http://www.baidu.com/3"))
+    linker_manager.push(Uri("http://www.baidu.com/4/5"))
 
     link = linker_manager.pull()
     while link is not None:
-        print "next url: "+link.uri().url()
         link = linker_manager.pull()
+        time.sleep(1)
 
 
     linker_manager.shutdown()

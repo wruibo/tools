@@ -38,9 +38,9 @@ class Uri:
 
     def decode(self, obj):
         if isinstance(obj, dict):
-            self.__url = str(obj.get("url", self.__url))
-            self.__ref = str(obj.get("ref", self.__ref))
-            self.__protocol = str(obj.get("protocol", self.__protocol))
+            self.__url = obj.get("url", self.__url)
+            self.__ref = obj.get("ref", self.__ref)
+            self.__protocol = obj.get("protocol", self.__protocol)
         return self
 
 
@@ -74,15 +74,18 @@ class Response:
     '''
         base class for all sub response class
     '''
-    __content = ""  # string, response content
-
     def __init__(self, content = ""):
         '''
             initialize response instance
         :param content: string, content
         '''
-        if content is not None:
-            self.__content = content
+        self.__content = content
+
+    def success(self):
+        return False
+
+    def extras(self):
+        return {}
 
     def content(self, c = None):
         if c is not None:
@@ -90,19 +93,27 @@ class Response:
         else:
             return self.__content
 
-
 class HttpResponse(Response):
     '''
         structure for holding the http request's response
     '''
     __headers = [] #string list, response headers
 
-    def __init__(self, code, msg, headers = [], content = ""):
+    def __init__(self, code = None, msg = "", headers = [], content = ""):
         Response.__init__(self, content)
-        self.__code, self.__msg = code, msg
 
-        if headers is not None:
-            self.__headers = headers
+        self.__code = code
+        self.__msg = msg
+        self.__headers = headers
+
+    def success(self):
+        if self.__code is not None and self.__code == "200":
+            return True
+
+        return False
+
+    def extras(self):
+        return {"code":self.__code, "msg":self.__msg, "headers":self.__headers}
 
     def url(self, u = None):
         if u is not None:

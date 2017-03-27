@@ -1,6 +1,7 @@
 '''
     extractor for content extract from crawl response
 '''
+import time
 
 from clogger import logger
 from clauncher import Launcher
@@ -37,18 +38,18 @@ class Extractor(Launcher):
         :param content: string, content of @uri
         :return: object, extract result object or None
         '''
+
+        results = []
         if self.accept(uri):
             stime = time.time()
-            result = self._extract(uri, content)
+            results = self._extract(uri, content)
             etime = time.time()
 
             logger.info("%s: extract data from %s completed. time used: %fs", self.name(), uri.url(), etime-stime)
-
-            return result
         else:
             logger.info("%s: extract data form %s, skipped by filter.", self.name(), uri.url())
 
-        return None
+        return results
 
     def _launch(self):
         logger.warning("extractor: unimplemented launch method, nothing will be done.")
@@ -142,13 +143,12 @@ class ExtractorMgr(Launcher):
         :param content: string, response content of @uri
         :return: list, extracted data as tuple(extractor name, data object) or None
         '''
-        result = []
+        results = []
         for extractor in self.__extractors:
-            data = extractor.extract(uri, content)
-            if data is not None:
-                result.append((extractor.name(), data))
+            result = extractor.extract(uri, content)
+            results += result
 
-        return result
+        return results
 
     @staticmethod
     def default(workdir = "./extractor", name = "exractor_manager"):

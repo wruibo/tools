@@ -39,17 +39,17 @@ class Parser(Launcher):
         :param content: string, content for the @url
         :return: list, list with @Uri objects
         '''
+        links = []
         if self.accept(uri):
             stime = time.time()
             links = self._parse(uri, content)
             etime = time.time()
 
             logger.info("%s: parsing %s completed. links: %d, time used: %fs", self.name(), uri.url(), len(links), etime-stime)
-            return links
         else:
             logger.info("%s: parsing %s, skipped by filter.", self.name(), uri.url())
 
-        return []
+        return links
 
     def _launch(self):
         logger.warning("parser: unimplemented launch method, nothing will be done.")
@@ -98,18 +98,17 @@ class AParser(Parser):
         return self.__filter.accept(uri.url())
 
     def _parse(self, uri, content):
-
         #regex for parsing "a" tag's links
         regex = re.compile(r'<a.* href="([^"]+)"[^>]*>', re.IGNORECASE)
 
         #links parsed
-        ref, links = uri.ref(), []
+        links = []
 
         #parse links from content
         urls = regex.findall(content)
         for url in urls:
             url = Helper.combine_path(uri.url(), url)
-            links.append(Uri(url, ref))
+            links.append(Uri(url, uri.url()))
 
         return links
 
@@ -140,13 +139,13 @@ class ImageParser(Parser):
         regex = re.compile(r'<img.* src="([^"]+)"[^>]*>', re.IGNORECASE)
 
         # links parsed
-        ref, links = uri.ref(), []
+        links = []
 
         # parse links from content
         urls = regex.findall(content)
         for url in urls:
             url = Helper.combine_path(uri.url(), url)
-            links.append(Uri(url, ref))
+            links.append(Uri(url, uri.url()))
 
         return links
 
