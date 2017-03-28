@@ -30,6 +30,8 @@ class Spider(threading.Thread, Launcher):
         self.__stop = True
         self.__stopped = True
 
+        self.__last_persist_time = time.time()
+
         self.config()
 
     def config(self, **kwargs):
@@ -60,6 +62,14 @@ class Spider(threading.Thread, Launcher):
         self.__stop = False
         self.start()
 
+        self.__last_persist_time = time.time()
+
+    def persist(self):
+        if self.__last_persist_time + 10 < time.time():
+            self.__linker_manager.persist()
+            self.__crawler_manager.persist()
+            self.__parser_manager.persist()
+            self.__extractor_manager.persist()
 
     def shutdown(self):
         self.__extractor_manager.shutdown()
@@ -70,12 +80,6 @@ class Spider(threading.Thread, Launcher):
         self.__stop = True
         self.join()
 
-    def persist(self):
-        self.__linker_manager.launch()
-        self.__crawler_manager.launch()
-        self.__parser_manager.launch()
-        self.__extractor_manager.launch()
-
     def stopped(self):
         return self.__stopped
 
@@ -84,32 +88,35 @@ class Spider(threading.Thread, Launcher):
         self.__stopped = False
 
         #get next link need crawling
-        link = self.__linker_manager.pull()
+        uri = self.__linker_manager.pull()
         while not self.__stop:
             #check if has more link
-            if link is not None:
+            if uri is not None:
                 #crawl the link
-                resp = self.__crawler_manager.crawl(link.uri())
+                resp = self.__crawler_manager.crawl(uri)
 
                 # update link context
-                self.__linker_manager.update(link.uri(), resp.extras())
+                self.__linker_manager.update(uri, resp.extras())
 
                 #parse new links
-                uris = self.__parser_manager.parse(link.uri(), resp.content())
+                links = self.__parser_manager.parse(uri, resp.content())
 
                 #add new links to linker
-                for uri in uris:
-                    self.__linker_manager.push(uri)
+                for link in links:
+                    self.__linker_manager.push(link)
 
                 #extract content
-                data = self.__extractor_manager.extract(link.uri(), resp.content())
+                data = self.__extractor_manager.extract(uri, resp.content())
 
                 time.sleep(self.__crawl_interval)
             else:
                 time.sleep(self.__idle_time)
 
-            # process next link
-            link = self.__linker_manager.pull()
+            #persist spider data
+            self.persist()
+
+            #process next link
+            uri = self.__linker_manager.pull()
 
 
         #set the stopped flag to true
@@ -178,6 +185,9 @@ class SpiderMgr(threading.Thread, Launcher):
         self.__stop = False
         self.start()
 
+    def persist(self):
+        pass
+
     def shutdown(self):
         #shutdown all spiders
         try:
@@ -206,35 +216,11 @@ class SpiderMgr(threading.Thread, Launcher):
         self.__stop = True
         self.join()
 
-    def persist(self):
-        try:
-            fspiders = Helper.open(self.workdir(), self.__SPIDERS_FILE_NAME, "w")
-
-            spiders = []
-            for spider in self.__spiders:
-                spiders.append({"workdir":spider.workdir(), "name":spider.name()})
-
-            json.dump(spiders, fspiders)
-
-            fspiders.close()
-
-        except Exception, e:
-            logger.error("spider manager: persist error: %s", e.message)
-        else:
-            logger.info("spider manager: persist finished, %d spiders persist.", len(self.__spiders))
-        finally:
-            pass
-
-        #persist all spiders
-        for spider in self.__spiders:
-            spider.persist()
-
     def run(self):
         self.__stopped = False
 
         while not self.__stop:
             time.sleep(10)
-            self.persist()
 
         self.__stopped = True
 

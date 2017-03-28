@@ -14,16 +14,31 @@ class Parser(Launcher):
     '''
         parser base class
     '''
-    def __init__(self, workdir, name):
+    def __init__(self, workdir, name = "parser"):
         '''
             initialize the parse instance
         '''
         Launcher.__init__(self, workdir, name)
 
     def launch(self):
+        '''
+            launch parser
+        :return:
+        '''
         self._launch()
 
+    def persist(self):
+        '''
+            persist parser data
+        :return:
+        '''
+        self._persist()
+
     def shutdown(self):
+        '''
+            shutdown parser
+        :return:
+        '''
         self._shutdown()
 
     def filter(self, *cond):
@@ -39,54 +54,47 @@ class Parser(Launcher):
         :param content: string, content for the @url
         :return: list, list with @Uri objects
         '''
-        links = []
-        if self.accept(uri):
-            stime = time.time()
-            links = self._parse(uri, content)
-            etime = time.time()
+        if not self.accept(uri):
+            return None
 
-            logger.info("%s: parsing %s completed. links: %d, time used: %fs", self.name(), uri.url(), len(links), etime-stime)
-        else:
-            logger.info("%s: parsing %s, skipped by filter.", self.name(), uri.url())
+        time_used, links = Helper.timerun(self._parse, uri, content)
+        logger.info("parser: parse links: %s, parsed. links: %d, time used: %fs", uri.url(), len(links), time_used)
 
         return links
 
     def _launch(self):
-        logger.warning("parser: unimplemented launch method, nothing will be done.")
+        logger.warning("parser: unimplemented launch method.")
+
+    def _persist(self):
+        logger.warning("parser: unimplemented persist method.")
 
     def _shutdown(self):
-        logger.warning("parser: unimplemented shutdown method, nothing will be done.")
+        logger.warning("parser: unimplemented shutdown method.")
 
     def _filter(self, *cond):
-        logger.warning("parser: unimplemented filter method, nothing will be done.")
+        logger.warning("parser: unimplemented filter method.")
 
     def _accept(self, uri):
-        logger.warning("parser: unimplemented accept method, default not accepted.")
-        return False
+        logger.warning("parser: unimplemented accept method.")
 
     def _parse(self, uri, content):
-        '''
-            method must be implemented by sub classes
-        :param uri: object, uri for the @content
-        :param content: string, content for the @url
-        :return: list, list with @Uri objects
-        '''
-        logger.warning("parser: unimplemented parser method, nothing will be done.")
-
-        return []
+        logger.warning("parser: unimplemented parser method.")
 
 
 class AParser(Parser):
     '''
         uri parser for tag "a"
     '''
-    def __init__(self, workdir, name = "a_parser"):
+    def __init__(self, workdir, name = "href parser"):
         Parser.__init__(self, workdir, name)
 
-        self.__filter = WhiteListFilter(workdir, "filter")
+        self.__filter = WhiteListFilter(workdir, "white list filter")
 
     def _launch(self):
         self.__filter.launch()
+
+    def _persist(self):
+        self.__filter.persist()
 
     def _shutdown(self):
         self.__filter.shutdown()
@@ -117,13 +125,16 @@ class ImageParser(Parser):
     '''
         link parser for tag "img"
     '''
-    def __init__(self, workdir, name = "image_parser"):
+    def __init__(self, workdir, name = "image parser"):
         Parser.__init__(self, workdir, name)
 
         self.__filter = WhiteListFilter(workdir, "filter")
 
     def _launch(self):
         self.__filter.launch()
+
+    def _persist(self):
+        self.__filter.persist()
 
     def _shutdown(self):
         self.__filter.shutdown()
@@ -154,7 +165,7 @@ class ParserMgr(Launcher):
     '''
         parser manager
     '''
-    def __init__(self, workdir, name = "parser_manager"):
+    def __init__(self, workdir, name = "parser manager"):
         Launcher.__init__(self, workdir, name)
 
         # parsers in the manager, list of parsers
@@ -164,42 +175,32 @@ class ParserMgr(Launcher):
         for parser in self.__parsers:
             parser.launch()
 
+    def persist(self):
+        for parser in self.__parsers:
+            parser.persist()
+
     def shutdown(self):
         for parser in self.__parsers:
             parser.shutdown()
 
     def register(self, parser):
-        '''
-            load a new @parser with @filter for specified url into manager
-        :param filter: object, Filter object for specified url to parse links
-        :param parser: object, Parser object for parse links
-        :return:
-        '''
         self.__parsers.append(parser)
 
     def parse(self, uri, content):
-        '''
-            default parse method for parsing hyperlinks from response @content
-        :param url: string, request url
-        :param content: string, http response content of @url
-        :return: list, links parsed, with @Link object in the list
-        '''
         links = []
-
         for parser in self.__parsers:
             links += parser.parse(uri, content)
-
         return links
 
     @staticmethod
-    def default(workdir, name = "parser_manager"):
+    def default(workdir, name = "parser manager"):
         parser_manager = ParserMgr(workdir, name)
 
-        a_parser = AParser(workdir)
+        a_parser = AParser(workdir, "href parser")
         a_parser.filter(r".*")
         parser_manager.register(a_parser)
 
-        image_parser = ImageParser(workdir)
+        image_parser = ImageParser(workdir, "image parser")
         image_parser.filter(r".*")
         parser_manager.register(image_parser)
 

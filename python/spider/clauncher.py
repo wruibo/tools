@@ -25,5 +25,8 @@ class Launcher:
     def launch(self):
         pass
 
+    def persist(self):
+        pass
+
     def shutdown(self):
         pass

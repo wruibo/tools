@@ -6,6 +6,7 @@ import urllib2, gzip, zlib, time
 from StringIO import StringIO
 
 from clogger import logger
+from chelper import Helper
 from clauncher import Launcher
 from cfilter import WhiteListFilter
 from cprotocol import Uri, Cookie, HttpResponse
@@ -15,16 +16,31 @@ class Crawler(Launcher):
     '''
         crawler base class
     '''
-    def __init__(self, workdir, name):
+    def __init__(self, workdir, name = "crawler"):
         '''
             initialize crawler instance
         '''
         Launcher.__init__(self, workdir, name)
 
     def launch(self):
+        '''
+            launch crawler
+        :return:
+        '''
         self._launch()
 
+    def persist(self):
+        '''
+            persist crawler data
+        :return:
+        '''
+        self._persist()
+
     def shutdown(self):
+        '''
+            shutdown crawler data
+        :return:
+        '''
         self._shutdown()
 
     def filter(self, *cond):
@@ -39,42 +55,31 @@ class Crawler(Launcher):
         :param uri: object, @Uri class object
         :return: object, crawl response content
         '''
-        if self.accept(uri):
+        if not self.accept(uri):
+            return None
 
-            stime = time.time()
-            response = self._crawl(uri)
-            etime = time.time()
+        time_used, response = Helper.timerun(self._crawl, uri)
+        logger.info("crawler: crawl uri: %s, response: %d bytes. time used: %fs", uri.url(), len(response.content()), time_used)
 
-            logger.info("%s: crawling %s, length: %d bytes. time used: %fs", self.name(), uri.url(), len(response.content()), etime-stime)
-
-            return response
-        else:
-            logger.info("%s: crawling %s, skipped by filter.", self.name(), uri.url())
-
-        return None
+        return response
 
     def _launch(self):
-        logger.warning("crawler: unimplemented launch method, nothing will be done.")
+        logger.warning("crawler: unimplemented launch method.")
+
+    def _persist(self):
+        logger.warning("crawler: unimplemented persist method.")
 
     def _shutdown(self):
-        logger.warning("crawler: unimplemented shutdown method, nothing will be done.")
+        logger.warning("crawler: unimplemented shutdown method.")
 
     def _filter(self, *cond):
-        logger.warning("crawler: unimplemented filter method, nothing will be done.")
+        logger.warning("crawler: unimplemented filter method.")
 
     def _accept(self, uri):
-        logger.warning("crawler: unimplemented accept method, default not accepted.")
-        return False
+        logger.warning("crawler: unimplemented accept method.")
 
     def _crawl(self, uri):
-        '''
-            crawl method that subclass must be implemented
-        :param uri: object, @Uri class object
-        :return:object, crawl response content
-        '''
-        logger.warning("crawler: unimplemented crawl method, nothing will be done.")
-
-        return None
+        logger.warning("crawler: unimplemented crawl method.")
 
 
 class HttpCrawler(Crawler):
@@ -195,10 +200,10 @@ class HttpCrawler(Crawler):
             def https_response(self, req, resp):
                 return self.http_response(req, resp)
 
-    def __init__(self, workdir, name = "http_crawler", client = "chrome", platform = "pc"):
+    def __init__(self, workdir, name = "http crawler", client = "chrome", platform = "pc"):
         Crawler.__init__(self, workdir, name)
         #use white list filter
-        self.__filter = WhiteListFilter(workdir)
+        self.__filter = WhiteListFilter(workdir, "white list filter")
 
         #initialize vendor, cookie
         self.__vendor = HttpCrawler.Vendor(client, platform)
@@ -217,6 +222,9 @@ class HttpCrawler(Crawler):
     def _launch(self):
         self.__filter.launch()
 
+    def _persist(self):
+        self.__filter.persist()
+
     def _shutdown(self):
         self.__filter.shutdown()
 
@@ -231,16 +239,12 @@ class HttpCrawler(Crawler):
         if protocol != "http" and protocol != "https":
             return None
 
-        resp = HttpResponse()
-
         try:
             conn = urllib2.urlopen(uri.url())
         except Exception, e:
-            pass
+            return HttpResponse("555", e.message)
         else:
-            resp = HttpResponse(conn.getcode(), conn.msg, conn.info().headers, conn.read())
-
-        return resp
+            return HttpResponse(conn.getcode(), conn.msg, conn.info().headers, conn.read())
 
 
 class CrawlerMgr(Launcher):
@@ -257,6 +261,10 @@ class CrawlerMgr(Launcher):
         for crawler in self.__crawlers:
             crawler.launch()
 
+    def persist(self):
+        for crawler in self.__crawlers:
+            crawler.persist()
+
     def shutdown(self):
         for crawler in self.__crawlers:
             crawler.shutdown()
@@ -265,24 +273,23 @@ class CrawlerMgr(Launcher):
         self.__crawlers.append(crawler)
 
     def crawl(self, uri):
-
         for crawler in self.__crawlers:
             resp = crawler.crawl(uri)
             if resp is not None:
                 return resp
 
-        logger.warning("crawler: there is no satisfied crawler for url: " + uri.url())
+        logger.warning("crawler: no crawler for: " + uri.url())
         return None
 
     @staticmethod
-    def default(workdir = "./crawler", name = "crawler_manager"):
+    def default(workdir = "./crawler", name = "crawler manager"):
         crawler_manager = CrawlerMgr(workdir, name)
 
-        http_crawler = HttpCrawler(workdir, "http_crawler")
+        http_crawler = HttpCrawler(workdir, "http crawler")
         http_crawler.filter("^http://.*")
         crawler_manager.register(http_crawler)
 
-        https_crawler = HttpCrawler(workdir, "https_crawler")
+        https_crawler = HttpCrawler(workdir, "https crawler")
         https_crawler.filter("^https://.*")
         crawler_manager.register(https_crawler)
 

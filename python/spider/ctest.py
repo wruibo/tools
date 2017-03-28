@@ -1,7 +1,9 @@
 import cexpt
 
-def raise_error():
-    raise cexpt.ExpUnsupportedProtocol("heh")
+from chelper import Helper
+
+def raise_error(msg):
+    raise cexpt.ExpUnsupportedProtocol(msg)
 
 class obj:
     __d = None
@@ -16,17 +18,13 @@ class obj1:
         self.__b = b
         self.__c = c
 
-def catch_error():
+def catch_error(msg, tt):
     try:
-        raise_error()
+        raise_error(msg+tt)
     except Exception, e:
         print e.message
     else:
         print "no error"
 
 if __name__ == "__main__":
-    print obj(1, 2, 3)
-
-    print dir(obj)
-    print dir(obj(1, 2, 3))
-    print dir(obj1(1, 2, 3))
+    print Helper.timerun(catch_error, "dddd", "aa")

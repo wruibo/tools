@@ -1,7 +1,7 @@
 '''
     useful functions for spider
 '''
-import re, os, sys
+import re, os, sys, time
 
 
 class Helper:
@@ -247,3 +247,11 @@ class Helper:
             return None
         else:
             return str
+
+    @staticmethod
+    def timerun(func, *args):
+        stime = time.time()
+        ret = func(*args)
+        etime = time.time()
+
+        return etime - stime, ret

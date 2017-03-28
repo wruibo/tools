@@ -12,14 +12,43 @@ class Filter(Launcher):
     '''
         filter base class, use white list rules
     '''
-    def __init__(self, name, workdir):
-        Launcher.__init__(self, name, workdir)
+    def __init__(self, workdir, name = "filter"):
+        Launcher.__init__(self, workdir, name)
 
     def launch(self):
-        self._launch()
+        '''
+            launch filter
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._launch)
+            logger.info("filter: launch filter - %s, time used: %fs", self.name(), time_used)
+        except IOError, e:
+            pass
+        except Exception, e:
+            logger.info("filter: launch filter - %s, error: %s", self.name(), e.message)
+
+    def persist(self):
+        '''
+            persist filter data
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._persist)
+            logger.info("filter: persist filter - %s, time used: %fs", self.name(), time_used)
+        except Exception, e:
+            logger.info("filter: persist filter - %s, error: %s", self.name(), e.message)
 
     def shutdown(self):
-        self._shutdown()
+        '''
+            shutdown filter
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._shutdown)
+            logger.info("filter: shutdown filter - %s, time used: %fs", self.name(), time_used)
+        except Exception, e:
+            logger.info("filter: shutdown filter - %s, error: %s", self.name(), e.message)
 
     def filter(self, *cond):
         '''
@@ -32,30 +61,32 @@ class Filter(Launcher):
     def accept(self, obj):
         '''
             test if obj is accept by filter
-        :param obj:
-        :return:
+        :param obj: object, object to be test
+        :return: boolean
         '''
         return self._accept(obj)
 
     def _launch(self):
-        logger.warning("filter: unimplemented launch method, nothing will be done.")
+        logger.warning("filter: unimplemented launch method.")
+
+    def _persist(self):
+        logger.warning("filter: unimplemented persist method.")
 
     def _shutdown(self):
-        logger.warning("filter: unimplemented shutdown method, nothing will be done.")
+        logger.warning("filter: unimplemented shutdown method.")
 
     def _filter(self, *cond):
-        logger.warning("filter: unimplemented filter method, nothing will be done.")
+        logger.warning("filter: unimplemented filter method.")
 
     def _accept(self, obj):
-        logger.warning("filter: unimplemented accept method, nothing will be done.")
-        return None
+        logger.warning("filter: unimplemented accept method.")
 
 
 class WhiteListFilter(Filter):
     '''
         default filter for url with preferred white list
     '''
-    def __init__(self, workdir, name = "white_list"):
+    def __init__(self, workdir, name = "filter"):
         Filter.__init__(self, workdir, name)
 
         # regex patterns for white list
@@ -71,47 +102,26 @@ class WhiteListFilter(Filter):
         return False
 
     def _launch(self):
-        '''
-            load filter patterns from file
-        :return:
-        '''
-        try:
-            file = Helper.open(self.workdir(), self.name(), "r")
-            patterns = json.load(file)
-            file.close()
-        except Exception, e:
-            logger.warning("white list filter: %s launch nothing. %s", self.name(), e.message)
-        else:
-            if isinstance(patterns, list):
-                self._filter(*tuple(patterns))
-            logger.info("white list filter: %s launch succeed. ", self.name())
+        file = Helper.open(self.workdir(), self.name(), "r")
+        patterns = json.load(file)
+        file.close()
+        self._filter(*tuple(patterns))
 
+    def _persist(self):
+        file = Helper.open(self.workdir(), self.name(), "w")
+        json.dump(self.__patterns, file)
+        file.close()
 
     def _shutdown(self):
-        '''
-            save filter patterns to file
-        :return:
-        '''
-        try:
-            file = Helper.open(self.workdir(), self.name(), "w")
-            json.dump(self.__patterns, file)
-            file.close()
-        except Exception, e:
-            logger.warning("white list filter: %s shutdown error, %s", self.name(), e.message)
-        else:
-            logger.info("white list filter: %s shutdown succeed.", self.name())
+        self._persist()
 
     def _filter(self, *patterns):
-        if len(patterns) == 0:
-            return
-
         for pattern in patterns:
             if not self.exists(pattern):
                 self.__patterns.append(pattern)
                 self.__cpatterns.append(re.compile(pattern, re.IGNORECASE))
 
     def _accept(self, str):
-        #accept if @url is in the white list
         for cpattern in self.__cpatterns:
             result = cpattern.match(str)
             if result is not None:
@@ -124,7 +134,7 @@ class BlackListFilter(Filter):
     '''
         default filter for url with preferred white list
     '''
-    def __init__(self, workdir, name = "black_list"):
+    def __init__(self, workdir, name = "filter"):
         Filter.__init__(self, workdir, name)
 
         # regex patterns for white list
@@ -140,34 +150,19 @@ class BlackListFilter(Filter):
         return False
 
     def _launch(self):
-        '''
-            load filter patterns from file
-        :return:
-        '''
-        try:
-            file = Helper.open(self.workdir(), self.name(), "r")
-            patterns = json.load(file)
-            file.close()
-        except Exception, e:
-            logger.warning("black list filter: %s launch nothing. %s", self.name(), e.message)
-        else:
-            if isinstance(patterns, list):
-                self._filter(*tuple(patterns))
-            logger.info("black list filter: %s launch succeed. ", self.name())
+        file = Helper.open(self.workdir(), self.name(), "r")
+        patterns = json.load(file)
+        file.close()
+
+        self._filter(*tuple(patterns))
+
+    def _persist(self):
+        file = Helper.open(self.workdir(), self.name(), "w")
+        json.dump(self.__patterns, file)
+        file.close()
 
     def _shutdown(self):
-        '''
-            save filter patterns to file
-        :return:
-        '''
-        try:
-            file = Helper.open(self.workdir(), self.name(), "w")
-            json.dump(self.__patterns, file)
-            file.close()
-        except Exception, e:
-            logger.warning("black list filter: %s shutdown error, %s", self.name(), e.message)
-        else:
-            logger.info("black list filter: %s shutdown succeed.", self.name())
+        self._persist()
 
     def _filter(self, *patterns):
         if len(patterns) == 0:
@@ -189,7 +184,7 @@ class BlackListFilter(Filter):
 
 
 if __name__ == "__main__":
-    filter = WhiteListFilter("/tmp/spider/filter")
+    filter = WhiteListFilter("/tmp/spider/filter", "white list filter")
     filter.launch()
 
     filter.filter("http://www.baidu.com/a", "http://wwww.caifuqiao.cn/.*")
@@ -200,7 +195,7 @@ if __name__ == "__main__":
 
     filter.shutdown()
 
-    filter = BlackListFilter("/tmp/spider/filter")
+    filter = BlackListFilter("/tmp/spider/filter", "black list filter")
     filter.launch()
 
     filter.filter("http://www.baidu.com/a", "http://wwww.caifuqiao.cn/.*")

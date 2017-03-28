@@ -4,6 +4,7 @@
 import time
 
 from clogger import logger
+from chelper import Helper
 from clauncher import Launcher
 from cfilter import WhiteListFilter
 
@@ -12,7 +13,7 @@ class Extractor(Launcher):
     '''
         base class for all extractor
     '''
-    def __init__(self, workdir, name):
+    def __init__(self, workdir, name = "extractor"):
         '''
             initialize extractor instance with @filter
         :param name: string, extractor name, unique identifier for the extractor instance
@@ -20,10 +21,39 @@ class Extractor(Launcher):
         Launcher.__init__(self, workdir, name)
 
     def launch(self):
-        self._launch()
+        '''
+            launch extractor
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._launch)
+            logger.info("extractor: launch extractor - %s, time used: %fs", self.name(), time_used)
+        except IOError, e:
+            pass
+        except Exception, e:
+            logger.info("extractor: launch extractor - %s, error: %s", self.name(), e.message)
+
+    def persist(self):
+        '''
+            persist extractor data
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._persist)
+            logger.info("extractor: persist extractor - %s, time used: %fs", self.name(), time_used)
+        except Exception, e:
+            logger.info("extractor: persist extractor - %s, error: %s", self.name(), e.message)
 
     def shutdown(self):
-        self._shutdown()
+        '''
+            shutdown extractor
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._shutdown)
+            logger.info("extractor: shutdown extractor - %s, time used: %fs", self.name(), time_used)
+        except Exception, e:
+            logger.info("extractor: shutdown extractor - %s, error: %s", self.name(), e.message)
 
     def filter(self, *cond):
         self._filter(*cond)
@@ -33,47 +63,37 @@ class Extractor(Launcher):
 
     def extract(self, uri, content):
         '''
-            extract wrapper for actual @_extract action
+            extract data from content
         :param uri: object, @Uri object of content
         :param content: string, content of @uri
         :return: object, extract result object or None
         '''
+        if not self.accept(uri):
+            return None
 
-        results = []
-        if self.accept(uri):
-            stime = time.time()
-            results = self._extract(uri, content)
-            etime = time.time()
+        time_used, result = Helper.timerun(self._extract, uri, content)
 
-            logger.info("%s: extract data from %s completed. time used: %fs", self.name(), uri.url(), etime-stime)
-        else:
-            logger.info("%s: extract data form %s, skipped by filter.", self.name(), uri.url())
+        logger.info("extractor: extract data from: %s, extracted. time used: %fs", uri.url(), time_used)
 
-        return results
+        return result
 
     def _launch(self):
-        logger.warning("extractor: unimplemented launch method, nothing will be done.")
+        logger.warning("extractor: unimplemented launch method.")
+
+    def _persist(self):
+        logger.warning("extractor: unimplemented persist method.")
 
     def _shutdown(self):
-        logger.warning("extractor: unimplemented shutdown method, nothing will be done.")
+        logger.warning("extractor: unimplemented shutdown method.")
 
     def _filter(self, *cond):
-        logger.warning("extractor: unimplemented filter method, nothing will be done.")
+        logger.warning("extractor: unimplemented filter method.")
 
     def _accept(self, uri):
-        logger.warning("extractor: unimplemented accept method, default not accepted.")
-        return False
+        logger.warning("extractor: unimplemented accept method.")
 
     def _extract(self, uri, content):
-        '''
-            extract method must be implemented by sub class
-        :param uri: object, @Uri object of content
-        :param content: string, content of @uri
-        :return: object, extract result object or None
-        '''
-        logger.warning("extractor: unimplemented extract method, nothing will be done.")
-
-        return None
+        logger.warning("extractor: unimplemented extract method.")
 
 
 class TextExtractor(Extractor):
@@ -81,13 +101,16 @@ class TextExtractor(Extractor):
         example for extract text from response content
     '''
 
-    def __init__(self, workdir, name = "text_extractor"):
+    def __init__(self, workdir, name = "text extractor"):
         Extractor.__init__(self, workdir, name)
 
-        self.__filter = WhiteListFilter(workdir, "filter")
+        self.__filter = WhiteListFilter(workdir, "white list filter")
 
     def _launch(self):
         self.__filter.launch()
+
+    def _persist(self):
+        self.__filter.persist()
 
     def _shutdown(self):
         self.__filter.shutdown()
@@ -124,6 +147,10 @@ class ExtractorMgr(Launcher):
         for extractor in self.__extractors:
             extractor.launch()
 
+    def persist(self):
+        for extractor in self.__extractors:
+            extractor.persist()
+
     def shutdown(self):
         for extractor in self.__extractors:
             extractor.shutdown()
@@ -151,7 +178,7 @@ class ExtractorMgr(Launcher):
         return results
 
     @staticmethod
-    def default(workdir = "./extractor", name = "exractor_manager"):
+    def default(workdir = "./extractor", name = "exractor manager"):
         extractor_manager = ExtractorMgr(workdir, name)
 
         text_extractor = TextExtractor(workdir)

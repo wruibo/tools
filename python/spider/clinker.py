@@ -222,6 +222,13 @@ class CLink:
         else:
             return self.__contexts
 
+    def ready(self, config):
+        lastc = self.__contexts.last()
+        if lastc is None:
+            return True
+
+        return lastc.tm() + config.crawl_period() < time.time()
+
     def encode(self):
         return {"uri":self.__uri.encode(), "contexts":self.__contexts.encode()}
 
@@ -249,6 +256,15 @@ class CLinks:
         '''
         return Helper.md5(uri.url())
 
+    def exists(self, uri):
+        '''
+            check if given @uri has exists
+        :param uri: object, @Uri object
+        :return: boolean
+        '''
+        key = self._key(uri)
+        return self.__index.has_key(key)
+
     def push(self, uri):
         '''
             push new links to linker
@@ -256,13 +272,9 @@ class CLinks:
         :return:
         '''
         key = self._key(uri)
-
         if not self.__index.has_key(key):
             self.__links.append(CLink(uri))
             self.__index[key] = len(self.__links) - 1
-
-        return key
-
 
     def pull(self):
         '''
@@ -326,7 +338,7 @@ class Linker(Launcher):
     '''
         linker who manage crawl links from spider
     '''
-    def __init__(self, workdir, name):
+    def __init__(self, workdir, name = "linker"):
         '''
             initialize linker instance
         :param name: string, linker name, an unique identifier
@@ -335,13 +347,39 @@ class Linker(Launcher):
         Launcher.__init__(self, workdir, name)
 
     def launch(self):
-        #launch sub class instance
-        self._launch()
+        '''
+            launch linker
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._launch)
+            logger.info("linker: launch linker - %s, time used: %fs", self.name(), time_used)
+        except IOError, e:
+            pass
+        except Exception, e:
+            logger.info("linker: launch linker - %s, error: %s", self.name(), e.message)
 
+    def persist(self):
+        '''
+            persist linker data
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._persist)
+            logger.info("linker: persist linker - %s, time used: %fs", self.name(), time_used)
+        except Exception, e:
+            logger.info("linker: persist linker - %s, error: %s", self.name(), e.message)
 
     def shutdown(self):
-        #shutdown sub class instance
-        self._shutdown()
+        '''
+            shutdown linker
+        :return:
+        '''
+        try:
+            time_used, ret = Helper.timerun(self._shutdown)
+            logger.info("linker: shutdown linker - %s, time used: %fs", self.name(), time_used)
+        except Exception, e:
+            logger.info("linker: shutdown linker - %s, error: %s", self.name(), e.message)
 
     def filter(self, *cond):
         '''
@@ -359,129 +397,92 @@ class Linker(Launcher):
         '''
         return self._accept(uri)
 
+    def exists(self, uri):
+        '''
+            test if the uri has exists in linker
+        :param uri: object, Uri object
+        :return: boolean
+        '''
+        return self._exists(uri)
+
     def config(self, pattern, config):
         '''
             add configure for url pattern for crawling
-        :param pattern:
-        :param config:
+        :param pattern: string, pattern of relate configure
+        :param config: object, CConfig object
         :return:
         '''
         self._config(pattern, config)
 
     def push(self, uri):
         '''
-            push a uri into link database
+            push a uri to linker
         :param uri: object, Uri object
         :return: object, key of stored link
         '''
-        if self.accept(uri):
-            stime = time.time()
-            key = self._push(uri)
-            etime = time.time()
+        if self.exists(uri):
+            logger.info("linker: push link %s, exists.", uri.url())
+            return
 
-            logger.info("linker: push link %s completed. time used:%fs", uri.url(), etime-stime)
-            return key
-        else:
-            logger.info("linker: push link %s, skipped by filter.", uri.url())
+        if not self.accept(uri):
+            logger.info("linker: push link %s, filtered.", uri.url())
+            return
 
-        return None
+        time_used, ret = Helper.timerun(self._push, uri)
+
+        logger.info("linker: push link %s, pushed. time used:%fs", uri.url(), time_used)
 
     def pull(self):
         '''
-            get a link object by specified key
+            pull next link from linker
         :return: object, Link object or None
         '''
-        stime = time.time()
-        link = self._pull()
-        etime = time.time()
+        time_used, link = Helper.timerun(self._pull)
 
         if link is not None:
-            logger.info("linker: pull link: %s completed. time used: %fs", link.uri().url(), etime-stime)
+            logger.info("linker: pull link %s, pulled. time used: %fs", link.uri().url(), time_used)
+            return link.uri()
         else:
-            logger.info("linker: pull link: none, nothing pulled.")
-
-        return link
+            logger.info("linker: pull link none, no more links. time used: %fs", time_used)
+            return None
 
     def update(self, uri, extras):
         '''
-            push a uri into link database
+            udpate uri context with crawl response extras data
         :param uri: object, Uri object
-        :param extras: dict, extras message for uri
+        :param extras: dict, extras data for crawled response
         :return:
         '''
-        stime = time.time()
-        self._update(uri, extras)
-        etime = time.time()
+        time_used, ret = Helper.timerun(self._update, uri, extras)
 
-        logger.info("linker: update link %s completed. time used:%fs", uri.url(), etime-stime)
+        logger.info("linker: update link %s, updated. time used:%fs", uri.url(), time_used)
 
     def _launch(self):
-        '''
-            launch linker, subclass must implement this method
-        :return:
-        '''
         logger.warning("linker: unimplemented launch method, nothing will be done.")
 
     def _shutdown(self):
-        '''
-            shutdown linker, subclass must implement this method
-        :return:
-        '''
         logger.warning("linker: unimplemented shutdown method, nothing will be done.")
 
     def _filter(self, *cond):
-        '''
-            add accept condition for linker
-        :param cond: object, filter accept condition, subclass must implement this method
-        :return:
-        '''
         logger.warning("linker: unimplemented filter method, nothing will be done.")
 
     def _accept(self, uri):
-        '''
-            test if the uri is filtered by linker, subclass must implement this method
-        :param uri: uri, Uri obejct
-        :return: boolean
-        '''
         logger.warning("linker: unimplemented accept method, default denied.")
 
+    def _exists(self, uri):
+        logger.warning("linker: unimplemented exists method, nothing will be done.")
         return False
 
     def _config(self, pattern, config):
-        '''
-            add configure for url pattern for crawling, subclass must implement this method
-        :param pattern:
-        :param config:
-        :return:
-        '''
         logger.warning("linker: unimplemented config method, nothing will be done.")
 
     def _push(self, uri):
-        '''
-            push a uri into link database, subclass must implement this method
-        :param uri: object, Uri object
-        :param extras: dict, extras message for uri
-        :return: object, key of stored link
-        '''
         logger.warning("linker: unimplemented push method, nothing will be done.")
-        return None
 
     def _pull(self):
-        '''
-            get a link object by specified key
-        :return: object, Link object or None
-        '''
         logger.warning("linker: unimplemented pull method, nothing will be done.")
 
-        return None
-
     def _update(self, uri, extras):
-        '''
-            udpate uri context
-        :param uri: object, Uri object
-        :param extras: dict, extras message for uri
-        :return:
-        '''
         logger.warning("linker: unimplemented update method, nothing will be done.")
 
 
@@ -492,7 +493,7 @@ class DefaultLinker(Linker):
     __CONFIG_FILE_NAME = "configs"
     __LINKS_FILE_NAME = "links"
 
-    def __init__(self, workdir, name = "default_linker"):
+    def __init__(self, workdir, name = "linker"):
         '''
             initialize linker instance with @filter
         :param filter: object, Filter object
@@ -507,43 +508,25 @@ class DefaultLinker(Linker):
         self.__links = CLinks()
 
     def _launch(self):
-        '''
-            lauch default linker
-        :return:
-        '''
         #launch filter of linker
         self.__filter.launch()
 
         #load configures of linker
-        if Helper.exists(self.workdir(), self.__CONFIG_FILE_NAME):
-            try:
-                fconfigs = Helper.open(self.workdir(), self.__CONFIG_FILE_NAME, "r")
-                jsonobj = json.load(fconfigs)
-                fconfigs.close()
-            except:
-                pass
-            else:
-                self.__configs.decode(jsonobj)
+        fconfigs = Helper.open(self.workdir(), self.__CONFIG_FILE_NAME, "r")
+        jsonobj = json.load(fconfigs)
+        fconfigs.close()
+        self.__configs.decode(jsonobj)
 
 
         #load links of linker
-        if Helper.exists(self.workdir(), self.__LINKS_FILE_NAME):
-            try:
-                flinks = Helper.open(self.workdir(), self.__LINKS_FILE_NAME, "r")
-                jsonobj = json.load(flinks)
-                flinks.close()
-            except:
-                pass
-            else:
-                self.__links.decode(jsonobj)
+        flinks = Helper.open(self.workdir(), self.__LINKS_FILE_NAME, "r")
+        jsonobj = json.load(flinks)
+        flinks.close()
+        self.__links.decode(jsonobj)
 
-    def _shutdown(self):
-        '''
-            shutdown default linker
-        :return:
-        '''
-        #shutdown filter of linker
-        self.__filter.shutdown()
+    def _persist(self):
+        #persist filter of linker
+        self.__filter.persist()
 
         #save configures of linker
         fconfigs = Helper.open(self.workdir(), self.__CONFIG_FILE_NAME, "w")
@@ -555,61 +538,37 @@ class DefaultLinker(Linker):
         json.dump(self.__links.encode(), flinks)
         flinks.close()
 
+    def _shutdown(self):
+        self._persist()
+
     def _filter(self, *cond):
         return self.__filter.filter(*cond)
 
     def _accept(self, uri):
         return self.__filter.accept(uri.url())
 
+    def _exists(self, uri):
+        return self.__links.exists(uri)
+
     def _config(self, pattern, config):
-        '''
-            link crawl configure with sepcified pattern
-        :param pattern:
-        :param config:
-        :return:
-        '''
         self.__configs.add(pattern, config)
 
     def _push(self, uri):
-        '''
-            store the uri into database
-        :param uri: object, Uri object
-        :param extras: dict, extras message for uri
-        :return: string, key of uri
-        '''
-        return self.__links.push(uri)
+        self.__links.push(uri)
 
     def _pull(self):
-        '''
-            pull Link from database by specified uri
-        :param uri: object, Uri object
-        :return: object, Link object or None
-        '''
         link = self.__links.pull()
-
-        #pull the next link need crawling
         while link is not None:
             config = self.__configs.match(link.uri())
-            context = link.contexts().last()
-
-            #crawl period, need to crawl
-            if context is None or context.tm() + config.crawl_period() < time.time():
+            if link.ready(config):
                 break
-            else:
-                logger.info("default linker: pull link: %s, skipped for crawling period not satisfied.", link.uri().url())
-
             link = self.__links.pull()
 
         return link
 
     def _update(self, uri, extras):
-        '''
-            update context of uri
-        :param uri:
-        :param extras:
-        :return:
-        '''
         self.__links.update(uri, extras)
+
 
 class LinkerMgr(Launcher):
     '''
@@ -628,12 +587,17 @@ class LinkerMgr(Launcher):
         :return:
         '''
         if self.__linker is None:
-            logger.warning("linker manager: there is no linker registered. invoke launch nothing")
             return
 
         #launch registered linker
         self.__linker.launch()
 
+    def persist(self):
+        '''
+            persist linker manager
+        :return:
+        '''
+        self.__linker.persist()
 
     def shutdown(self):
         '''
@@ -641,7 +605,6 @@ class LinkerMgr(Launcher):
         :return:
         '''
         if self.__linker is None:
-            logger.warning("linker manager: there is no linker registered. invoke shutdown nothing")
             return
 
         #shutdown registered linker
@@ -649,7 +612,7 @@ class LinkerMgr(Launcher):
 
     def register(self, linker):
         '''
-            load @linker into linker manager, replace current linker
+            register @linker into linker manager, replace current linker
         :param linker: object, linker to be loaded
         :return: object, old linker or None
         '''
@@ -699,9 +662,8 @@ class LinkerMgr(Launcher):
         '''
         if self.__linker is None:
             logger.error("linker manager: there is no linker registered. invoke push failed.")
-            return None
 
-        return self.__linker.push(uri)
+        self.__linker.push(uri)
 
     def pull(self):
         if self.__linker is None:
@@ -719,10 +681,10 @@ class LinkerMgr(Launcher):
         return self.__linker.update(uri, extras)
 
     @staticmethod
-    def default(workdir = "./linker", name = "linker_manager"):
+    def default(workdir = "./linker", name = "linker manager"):
         linker_manager = LinkerMgr(workdir, name)
 
-        default_linker = DefaultLinker(workdir, "default_linker")
+        default_linker = DefaultLinker(workdir, "linker")
         default_linker.filter(r".*")
 
         linker_manager.register(default_linker)
