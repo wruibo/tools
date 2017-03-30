@@ -517,7 +517,6 @@ class DefaultLinker(Linker):
         fconfigs.close()
         self.__configs.decode(jsonobj)
 
-
         #load links of linker
         flinks = Helper.open(self.workdir(), self.__LINKS_FILE_NAME, "r")
         jsonobj = json.load(flinks)

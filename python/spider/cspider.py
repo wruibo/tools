@@ -30,6 +30,7 @@ class Spider(threading.Thread, Launcher):
         self.__stop = True
         self.__stopped = True
 
+        self.__persist_time_interval = 60
         self.__last_persist_time = time.time()
 
         self.config()
@@ -37,6 +38,7 @@ class Spider(threading.Thread, Launcher):
     def config(self, **kwargs):
         self.__crawl_interval = kwargs.get("crawl_interval", 3)
         self.__idle_time = kwargs.get("idle_time", 5)
+        self.__persist_time_interval = kwargs.get("persist_time_interval", 60)
 
     def register(self, obj):
         if isinstance(obj, Linker):
@@ -66,6 +68,8 @@ class Spider(threading.Thread, Launcher):
 
     def persist(self):
         if self.__last_persist_time + 10 < time.time():
+            self.__last_persist_time = time.time()
+
             self.__linker_manager.persist()
             self.__crawler_manager.persist()
             self.__parser_manager.persist()

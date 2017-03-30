@@ -51,9 +51,12 @@ class Cookie:
     __cookie = None
 
     def __init__(self):
-        self.__cookie = cookielib.CookieJar()
+        self.__cfile = "/tmp/cookies.txt"
+        self.__cookie = cookielib.MozillaCookieJar(self.__cfile)
+
 
     def cookie(self):
+        self.__cookie.load()
         return self.__cookie
 
 class Session:
@@ -87,6 +90,9 @@ class Response:
     def extras(self):
         return {}
 
+    def charset(self):
+        return None
+
     def content(self, c = None):
         if c is not None:
             self.__content = c
@@ -112,8 +118,11 @@ class HttpResponse(Response):
 
         return False
 
+    def charset(self):
+        return "utf8"
+
     def extras(self):
-        return {"code":self.__code, "msg":self.__msg, "headers":self.__headers}
+        return {"code":self.__code, "msg":self.__msg}
 
     def url(self, u = None):
         if u is not None:

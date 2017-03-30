@@ -142,6 +142,15 @@ class Helper:
         if Helper.is_remote_path(path):
             return path
 
+        if path[0] == "/":
+            if Helper.is_remote_path(ref):
+                ref = Helper.root_path(ref)
+            else:
+                ref = "/"
+        else:
+            while len(ref) > 0 and ref[-1] != "/":
+                ref = ref[:-1]
+
         while len(ref) > 0 and ref[-1] == "/":
             ref = ref[:-1]
 
@@ -194,7 +203,6 @@ class Helper:
         :return: string
         '''
         import  hashlib
-
         m = hashlib.md5()
         m.update(str)
 

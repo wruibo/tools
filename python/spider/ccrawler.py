@@ -203,7 +203,7 @@ class HttpCrawler(Crawler):
     def __init__(self, workdir, name = "http crawler", client = "chrome", platform = "pc"):
         Crawler.__init__(self, workdir, name)
         #use white list filter
-        self.__filter = WhiteListFilter(workdir, "white list filter")
+        self.__filter = WhiteListFilter(workdir, "filter")
 
         #initialize vendor, cookie
         self.__vendor = HttpCrawler.Vendor(client, platform)
@@ -251,8 +251,7 @@ class CrawlerMgr(Launcher):
     '''
         crawler manager for all supported crawlers
     '''
-
-    def __init__(self, workdir, name="crawler_manager"):
+    def __init__(self, workdir, name="crawler manager"):
         Launcher.__init__(self, workdir, name)
 
         self.__crawlers = []
