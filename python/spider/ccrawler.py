@@ -1,310 +1,336 @@
-'''
-    browser simulator
-'''
-
-import urllib2, gzip, zlib, time
+import os, re, gzip, zlib
+import urllib2, cookielib
 from StringIO import StringIO
 
-from clogger import logger
-from chelper import Helper
-from clauncher import Launcher
-from cfilter import WhiteListFilter
-from cprotocol import Uri, Cookie, HttpResponse
 
+class Crawler:
+    def __init__(self, workdir = "./crawler"):
+        #create working directory
+        self.__workdir = workdir
+        self.__cookie_file_path = workdir+"/cookies"
 
-class Crawler(Launcher):
-    '''
-        crawler base class
-    '''
-    def __init__(self, workdir, name = "crawler"):
-        '''
-            initialize crawler instance
-        '''
-        Launcher.__init__(self, workdir, name)
+        #initialize handlers
+        self.__header_handler = HeaderHandler()
+        self.__cookie_handler = CookieHandler()
+        self.__decompress_handler = DecompressHandler()
 
-    def launch(self):
-        '''
-            launch crawler
-        :return:
-        '''
-        self._launch()
+        #initialize urllib2 opener
+        self.__opener = urllib2.build_opener()
 
-    def persist(self):
-        '''
-            persist crawler data
-        :return:
-        '''
-        self._persist()
-
-    def shutdown(self):
-        '''
-            shutdown crawler data
-        :return:
-        '''
-        self._shutdown()
-
-    def filter(self, *cond):
-        self._filter(*cond)
-
-    def accept(self, uri):
-        return self._accept(uri)
-
-    def crawl(self, uri):
-        '''
-            crawl wrapper for @_crawl method
-        :param uri: object, @Uri class object
-        :return: object, crawl response content
-        '''
-        if not self.accept(uri):
-            return None
-
-        time_used, response = Helper.timerun(self._crawl, uri)
-        logger.info("crawler: crawl uri: %s, response: %d bytes. time used: %fs", uri.url(), len(response.content()), time_used)
-
-        return response
-
-    def _launch(self):
-        logger.warning("crawler: unimplemented launch method.")
-
-    def _persist(self):
-        logger.warning("crawler: unimplemented persist method.")
-
-    def _shutdown(self):
-        logger.warning("crawler: unimplemented shutdown method.")
-
-    def _filter(self, *cond):
-        logger.warning("crawler: unimplemented filter method.")
-
-    def _accept(self, uri):
-        logger.warning("crawler: unimplemented accept method.")
-
-    def _crawl(self, uri):
-        logger.warning("crawler: unimplemented crawl method.")
-
-
-class HttpCrawler(Crawler):
-    '''
-        crawler for url, simulate as a browser
-    '''
-    class Vendor:
-        '''
-            vendor for various simulate browsers
-        '''
-
-        # vendor client
-        __client = None
-
-        # vendor platform
-        __platform = None
-
-        # vendor's key for headers dictionary
-        __key = None
-
-        # default request header for various simulate browsers under different platform
-        __headers = {
-            "chrome-pc": [
-                ("User-Agent",
-                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"),
-                ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8"),
-                ("Accept-Encoding", "gzip, deflate")
-            ],
-            "safari-pc": [
-                ("User-Agent",
-                 "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"),
-                ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8"),
-                ("Accept-Encoding", "gzip, deflate")
-            ],
-            "ie-pc": [
-                ("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0"),
-                ("Accept", "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8"),
-                ("Accept-Encoding", "gzip, deflate")
-            ]
-        }
-
-        def __init__(self, client="chrome", platform="pc"):
-            self.__client = client
-            self.__platform = platform
-            self.__key = self.__client + "-" + self.__platform
-
-            if not self.__headers.has_key(self.__key):
-                raise Exception("unsupport browser vendor %s/%s, must be %s" % (
-                self.__client, self.__platform, "/".join(self.__headers.keys())))
-
-        def client(self):
-            return self.__client
-
-        def platform(self):
-            return self.__platform
-
-        def headers(self):
-            return self.__headers[self.__key]
-
-    class Handler:
-        '''
-            handler for urllib2
-        '''
-
-        def __init__(self):
-            pass
-
-        class AddHeaderHandler(urllib2.BaseHandler):
-            '''
-                add header handler for each request
-            '''
-
-            def __init__(self, headers):
-                self.__headers = headers
-
-            def http_request(self, req):
-                '''
-                    add request headers
-                :param req:
-                :return:
-                '''
-                for header in self.__headers:
-                    req.add_header(header[0], header[1])
-                    req.add_unredirected_header(header[0], header[1])
-
-                return req
-
-            def https_request(self, req):
-                return self.http_request(req)
-
-        class DecompressHandler(urllib2.BaseHandler):
-            def __init__(self):
-                pass
-
-            def http_response(self, req, resp):
-                '''
-                    decompress the compressed response
-                :param req:
-                :param resp:
-                :return:
-                '''
-                msg = resp.msg
-
-                encoding = resp.headers.get("content-encoding")
-                if encoding == "gzip":
-                    fp = gzip.GzipFile(fileobj=StringIO(resp.read()))
-                    resp = urllib2.addinfourl(fp, resp.info(), resp.geturl(), resp.getcode())
-                elif encoding == "deflate":
-                    fp = zlib.decompress(resp.read())
-                    resp = urllib2.addinfourl(fp, resp.info(), resp.geturl(), resp.getcode())
-                else:
-                    pass
-
-                resp.msg = msg
-
-                return resp
-
-            def https_response(self, req, resp):
-                return self.http_response(req, resp)
-
-    def __init__(self, workdir, name = "http crawler", client = "chrome", platform = "pc"):
-        Crawler.__init__(self, workdir, name)
-        #use white list filter
-        self.__filter = WhiteListFilter(workdir, "filter")
-
-        #initialize vendor, cookie
-        self.__vendor = HttpCrawler.Vendor(client, platform)
-        self.__cookie = Cookie()
-
-        #initialize the urllib2
-        opener = urllib2.build_opener()
+    def init(self):
+        #load cookie data for cookie handler
+        if os.path.exists(self.__cookie_file_path):
+            self.__cookie_handler.load(self.__cookie_file_path)
 
         #add special handlers
-        opener.add_handler(HttpCrawler.Handler.AddHeaderHandler(self.__vendor.headers()))
-        opener.add_handler(HttpCrawler.Handler.DecompressHandler())
-        opener.add_handler(urllib2.HTTPCookieProcessor(self.__cookie.cookie()))
+        self.__opener.add_handler(self.__header_handler)
+        self.__opener.add_handler(self.__cookie_handler)
+        self.__opener.add_handler(self.__decompress_handler)
 
-        urllib2.install_opener(opener)
+    def open(self, url):
+        try:
+            response = self.__opener.open(url)
+            content = response.read()
+        except Exception, e:
+            return Response(url, "exception", str(e.__class__.__name__)+":"+str(e))
+        else:
+            return Response(url, response.getcode(), response.msg, response.headers, content)
 
-    def _launch(self):
-        self.__filter.launch()
+    def download(self, url, fpath):
+        file = None
+        try:
+            file = open(fpath, "wb")
+            response = self.__opener.open(url)
+            content = response.read(16*1024)
+            while content:
+                file.write(content)
+                content = response.read(16*1024)
+        except Exception, e:
+            return Response(url, "exception", str(e.__class__.__name__) + ":" + str(e))
+        else:
+            return Response(url, response.getcode(), response.msg, response.headers, fpath)
+        finally:
+            if file is not None:
+                file.close()
 
-    def _persist(self):
-        self.__filter.persist()
+    def set_cookie(self, cookie_string):
+        return self.__cookie_handler.set(cookie_string)
 
-    def _shutdown(self):
-        self.__filter.shutdown()
+    def set_header(self, name, value):
+        return self.__header_handler.set(name, value)
 
-    def _filter(self, *cond):
-        self.__filter.filter(*cond)
+    def destroy(self):
+        #create working directory
+        if not os.path.exists(self.__workdir):
+            os.makedirs(self.__workdir)
 
-    def _accept(self, uri):
-        return self.__filter.accept(uri.url())
+        #save cookie data of cookie handler
+        self.__cookie_handler.save(self.__cookie_file_path)
 
-    def _crawl(self, uri):
-        protocol = uri.protocol().lower()
-        if protocol != "http" and protocol != "https":
+class Cookie:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def create(cookie_string):
+        try:
+            #split "Set-Cookie:x=y; domain=...; expires=...;..."
+            set_string, tuple_string = cookie_string.split(":", 1)
+            #parse version from set string
+            version = Cookie._version(set_string)
+
+            #parse name, value from tuple string
+            nv = Cookie._name_value(tuple_string)
+            #change tuple string to dict
+            dict = Cookie._dict(tuple_string)
+
+            if nv is None or dict is None:
+                raise Exception("invalid cookie string: " + cookie_string)
+
+            name, value = nv
+            port = dict.get("port", None)
+            port_specified = port is not None
+
+            domain = dict.get("domain", None)
+            domain_specified = domain is not None
+            domain_initial_dot = False
+            if domain is not None:
+                domain_initial_dot = domain.startswith(".")
+
+            path = dict.get("path", None)
+            path_specified = path is not None
+
+            secure = dict.get("secure", False)
+            expires = dict.get("expires", None)
+            if expires is not None:
+                expires = cookielib.http2time(expires)
+
+            discard = dict.get("discard", False)
+            comment = dict.get("comment", None)
+            comment_url = None
+            rest = {}
+
+            #create cookielib.Cookie object
+            cookie = cookielib.Cookie(
+                version, name, value,
+                port, port_specified,
+                domain, domain_specified, domain_initial_dot,
+                path, path_specified,
+                secure,
+                expires,
+                discard,
+                comment,
+                comment_url,
+                rest
+            )
+
+            return cookie
+        except Exception, e:
             return None
 
-        try:
-            conn = urllib2.urlopen(uri.url())
-        except Exception, e:
-            return HttpResponse("555", e.message)
-        else:
-            return HttpResponse(conn.getcode(), conn.msg, conn.info().headers, conn.read())
-
-
-class CrawlerMgr(Launcher):
-    '''
-        crawler manager for all supported crawlers
-    '''
-    def __init__(self, workdir, name="crawler manager"):
-        Launcher.__init__(self, workdir, name)
-
-        self.__crawlers = []
-
-    def launch(self):
-        for crawler in self.__crawlers:
-            crawler.launch()
-
-    def persist(self):
-        for crawler in self.__crawlers:
-            crawler.persist()
-
-    def shutdown(self):
-        for crawler in self.__crawlers:
-            crawler.shutdown()
-
-    def register(self, crawler):
-        self.__crawlers.append(crawler)
-
-    def crawl(self, uri):
-        for crawler in self.__crawlers:
-            resp = crawler.crawl(uri)
-            if resp is not None:
-                return resp
-
-        logger.warning("crawler: no crawler for: " + uri.url())
+    @staticmethod
+    def _version(set_string):
+        result = re.search(r"set-cookie(\d)*", set_string, re.IGNORECASE)
+        if result is not None:
+            return result.group(1)
         return None
 
     @staticmethod
-    def default(workdir = "./crawler", name = "crawler manager"):
-        crawler_manager = CrawlerMgr(workdir, name)
+    def _name_value(tuple_string):
+        result = re.search(r"([^=;]+)=([^=;]*)", tuple_string, re.IGNORECASE)
+        if result is not None:
+            return result.group(1), result.group(2)
 
-        http_crawler = HttpCrawler(workdir, "http crawler")
-        http_crawler.filter("^http://.*")
-        crawler_manager.register(http_crawler)
+        return None
 
-        https_crawler = HttpCrawler(workdir, "https crawler")
-        https_crawler.filter("^https://.*")
-        crawler_manager.register(https_crawler)
+    @staticmethod
+    def _dict(tuple_string):
+        results = re.findall(r"([^=;]+)=([^=;]*)", tuple_string, re.IGNORECASE)
+        if results is not None:
+            dict = {}
+            for result in results:
+                dict[result[0].strip()] = result[1].strip()
+            return dict
 
-        return crawler_manager
+        return None
+
+
+class Response:
+    '''
+        response of opened url by browser
+    '''
+    def __init__(self, url, code = "-1", message = "", headers = {}, content = ""):
+        self.url = url
+        self.code = code
+        self.message = message
+        self.headers = headers
+        self.content = content
+
+    def __str__(self):
+        str = "%s\n%s %s\n" % (self.url, self.code, self.message)
+        for name, value in self.headers.items():
+            str += "%s:%s\n" % (name, value)
+        str += "\n"+self.content
+
+        return str
+
+    __repr__ = __str__
+
+    def ctype(self):
+        ctype = None
+        content_type = self.headers.get("content-type", None)
+        # parse content type from header
+        if content_type is not None:
+            result = re.search(r'(\w+)/\w+;?', content_type, re.IGNORECASE)
+            if result is not None:
+                ctype = result.group(1).strip().lower()
+
+        return ctype
+
+    def ftype(self):
+        ftype = None
+        content_type = self.headers.get("content-type", None)
+        # parse content type from header
+        if content_type is not None:
+            result = re.search(r'\w+/(\w+);?', content_type, re.IGNORECASE)
+            if result is not None:
+                ftype = result.group(1).strip().lower()
+
+        return ftype
+
+    def fname(self):
+        fname = None
+        content_disposition = self.headers.get("content-disposition", None)
+        # parse content type from header
+        if content_disposition is not None:
+            result = re.search(r'filename=(.+);?', content_disposition, re.IGNORECASE)
+            if result is not None:
+                fname = result.group(1).strip().lower()
+
+        return fname
+
+    def charset(self):
+        charset = None
+        content_type = self.headers.get("content-type", None)
+        # parse charset from header
+        if content_type is not None:
+            result = re.search(r'charset=([\w-]*)', content_type, re.IGNORECASE)
+            if result is not None:
+                charset = result.group(1).strip().lower()
+
+        # parse charset from content
+        if charset is None and self.content is not None:
+            result = re.search(r'<meta[^>]*charset=[\'\"\s]*([\w-]*)[\'\"\s]*[^>]*>', self.content, re.IGNORECASE)
+            if result is not None:
+                charset = result.group(1).strip().lower()
+
+        return charset
+
+
+class HeaderHandler(urllib2.BaseHandler):
+    '''
+        add header for each request
+    '''
+    __DEFAULT_HEADERS ={
+        "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
+        "Accept":"text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8",
+        "Accept-Encoding":"gzip, deflate"
+    }
+
+    def __init__(self):
+        self.headers = self.__DEFAULT_HEADERS
+
+    def set(self, name, value):
+        self.headers[name] = value
+        return True
+
+    def http_request(self, req):
+        for name, value in self.headers.items():
+            req.add_header(name, value)
+            req.add_unredirected_header(name, value)
+
+        return req
+
+    https_request = http_request
+
+
+class CookieHandler(urllib2.BaseHandler):
+    '''
+        manage cookie of browser
+    '''
+    def __init__(self):
+        self.__cookiejar = cookielib.MozillaCookieJar()
+
+    def load(self, filename):
+        self.__cookiejar.load(filename)
+
+    def set(self, cookie_string):
+        cookie = Cookie.create(cookie_string)
+        if cookie is not None:
+            self.__cookiejar.set_cookie(cookie)
+            return True
+        else:
+            return False
+
+    def save(self, filename):
+        self.__cookiejar.save(filename)
+
+    def http_request(self, request):
+        self.__cookiejar.add_cookie_header(request)
+        return request
+
+    def http_response(self, request, response):
+        self.__cookiejar.extract_cookies(response, request)
+        return response
+
+    https_request = http_request
+    https_response = http_response
+
+
+class DecompressHandler(urllib2.BaseHandler):
+    '''
+        decompress response content
+    '''
+    def __init__(self):
+        pass
+
+    def http_response(self, req, resp):
+        encoding = resp.headers.get("content-encoding", "")
+        if encoding == "gzip":
+            fp = gzip.GzipFile(fileobj=StringIO(resp.read()))
+
+            response = urllib2.addinfourl(fp, resp.info(), resp.geturl(), resp.getcode())
+            response.msg = resp.msg
+
+            return response
+        elif encoding == "deflate":
+            fp = zlib.decompress(resp.read())
+
+            response = urllib2.addinfourl(fp, resp.info(), resp.geturl(), resp.getcode())
+            response.msg = resp.msg
+
+            return response
+        else:
+            return resp
+
+    https_response = http_response
 
 
 if __name__ == "__main__":
-    crawler_manager = CrawlerMgr.default("/tmp/spider/crawler")
+    crawler = Crawler()
+    crawler.init()
 
-    #url = "https://www.caifuqiao.cn/Product/List/productList?typeId=3&typeName=%E9%98%B3%E5%85%89%E7%A7%81%E5%8B%9F"
-    #url = "https://docs.python.org/2/library/random.html?highlight=rand#module-random"
-    url = "http://www.sse.com.cn/js/common/ssesuggestdataAll.js"
-    #url = "http://www.baidu.com/"
-    #url = "http://www.caifuqiao.cn/"
-    #resp = crawler.open("http://www.sse.com.cn/js/common/ssesuggestdataAll.js")
-    #resp = crawler.open("http://www.baidu.com/")
-    resp = crawler_manager.crawl(Uri(url))
+    crawler.set_cookie("Set-Cookie: userId=68131; expires=Tue, 04-Apr-2017 09:16:00 GMT; Max-Age=432000; domain=www.caifuqiao.cn; path=/")
+    crawler.set_cookie("Set-Cookie: token=615347353461caaf28eb4023230faa80; expires=Tue, 04-Apr-2017 09:16:00 GMT; Max-Age=432000; domain=www.caifuqiao.cn; path=/")
 
-    print resp.content()
+    resp = crawler.download("https://ss2.baidu.com/-vo3dSag_xI4khGko9WTAnF6hhy/image/h%3D200/sign=b4d9c7399582d158a4825eb1b00819d5/aa18972bd40735fa831d0f6e97510fb30e240873.jpg", "/tmp/baidu.jpg")
+    print resp
+
+    resp = crawler.download("http://www.baidu.com/", "/tmp/baidu.html")
+    print resp
+
+    resp = crawler.download("https://www.caifuqiao.cn/Product/Detail/attachmentDownload?attachmentId=799720", "/tmp/caifuqiao.pdf")
+    print resp
+    print resp.ctype(), resp.ftype(), resp.fname()
+
+    crawler.destroy()

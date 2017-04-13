@@ -1,1 +1,1 @@
-__all__ = ["cbrowser", "cparser", "cspider", "cstorage"]
+__all__ = ["cbrowser", "cparser", "cspider", "cstorage", "storage"]
