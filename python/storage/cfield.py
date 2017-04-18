@@ -1,7 +1,3 @@
-'''
-    unit for storage
-'''
-
 
 class Type:
     def __init__(self):
@@ -90,32 +86,9 @@ class Value:
             Value.Base.__init__(self, value)
 
 
-class Column:
+class Field:
     def __init__(self, name, type, nullable, default):
         self.name = name
         self.type = type
         self.nullable = nullable
         self.default = default
-
-    def default(self):
-        if self.default is not None:
-            return self.default.value()
-        else:
-            return None
-
-
-class Table:
-    def __init__(self, name):
-        self.name = name
-        self.columns = []
-
-    def column(self, name, type=None, nullable=None, default=None):
-        if type is not None:
-            self.columns.append(Column(name, type, nullable, default))
-        else:
-            for column in self.columns:
-                if name == column.name:
-                    return column
-
-            return None
-

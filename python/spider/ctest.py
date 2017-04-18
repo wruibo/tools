@@ -1,73 +1,53 @@
-import cexpt
+class TestProperty:
+    def __init__(self):
+        self._score = 0
 
-from chelper import Helper
+    @property
+    def score(self):
+        return self._score
 
-# coding=utf8
-# -*- coding: utf8 -*-
-
-def raise_error(msg):
-    raise cexpt.ExpUnsupportedProtocol(msg)
-
-class obj:
-    __d = None
-    def __init__(self, a, b, c):
-        self.__a = a
-        self.__b = b
-        self.__c = c
-
-class obj1:
-    def __init__(self, a, b, c):
-        self.__a = a
-        self.__b = b
-        self.__c = c
-
-    def seta(self, a):
-        self.__a = a
-
-    def geta(self):
-        return self.__a
-
-    def __str__(self):
-        return str(self.__a)+","+str(self.__b)+","+str(self.__c)
-
-    def __repr__(self):
-        return str(self.__a) + "|" + str(self.__b) + "|" + str(self.__c)
-
-def catch_error(msg, tt):
-    try:
-        raise_error(msg+tt)
-    except Exception, e:
-        print e.message
-    else:
-        print "no error"
+    @score.setter
+    def score(self, value):
+        self._score = value
 
 
-def fun(*arg):
-    for a in arg:
-        print a
-    raise ""
+def log(func):
+    def aa(*args, **kwargs):
+        print "log"
+        func(*args, **kwargs)
+    return aa
 
-import urllib2, cookielib
+@log
+def now():
+    import time
+    print time.time()
 
-def saveCookie():
-    filename = '/tmp/cookie.txt'
-    cookie = cookielib.MozillaCookieJar(filename)
-    cookie.set_cookie(cookielib.Cookie())
-    handler = urllib2.HTTPCookieProcessor(cookie)
-    opener = urllib2.build_opener(handler)
-    res = opener.open('https://www.caifuqiao.cn/')
-    res = opener.open('http://www.baidu.com/')
-    res = opener.open('http://www.baidu.com/')
-    res = opener.open('https://www.caifuqiao.cn/')
-    cookie.save(ignore_discard=True,ignore_expires=True)
+def fn(self, name="ena"):
+    print "abc"
+
+Hello = type('Hello', (object,), dict(hello=fn, hello1=fn))
+
+
+class QueIter:
+    def __init__(self, count):
+        self.count = count
+
+    def next(self):
+        self.count -= 1
+        if self.count == 0:
+            raise StopIteration
+        return self.count
+
+class Que:
+    def __init__(self):
+        pass
+
+    def __iter__(self):
+        return QueIter(10)
+
+
 
 if __name__ == "__main__":
-
-    #saveCookie()
-    a = obj1(1, 2, 3)
-    print a
-
-    print repr(a)
-
-    fun(1)
-
+    q = Que()
+    for i in q:
+        print i
