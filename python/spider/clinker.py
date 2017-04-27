@@ -1,13 +1,17 @@
 '''
     link database for crawling
 '''
-import re, sys, json, time
+import json
+import re
+import sys
+import time
 
-from cprotocol import Uri
-from clogger import logger
-from chelper import Helper
 from clauncher import Launcher
+from cprotocol import Uri
+
 from cfilter import WhiteListFilter
+from chelper import Helper
+from utility.clog import logger
 
 class CConfig:
     def __init__(self, is_origin = False, crawl_period = sys.maxint):

@@ -1,11 +1,13 @@
 '''
     filter for urls to crawl
 '''
-import re, os, json
+import json
+import re
+
+from clauncher import Launcher
 
 from chelper import Helper
-from clogger import logger
-from clauncher import Launcher
+from utility.clog import logger
 
 
 class Filter(Launcher):

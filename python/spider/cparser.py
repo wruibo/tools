@@ -1,13 +1,12 @@
 '''
     parser for parsing hyperlink from http response
 '''
-import re, time
 
-from clogger import logger
-from chelper import Helper
-from cprotocol import Uri
 from clauncher import Launcher
+
 from cfilter import WhiteListFilter
+from chelper import Helper
+from utility.clog import logger
 
 
 class Parser(Launcher):

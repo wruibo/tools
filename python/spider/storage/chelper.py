@@ -1,15 +1,18 @@
 import MySQLdb
-from spider.storage.cindex import *
-from spider.storage.ckey import *
-
 from storage.cfield import *
+from storage.ckey import *
+from storage.ctype import *
+
+from storage.cindex import *
+
 
 class SQLHelper:
     def __init__(self):
         pass
 
     @staticmethod
-    def sql_type(type):
+    def sql_type(field):
+        type = field.type
         if isinstance(type, Type.Int):
             return "integer"
         elif isinstance(type, Type.BigInt):
@@ -28,7 +31,8 @@ class SQLHelper:
             raise TypeError("unsupport column type: %s" % type.__class__.__name__)
 
     @staticmethod
-    def sql_value(value):
+    def sql_default(field):
+        value = field.default
         if isinstance(value, Value.Null):
             return "default null"
         elif isinstance(value, Value.AutoInc):
@@ -67,12 +71,12 @@ class SQLHelper:
     @staticmethod
     def sql_field(field):
         if field.nullable:
-            return "\t%s %s default null" % (field.name, SQLHelper.sql_type(field.type))
+            return "\t%s %s default null" % (field.name, SQLHelper.sql_type(field))
         else:
             if field.default is not None:
-                return "\t%s %s not null %s" % (field.name, SQLHelper.sql_type(field.type), SQLHelper.sql_value(field.default))
+                return "\t%s %s not null %s" % (field.name, SQLHelper.sql_type(field), SQLHelper.sql_default(field))
             else:
-                return "\t%s %s not null" % (field.name, SQLHelper.sql_type(field.type))
+                return "\t%s %s not null" % (field.name, SQLHelper.sql_type(field))
 
     @staticmethod
     def sql_create_fields(fields):
@@ -156,7 +160,18 @@ class DBHelper:
 
     @staticmethod
     def create_table(dbc, table):
-        dbc.cursor().execute(SQLHelper.sql_create_table(table))
+        sql = SQLHelper.sql_create_table(table)
+        dbc.cursor().execute(sql)
+
+    @staticmethod
+    def drop_table(dbc, table):
+        sql = "drop table if exists %s;" % table.name
+        DBHelper.execute(dbc, sql)
+
+    @staticmethod
+    def truncate_table(dbc, table):
+        sql = "truncate table %s;" % table.name
+        DBHelper.execute(dbc, sql)
 
     @staticmethod
     def update_table(dbc, table):
@@ -189,3 +204,103 @@ class DBHelper:
                 columns.append({"field":result[0], "type":result[1], "null":result[2], "key":result[3], "default":result[4], "extra":result[5]})
 
         return columns
+
+    @staticmethod
+    def execute(dbc, sql):
+        cursor = dbc.cursor()
+        cursor.execute(sql)
+
+    @staticmethod
+    def insert(dbc, sql):
+        cursor = dbc.cursor()
+        cursor.execute(sql)
+        dbc.commit()
+
+    @staticmethod
+    def select(dbc, sql):
+        cursor = dbc.cursor()
+        cursor.execute(sql)
+        return cursor.fetchall()
+
+
+from utility.cdir import *
+from utility.cpath import *
+
+
+class FSHelper:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def has_database(path):
+        return cpath.exists(path)
+
+    @staticmethod
+    def create_database(path):
+        if not cpath.exists(path):
+            cdir.makes(path)
+
+    @staticmethod
+    def has_table(table):
+        pass
+
+    @staticmethod
+    def create_table(table):
+        pass
+
+    @staticmethod
+    def update_table(table):
+        pass
+
+    @staticmethod
+    def drop_table(table):
+        pass
+
+    @staticmethod
+    def truncate_table(table):
+        pass
+
+
+class Wrapper:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def wrap(value):
+        ntype = value.__class__.__name__
+        return TYPE_WRAPPER[ntype](value)
+
+    @staticmethod
+    def _wrap_num(value):
+        return str(value)
+
+    @staticmethod
+    def _wrap_str(value):
+        return "\'%s\'" % value
+
+    @staticmethod
+    def _wrap_bool(value):
+        if value:
+            return 'true'
+        else:
+            return 'false'
+
+    @staticmethod
+    def _wrap_none(value):
+        return 'null'
+
+TYPE_WRAPPER = {
+    'int': Wrapper._wrap_num,
+    'float': Wrapper._wrap_num,
+    'str': Wrapper._wrap_str,
+    'bool': Wrapper._wrap_bool,
+    'NoneType':Wrapper._wrap_none
+}
+
+
+if __name__ == "__main__":
+    print Wrapper.wrap(1)
+    print Wrapper.wrap(1.1)
+    print Wrapper.wrap("abc")
+    print Wrapper.wrap(None)
+

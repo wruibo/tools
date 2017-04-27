@@ -1,12 +1,12 @@
 '''
     extractor for content extract from crawl response
 '''
-import time
 
-from clogger import logger
-from chelper import Helper
 from clauncher import Launcher
+
 from cfilter import WhiteListFilter
+from chelper import Helper
+from utility.clog import logger
 
 
 class Extractor(Launcher):
@@ -189,7 +189,6 @@ class ExtractorMgr(Launcher):
         return extractor_manager
 
 if __name__ == "__main__":
-    from ccrawler import *
     from cprotocol import Uri
 
     crawler_manager = CrawlerMgr.default("/tmp/spider/crawler")

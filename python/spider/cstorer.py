@@ -1,8 +1,5 @@
-import sys
-
 import MySQLdb
 
-from clogger import logger
 from cpipe import Pipe
 
 
