@@ -1,11 +1,22 @@
 '''
     file system table
 '''
+
+from utility.cstr import *
 from utility.cpath import *
 from utility.clog import logger
+
+
+from storage.ckey import *
+from storage.ctype import *
+from storage.cindex import *
+from storage.cvalue import *
+from storage.cfield import *
+from storage.cverifier import *
 from storage.cschema import Schema
 
 FSTableOperationError = Exception
+
 
 class FStable:
     '''
@@ -27,26 +38,38 @@ class FStable:
 
     def load(self):
         '''
-            load table @name from database
-        :param dbpath:
-        :param name:
-        :return:
+            load table
+        :return:  self or None
         '''
         try:
+            #schema file must be exist
+            if not is_file(self.schema_file):
+                raise FSTableOperationError("schema file not exist.")
+
+            #load schema file
             with open(self.schema_file, 'r') as fschema:
-                self.schema = Schema.fromstr(fschema.read())
-                self.check()
-                logger.info("loading table %s...success.", self.name)
-                return True
+                self.schema = Schema().fromstr(fschema.read())
+
+            #load data file
+            if not is_file(self.data_file):
+                #create data file if not exists
+                self._create_data_file()
+            else:
+                #replace old data file if needed
+                with open(self.data_file) as fdata:
+                    nfields = strips(fdata.readline().split(","))
+                    if self.schema.nfields() != nfields:
+                        self._replace_data_file()
+
+            logger.info("loading table %s...success.", self.name)
+            return self
         except Exception, e:
             logger.info("loading table %s...failed. error: %s", self.name, e.message)
 
     def create(self):
         '''
-            create table with @schema
-        :param dbpath:
-        :param schema:
-        :return:
+            create table
+        :return boolean, true for create success
         '''
         if self.schema is None:
             return False
@@ -58,11 +81,12 @@ class FStable:
             if is_file(self.schema_file):
                 #replace old schema file if needed
                 with open(self.schema_file) as fschema:
-                    schema = Schema.fromstr(fschema.read())
-                    if self.schema != schema:
+                    try:
+                        schema = Schema().fromstr(fschema.read())
+                        if self.schema != schema:
+                            self._replace_schema_file()
+                    except:
                         self._replace_schema_file()
-                    else:
-                        pass
             else:
                 #create new schema file
                 self._create_schema_file()
@@ -71,29 +95,54 @@ class FStable:
             if is_file(self.data_file):
                 #replace old data file if needed
                 with open(self.data_file) as fdata:
-                    from utility.cstr import *
                     nfields = strips(fdata.readline().split(","))
                     if self.schema.nfields() != nfields:
                         self._replace_data_file()
-                    else:
-                        pass
             else:
                 #create new data file
                 self._create_data_file()
 
-            logger.info("creating table %s...success.", self.name)
+            logger.info("create table %s...success.", self.name)
             return True
         except Exception, e:
-            logger.error("creating table %s...failed. error: %s", self.name, str(e))
+            logger.error("create table %s...failed. error: %s", self.name, str(e))
             return False
 
     def drop(self):
-        pass
+        '''
+            drop table
+        :return:
+        '''
+        try:
+            remove_dir(self.path)
+        except Exception, e:
+            logger.error("drop table %s...failed. error %s", self.name, str(e))
+
 
     def truncate(self):
-        pass
+        '''
+            truncate table
+        :return:
+        '''
+        try:
+            remove_files(self.data_file)
+            self._create_data_file()
+        except Exception, e:
+            logger.error("truncate table %s...failed. error %s", self.name, str(e))
 
-    def match(self, schema):
+    def getall(self):
+        '''
+            get all records from table
+        :return:
+        '''
+
+
+    def insert(self, records):
+        '''
+            insert records to table
+        :param records:
+        :return:
+        '''
         pass
 
     def _create_schema_file(self):
@@ -141,24 +190,22 @@ class FStable:
 
 
 if __name__ == "__main__":
-    from storage.ctype import Type
-    from storage.ckey import Key
-    from storage.cindex import Index
-    from storage.cvalue import Value
-
     schema = Schema("tb_demo")
-    schema.field("id", Type.Int(), False, Value.AutoInc())
-    schema.field("code", Type.String(32), False)
-    schema.field("name", Type.String(32), True)
-    schema.field("valid", Type.Boolean(), True)
-    schema.field("create_time", Type.BigInt(), True)
+    schema.field("id", Int(), False, AutoIncValue())
+    schema.field("code", String(32), False)
+    schema.field("name", String(32), True)
+    schema.field("valid", Boolean(), True)
+    schema.field("create_time", BigInt(), True)
 
-    schema.key(Key.PrimaryKey, "pk_id", "id")
-    schema.key(Key.NormalKey, "normal_key", "name","code")
-    schema.key(Key.UniqueKey, "unique_key", "code", "valid")
+    schema.key(PrimaryKey, "pk_id", "id")
+    schema.key(NormalKey, "normal_key", "name","code")
+    schema.key(UniqueKey, "unique_key", "code", "valid")
 
-    schema.index(Index.NormalIndex, "normal_index", "name", "code")
-    schema.index(Index.UniqueIndex, "unique_index", "code", "valid")
+    schema.index(NormalIndex, "normal_index", "name", "code")
+    schema.index(UniqueIndex, "unique_index", "code", "valid")
 
     table = FStable("./", schema.name, schema)
     table.create()
+
+    table1 = FStable("./", "tb_demo").load()
+    table1.truncate()

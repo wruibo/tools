@@ -69,11 +69,27 @@ def make_dirs(path):
 
 def remove_dir(path):
     if os.path.exists(path):
+        subpaths = os.listdir(path)
+        for subpath in subpaths:
+            abspath = "%s/%s" % (path, subpath)
+            if os.path.isfile(abspath):
+                os.remove(abspath)
+            else:
+                remove_dir(abspath)
+
         os.rmdir(path)
 
-def remove_dirs(path):
-    if os.path.exists(path):
-        os.removedirs(path)
+def remove_dirs(*paths):
+    for path in paths:
+        remove_dir(path)
+
+def remove_file(file):
+    if os.path.isfile(file):
+        os.remove(file)
+
+def remove_files(*files):
+    for file in files:
+        os.remove(file)
 
 def rename(src, dst):
     os.rename(src, dst)
@@ -123,7 +139,7 @@ def list_files(path, onlyname=True):
 
 
 if __name__ == "__main__":
-    print join_path('/path1/', '/path2/', 'file')
+    print join_paths('/path1/', '/path2/', 'file')
     print is_relative_path("path/")
     print list_files('/tmp')
     print list_dirs('/tmp')

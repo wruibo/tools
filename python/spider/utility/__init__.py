@@ -1,1 +1,1 @@
-__all__ = ["cdir", "cfile", "cpath"]
+__all__ = ["cdir", "cfile", "cpath", "cstr", "ccast"]

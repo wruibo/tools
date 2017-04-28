@@ -1,12 +1,14 @@
 '''
     schema for table creation
 '''
-from storage.ckey import Key
-from storage.ctype import Type
-from storage.cvalue import Value
-from storage.cindex import Index
-from storage.cfield import Field
-from storage.cverifier import Verifier
+import re
+
+from storage.ckey import *
+from storage.ctype import *
+from storage.cindex import *
+from storage.cvalue import *
+from storage.cfield import *
+from storage.cverifier import *
 
 
 class Schema:
@@ -18,9 +20,14 @@ class Schema:
         self.indexs = []
 
     def __eq__(self, other):
-        return self.name==other.name and self.fields == other.fields and self.keys==other.keys and self.indexs==other.indexs
+        if isinstance(other, self.__class__):
+            return self.name==other.name and self.fields == other.fields and self.keys==other.keys and self.indexs==other.indexs
+        return False
 
-    def field(self, name, type, nullable=True, default=Value.Null(), verifier=Verifier.DefaultVerifier()):
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def field(self, name, type, nullable=True, default=NullValue(), verifier=DefaultVerifier()):
         self.fields.append(Field(name, type, nullable, default, verifier))
 
     def key(self, keycls, name, *fields):
@@ -85,10 +92,8 @@ class Schema:
         :param str:
         :return:
         '''
-        import re
         SectionRegex = re.compile("^\s*\[\s*(?P<section>\w+)\s*\]\s*$")
         NameRegex = re.compile("\s*name\s*=\s*(?P<name>\w+)\s*")
-
         section = None
         lines = str.splitlines()
         for line in lines:
@@ -107,40 +112,33 @@ class Schema:
                         if mname:
                             self.name = mname.group('name')
                     elif section == 'fields':
-                        self.fields.append(Field.fromstr(line))
+                        self.fields.append(Field().fromstr(line))
                     elif section == 'keys':
-                        self.keys.append(Key.fromstr(line))
+                        self.keys.append(Key().fromstr(line))
                     elif section == 'indexs':
-                        self.indexs.append(Index.fromstr(line))
+                        self.indexs.append(Index().fromstr(line))
                     else:
                         pass
                 else:
                     pass
         return self
 
-
 if __name__ == "__main__":
-    from storage.ctype import Type
-    from storage.ckey import Key
-    from storage.cindex import Index
-    from storage.cvalue import Value
-
     schema = Schema("tb_demo")
-    schema.field("id", Type.Int(), False, Value.AutoInc())
-    schema.field("code", Type.String(32), False)
-    schema.field("name", Type.String(32), True)
-    schema.field("valid", Type.Boolean(), True)
-    schema.field("create_time", Type.BigInt(), True)
+    schema.field("id", Int(), False, AutoIncValue())
+    schema.field("code", String(32), False)
+    schema.field("name", String(32), True)
+    schema.field("valid", Boolean(), True)
+    schema.field("create_time", BigInt(), True)
 
-    schema.key(Key.PrimaryKey, "pk_id", "id")
-    schema.key(Key.NormalKey, "normal_key", "name","code")
-    schema.key(Key.UniqueKey, "unique_key", "code", "valid")
+    schema.key(PrimaryKey, "pk_id", "id")
+    schema.key(NormalKey, "normal_key", "name","code")
+    schema.key(UniqueKey, "unique_key", "code", "valid")
 
-    schema.index(Index.NormalIndex, "normal_index", "name", "code")
-    schema.index(Index.UniqueIndex, "unique_index", "code", "valid")
+    schema.index(NormalIndex, "normal_index", "name", "code")
+    schema.index(UniqueIndex, "unique_index", "code", "valid")
 
     str1 = schema.tostr()
     print str1
 
-    schema = Schema()
-    print schema.fromstr(str1).tostr()
+    print Schema().fromstr(str1).tostr()

@@ -11,7 +11,8 @@ class Record(dict):
     __metaclass__ = MetaRecord
 
     def __init__(self, **kwargs):
-        pass
+        for key in kwargs.keys():
+            self[key] = kwargs.get(key)
 
     def __getattr__(self, key):
         return self[key]
