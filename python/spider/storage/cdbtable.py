@@ -23,12 +23,9 @@ class DBTable:
         table base on file
     '''
     def __init__(self):
-        self.path = None
-        self.name = None
-        self.table_file = None
-        self.data_file = None
-
-        self.table = None
+        self.dbc = None #database connection
+        self.name = None #table name
+        self.table = None #table structure
 
     def __enter__(self):
         return self
@@ -36,17 +33,16 @@ class DBTable:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def load(self, dbpath, name):
+    def load(self, dbc, name):
         '''
             load table
         :return:  self or None
         '''
         try:
             #initialize table parameters
-            self.path = join_paths(dbpath, name)
+            self.dbc = dbc
             self.name = name
-            self.table_file = join_paths(self.path, "table")
-            self.data_file = join_paths(self.path, "data")
+
 
             #table file must be exist
             if not is_file(self.table_file):
@@ -73,7 +69,7 @@ class DBTable:
             logger.info("loading table %s...failed. error: %s", self.name, str(e))
             raise e
 
-    def create(self, dbpath, table):
+    def create(self, table):
         '''
             create table
         :return boolean, true for create success
@@ -181,48 +177,7 @@ class DBTable:
                 lines.append("%s\n"%",".join(vfields))
             fdata.writelines(lines)
 
-    def _create_table_file(self):
-        '''
-            create table file
-        :return:
-        '''
-        with open(self.table_file, 'w') as ftable:
-            ftable.write(self.table.tostr())
-
-    def _replace_table_file(self):
-        '''
-            replace table file
-        :return:
-        '''
-        if is_file(self.table_file):
-            import time
-            old_table_file = "%s.old.%s" % (self.table_file, str(time.time()))
-            move(self.table_file, old_table_file)
-            self._create_table_file()
-        else:
-            raise FSTableOperationError("replace table file failed. error: %s is not file.", self.table_file)
-
-
-    def _create_data_file(self):
-        '''
-            create data file
-        :return:
-        '''
-        with open(self.data_file, 'w') as fdata:
-            fdata.write(",".join(self.table.nfields()) + "\n")
-
-    def _replace_data_file(self):
-        '''
-            replace data file
-        :return:
-        '''
-        if is_file(self.data_file):
-            import time
-            old_data_file = "%s.old.%s" %(self.data_file, str(time.time()))
-            move(self.data_file, old_data_file)
-            self._create_data_file()
-        else:
-            raise FSTableOperationError("replace data file failed. error: %s is not file.", self.data_file)
+    def _describe(self, ):
 
 
 if __name__ == "__main__":

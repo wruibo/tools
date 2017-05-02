@@ -57,7 +57,7 @@ class FSStorage(Storage):
                 logger.info("create table %s...exists.", table.name)
             else:
                 #create new table
-                table = FStable().create(self.path, table)
+                table = FSTable().create(self.path, table)
                 self.tables.append(table)
 
     def drop_table(self, table):
