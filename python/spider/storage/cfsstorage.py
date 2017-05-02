@@ -1,34 +1,168 @@
 '''
-    file system storage
+    file system based database
 '''
-from utility.cpath import cpath
-from storage.chelper import FSHelper
+import threading
+
+from utility.cpath import *
+from utility.clog import logger
+from utility.clock import clock
+
+from storage.ctable import Table
+from storage.cfstable import FSTable
 from storage.cstorage import Storage
-from storage.cfstable import FStable
-from storage.cfsdatabase import FSDatabase
 
 
 class FSStorage(Storage):
-    def __init__(self, path, name):
-        Storage.__init__(self, name)
+    def __init__(self):
+        self.path = None #storage path
+        self.tables = [] #file system tables
+        self.lock = threading.Lock() #database lock
 
-        self.db = FSDatabase(cpath.join(path, name))
 
-    def create(self, table_schema):
-        self.db.create_table(table_schema)
+    def open(self, path):
+        '''
+            open storage or create it if not exist
+        :return:
+        '''
+        with clock(self.lock):
+            #init storage path
+            self.path = path
 
-    def drop(self, table_name):
-        self.db.drop_table(table_name)
+            if not path_exists(self.path):
+                #create database
+                self._create()
+            else:
+                # load database
+                self._load()
 
-    def truncate(self, table_name):
-        self.db.truncate_table(table_name)
+            return self
 
-    def getall(self, table_name):
-        self.db.select_from_table(table_name)
+    def close(self):
+        '''
+            close storage
+        :return:
+        '''
+        with clock(self.lock):
+            pass
 
-    def insert(self, table_name, records):
-        self.db.insert_into_table(table_name, records)
+    def create_table(self, table):
+        '''
+            create table in current database
+        :param table:
+        :return:
+        '''
+        with clock(self.lock):
+            # test if the table has loaded
+            if self._table_loaded(table):
+                logger.info("create table %s...exists.", table.name)
+            else:
+                #create new table
+                table = FStable().create(self.path, table)
+                self.tables.append(table)
 
+    def drop_table(self, table):
+        '''
+            drop table in current database
+        :param table:
+        :return:
+        '''
+        table_name = self._table_name(table)
+
+        with clock(self.lock):
+            for table in self.tables:
+                if table.name==table:
+                    table.drop()
+                    self.tables.remove(table)
+
+
+    def truncate_table(self, table):
+        '''
+            truncate table data
+        :param table:
+        :return:
+        '''
+        table_name = self._table_name(table)
+
+        with clock(self.lock):
+            for table in self.tables:
+                if table.name==table_name:
+                    table.truncate()
+
+    def select_from_table(self, table):
+        '''
+            select all records from table
+        :param table:
+        :return:
+        '''
+        table_name = self._table_name(table)
+
+        with clock(self.lock):
+            for table in self.tables:
+                if table.name==table_name:
+                    return table.select()
+
+    def insert_into_table(self, table, models):
+        '''
+            insert records into table
+        :param table:
+        :param models:
+        :return:
+        '''
+        table_name = self._table_name(table)
+
+        with clock(self.lock):
+            for table in self.tables:
+                if table.name == table_name:
+                    table.insert(models)
+
+    def _create(self):
+        '''
+            create storage directory if not exists
+        :return:
+        '''
+        #create database's root directory
+        if not path_exists(self.path):
+            make_dirs(self.path)
+
+
+    def _load(self):
+        '''
+            load tables in storage
+        :return:
+        '''
+        #load tables in storage
+        for table_name in list_dirs(self.path):
+            table = FStable().load(self.path, table_name)
+            self.tables.append(table)
+
+    def _table_loaded(self, table):
+        '''
+            test if table(schema) has loaded
+        :param table:
+        :return:
+        '''
+        for t in self.tables:
+            if t.table == table:
+                return True
+
+        return False
+
+    def _table_name(self, table):
+        table_name = table
+        if issubclass(table.__class__, Table):
+            table_name = table.name
+        return table_name
 
 if __name__ == "__main__":
-    pass
+    storage = FSStorage().open("./database")
+
+    from storage.ctable import DemoTable
+
+    table = DemoTable()
+    storage.create_table(table)
+
+    from storage.cmodel import DemoModel
+
+    storage.insert_into_table(table, DemoModel().randoms(5))
+
+    print storage.select_from_table(table)

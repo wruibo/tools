@@ -4,25 +4,22 @@
 
 
 def strips(strs, chars=None):
-    stripeds = []
-    for str in strs:
-        stripeds.append(str.strip(chars))
-    return stripeds
+    if isinstance(strs, list) or isinstance(strs, tuple):
+        stripeds = []
+        for str in strs:
+            stripeds.append(str.strip(chars))
+        return stripeds
+    else:
+        return strs.strip(chars)
 
-class A:
-    def __init__(self, a, b):
-        self.a = a
-        self.b = b
 
-    def __eq__(self, other):
-        if self.a == other.a and self.b == other.b:
-            return True
-        return False
+def quote(str, q="'"):
+    return "%s%s%s" % (q, str, q)
 
+
+def unquote(str):
+    return str.strip("'\"")
 
 if __name__ == "__main__":
-    d = A(1, 2)
-    c = A(1, 2)
-
-    if d == c:
-        print "eq"
+    print quote("123", '"')
+    print unquote("\'a\'")

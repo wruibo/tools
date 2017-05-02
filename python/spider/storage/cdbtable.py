@@ -18,7 +18,7 @@ from storage.cverifier import *
 FSTableOperationError = Exception
 
 
-class FSTable:
+class DBTable:
     '''
         table base on file
     '''
@@ -240,11 +240,11 @@ if __name__ == "__main__":
     table.index(NormalIndex, "normal_index", "name", "code")
     table.index(UniqueIndex, "unique_index", "code", "valid")
 
-    ftable = FSTable()
+    ftable = FStable()
     ftable.create("./", table)
 
     from storage.cmodel import DemoModel
     ftable.insert(DemoModel().randoms(10))
 
-    ftable1 = FSTable().load("./", table.name)
+    ftable1 = FStable().load("./", table.name)
     print ftable1.select()

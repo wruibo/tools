@@ -21,7 +21,6 @@ class Value:
             if cls.match(str):
                 return cls(str)
 
-
 class NullValue(Value):
     def __init__(self, value='null'):
         Value.__init__(self, value)

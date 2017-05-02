@@ -10,7 +10,7 @@ def isnone(s):
     :param s:
     :return:
     '''
-    s = str.strip().strip("'\"").lower()
+    s = s.strip().strip("'\"").lower()
     if s == 'none':
         return True
     return False
@@ -133,6 +133,10 @@ def typecls(s):
     '''
     s = s.lower()
 
+    #test none
+    if s=='none':
+        return None
+
     #test boolean
     if s=='true' or s=='false':
         return bool
@@ -144,3 +148,38 @@ def typecls(s):
     #string
     return str
 
+def objtostr(obj, escaped=None):
+    '''
+        object to string
+    :param obj:
+    :return:
+    '''
+    castfunc = {int.__name__:num2str, float.__name__:num2str, long.__name__:num2str, bool.__name__:bool2str, None.__class__.__name__:none2str}
+
+    s = castfunc.get(obj.__class__.__name__, str)(obj)
+    if escaped:
+        for c in escaped:
+            s = s.replace(c, "%"+str(hex(ord(c))))
+    return s
+
+def str2obj(s, escaped=None):
+    '''
+        string to object
+    :param str:
+    :return:
+    '''
+    castfunc = {int: str2num, float: str2num, long: str2num, bool: str2bool, None: str2none}
+
+    if escaped:
+        for c in escaped:
+            s = s.replace("%"+str(hex(ord(c))), c)
+
+    obj = castfunc.get(typecls(s), str)(s)
+
+    return obj
+
+
+if __name__ == "__main__":
+    print objtostr("123", ",|")
+
+    print str2obj("123.4")
