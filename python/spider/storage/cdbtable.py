@@ -9,7 +9,6 @@ from utility.clog import logger
 
 from storage.ckey import *
 from storage.ctype import *
-from storage.cindex import *
 from storage.cvalue import *
 from storage.cfield import *
 from storage.ctable import *
@@ -27,15 +26,32 @@ class DBTable:
         self.name = None #table name
         self.table = None #table structure
 
-    def __enter__(self):
-        return self
+    def create(self, dbc, table):
+        '''
+            create table
+        :return self
+        '''
+        try:
+            #initialize table parameters
+            self.dbc = dbc
+            self.name = table.name
+            self.table = table
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+            #check if table has exists
+            if self._exists():
+                self._update()
+            else:
+                self._create()
+
+            logger.info("create table %s...success.", self.name)
+            return self
+        except Exception, e:
+            logger.error("create table %s...failed. error: %s", self.name, str(e))
+            raise e
 
     def load(self, dbc, name):
         '''
-            load table
+            load table from database
         :return:  self or None
         '''
         try:
@@ -43,77 +59,21 @@ class DBTable:
             self.dbc = dbc
             self.name = name
 
+            #load table create sql
+            sql = self._fields()
 
-            #table file must be exist
-            if not is_file(self.table_file):
-                raise FSTableOperationError("table file not exist.")
+            #create table structure
+            sql = "show create table %s;" % self.name
+            cursor = self.dbc.cursor()
+            cursor.execute(sql)
+            create_sql = cursor.fetchall()[0][0]
 
-            #load table file
-            with open(self.table_file, 'r') as ftable:
-                self.table = Table().fromstr(ftable.read())
-
-            #load data file
-            if not is_file(self.data_file):
-                #create data file if not exists
-                self._create_data_file()
-            else:
-                #replace old data file if needed
-                with open(self.data_file) as fdata:
-                    nfields = strips(fdata.readline().split(","))
-                    if self.table.nfields() != nfields:
-                        self._replace_data_file()
+            self.table = Table().fromsql(create_sql)
 
             logger.info("loading table %s...success.", self.name)
             return self
         except Exception, e:
             logger.info("loading table %s...failed. error: %s", self.name, str(e))
-            raise e
-
-    def create(self, table):
-        '''
-            create table
-        :return boolean, true for create success
-        '''
-        try:
-            #initialize table parameters
-            self.path = join_paths(dbpath, table.name)
-            self.name = table.name
-            self.table_file = join_paths(self.path, "table")
-            self.data_file = join_paths(self.path, "data")
-            self.table = table
-
-            #create table directory
-            make_dirs(self.path)
-
-            #create table file
-            if is_file(self.table_file):
-                #replace old table file if needed
-                with open(self.table_file) as ftable:
-                    try:
-                        table = Table().fromstr(ftable.read())
-                        if self.table != table:
-                            self._replace_table_file()
-                    except:
-                        self._replace_table_file()
-            else:
-                #create new table file
-                self._create_table_file()
-
-            #create data file
-            if is_file(self.data_file):
-                #replace old data file if needed
-                with open(self.data_file) as fdata:
-                    nfields = strips(fdata.readline().split(","))
-                    if self.table.nfields() != nfields:
-                        self._replace_data_file()
-            else:
-                #create new data file
-                self._create_data_file()
-
-            logger.info("create table %s...success.", self.name)
-            return self
-        except Exception, e:
-            logger.error("create table %s...failed. error: %s", self.name, str(e))
             raise e
 
     def drop(self):
@@ -122,10 +82,12 @@ class DBTable:
         :return:
         '''
         try:
-            remove_dir(self.path)
+            sql = "drop table if exists %s;" % self.name
+            self.dbc.cursor().execute(sql)
+            logger.info("drop table %s...success", self.name)
         except Exception, e:
             logger.error("drop table %s...failed. error %s", self.name, str(e))
-
+            raise e
 
     def truncate(self):
         '''
@@ -133,33 +95,35 @@ class DBTable:
         :return:
         '''
         try:
-            remove_files(self.data_file)
-            self._create_data_file()
+            sql = "truncate table %s;" % table.name
+            self.dbc.cursor().execute(sql)
+            logger.info("truncate table %s...success", self.name)
         except Exception, e:
             logger.error("truncate table %s...failed. error %s", self.name, str(e))
+            raise e
 
     def select(self):
         '''
             select all data from table
         :return:
         '''
-        with open(self.data_file, "r") as fdata:
-            models = []
+        try:
+           nfields = self.table.nfields()
+           sql, models = "select %s from %s;" % (",".join(nfields), self.name), []
+           cursor = self.dbc.cursor()
+           cursor.execute(sql)
+           results = cursor.fetchall()
+           for result in results:
+               model = {}
+               for idx in range(0, len(result)):
+                   model[nfields[idx]] = result[idx]
+               models.append(model)
+           logger.info("select from table %s...success", self.name)
+           return models
 
-            #read field names
-            nfields = fdata.readline().strip().split(",")
-            #read data records
-            data = fdata.readline()
-            while data:
-                data = data.strip()
-                vfields = data.split(",")
-                model = {}
-                for idx in range(0, len(nfields)):
-                    model[nfields[idx]] = str2obj(vfields[idx])
-                models.append(model)
-                data = fdata.readline()
-
-            return models
+        except Exception, e:
+           logger.error("select from table %s...failed. error %s", self.name, str(e))
+           raise e
 
 
     def insert(self, models):
@@ -168,22 +132,86 @@ class DBTable:
         :param models:
         :return:
         '''
-        with open(self.data_file, "a") as fdata:
-            lines = []
+        try:
+            nfields, values = self.table.nfields(), []
             for model in models:
-                vfields = []
-                for nfield in self.table.nfields():
-                    vfields.append(objtostr(model.get(nfield)))
-                lines.append("%s\n"%",".join(vfields))
-            fdata.writelines(lines)
+                value = []
+                for nfield in nfields:
+                    value.append(model.get(nfield))
+                values.append("(%s)" % ",".join(values))
 
-    def _describe(self, ):
+            sql = "insert into %s(%s) values %s;" % (self.name, ",".join(nfields), "".join(values))
+            self.dbc.cursor().execute(sql)
+
+            logger.info("insert into table %s...success", self.name)
+        except Exception, e:
+            logger.error("insert into table %s...failed. error %s", self.name, str(e))
+            raise e
+
+
+    def _create(self):
+        '''
+            create table in database
+        :return:
+        '''
+        sql = self.table.tosql()
+        self.dbc.cursor().execute(sql)
+
+    def _udpate(self):
+        '''
+            update table in database
+        :return:
+        '''
+
+        after_column = None
+        columns = self._nfields()
+        for field in table.fields:
+            if not (field.name in columns):
+                if after_column is not None:
+                    sql = "alter table %s add column %s after %s" % (table.name, field.tosql(), after_column)
+                else:
+                    sql = "alter table %s add column %s;" % (table.name, field.tosql())
+                self.dbc.cursor().execute(sql)
+            after_column = field.name
+
+    def _exists(self):
+        '''
+            test if table has exist
+        :return:
+        '''
+        sql, tables = "show tables;", []
+
+        cursor = self.dbc.cursor()
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        for result in results:
+            tables.append(result[0].lower())
+
+        if self.name.lower() in tables:
+            return True
+
+        return False
+
+    def _nfields(self):
+        '''
+            get table field names in database
+        :return:
+        '''
+        #get nfields on table
+        sql, nfields = "desc %s;" % self.name, []
+        cursor = self.dbc.cursor()
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        for result in results:
+            nfields.append(result[0])
+
+        return nfields
 
 
 if __name__ == "__main__":
     table = Table("tb_demo")
     table.field("id", Int(), False, AutoIncValue())
-    table.field("code", String(32), False)
+    table.field("code", String(32), False, StringValue("123"))
     table.field("name", String(32), True)
     table.field("valid", Boolean(), True)
     table.field("create_time", BigInt(), True)
@@ -195,11 +223,5 @@ if __name__ == "__main__":
     table.index(NormalIndex, "normal_index", "name", "code")
     table.index(UniqueIndex, "unique_index", "code", "valid")
 
-    ftable = FStable()
-    ftable.create("./", table)
-
-    from storage.cmodel import DemoModel
-    ftable.insert(DemoModel().randoms(10))
-
-    ftable1 = FStable().load("./", table.name)
-    print ftable1.select()
+    from storage.chelper import SQLHelper
+    print SQLHelper.sql_create_table(table)

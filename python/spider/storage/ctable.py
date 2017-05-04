@@ -3,7 +3,6 @@
 '''
 from storage.ckey import *
 from storage.ctype import *
-from storage.cindex import *
 from storage.cvalue import *
 from storage.cfield import *
 from storage.cverifier import *
@@ -17,24 +16,20 @@ class Table:
         self.name = name
         self.fields = []
         self.keys = []
-        self.indexs = []
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.name==other.name and self.fields == other.fields and self.keys==other.keys and self.indexs==other.indexs
+            return self.name==other.name and self.fields == other.fields
         return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def field(self, name, type, nullable=True, default=NullValue(), verifier=DefaultVerifier()):
-        self.fields.append(Field(name, type, nullable, default, verifier))
+    def field(self, name, type, default=DefaultNull(), verifier=DefaultVerifier()):
+        self.fields.append(Field(name, type, default, verifier))
 
     def key(self, keycls, name, *fields):
         self.keys.append(keycls(name, *fields))
-
-    def index(self, indexcls, name, *fields):
-        self.indexs.append(indexcls(self.name, name, *fields))
 
     def nfields(self):
         names = []
@@ -48,14 +43,63 @@ class Table:
             names.append(key.name)
         return names
 
-    def nindexs(self):
-        names = []
-        for index in self.indexs:
-            names.append(index.name)
-        return names
-
     def match(self, model):
         return True
+
+    def tosql(self):
+        '''
+            translate table to create sql
+        :return:
+        '''
+        #field sql
+        sql_fields = []
+        for field in self.fields:
+            sql_fields.append("\t%s" % field.tosql())
+        sql_fields = ",\n".join(sql_fields)
+
+        #key sql
+        sql_keys = []
+        for key in self.keys:
+            sql_keys.append("\t%s" % key.tosql())
+        sql_keys = ",\n".join(sql_keys)
+
+        #table sql
+        sql_table = "create table %s\n(\n%s\n\n%s\n);" % (self.name, sql_fields, sql_keys)
+
+        return sql_table
+
+    def fromsql(self, sql):
+        '''
+            create table from sql
+        :param sql:
+        :return:
+        '''
+        regex_fields = re.compile(r"(`\w+`\s+\w+(\([,\d\s]+\))?([^,\)]+)?)[,|\)]", re.IGNORECASE)
+
+        #regex_keys = re.compile(r"(\w+\s+)?key\s*(`\w+`)?\s*\([^\(\)]+\)[\s,|\)]", re.IGNORECASE)
+
+        regex_keys = re.compile(r'((unique|primary)?'
+                               r'key'
+                               r'(`)?'
+                               r'[\w_]+'
+                               r'(`)?'
+                               r'\('
+                               r'[`\w,\s]+'
+                               r'\))',
+                               re.IGNORECASE)
+
+        #extract fields
+        mobjs = regex_fields.findall(sql)
+        for mobj in mobjs:
+            self.fields.append(Field().fromsql(mobj[0]))
+
+        #extract keys
+        mobjs = regex_keys.findall(sql)
+        for mobj in mobjs:
+            self.keys.append(Key().fromsql(mobj[0]))
+
+        return self
+
 
     def tostr(self):
         '''
@@ -72,19 +116,13 @@ class Table:
             sfield = "%s\n" % field.tostr()
             sfields += sfield
 
-        #translate indexs
-        sindexs = "[indexs]\n"
-        for index in self.indexs:
-            sindex = "%s\n" % index.tostr()
-            sindexs += sindex
-
         #translate keys
         skeys = "[keys]\n"
         for key in self.keys:
             skey = "%s\n" % key.tostr()
             skeys += skey
 
-        return "%s%s%s%s" % (sname, sfields, sindexs, skeys)
+        return "%s%s%s" % (sname, sfields, skeys)
 
     def fromstr(self, str):
         '''
@@ -115,8 +153,6 @@ class Table:
                         self.fields.append(Field().fromstr(line))
                     elif section == 'keys':
                         self.keys.append(Key().fromstr(line))
-                    elif section == 'indexs':
-                        self.indexs.append(Index().fromstr(line))
                     else:
                         pass
                 else:
@@ -128,23 +164,39 @@ class DemoTable(Table):
     def __init__(self, name="tb_demo"):
         Table.__init__(self, name)
 
-        self.field("id", Int(), False, AutoIncValue())
-        self.field("code", String(32), False)
-        self.field("name", String(32), True)
-        self.field("valid", Boolean(), True)
-        self.field("create_time", BigInt(), True)
+        self.field("id", Int(), AutoIncValue())
+        self.field("code", String(32))
+        self.field("name", String(32), StringValue("abc"))
+        self.field("valid", Boolean())
+        self.field("create_time", BigInt())
 
         self.key(PrimaryKey, "pk_id", "id")
         self.key(NormalKey, "normal_key", "name", "code")
         self.key(UniqueKey, "unique_key", "code", "valid")
 
-        self.index(NormalIndex, "normal_index", "name", "code")
-        self.index(UniqueIndex, "unique_index", "code", "valid")
-
 
 if __name__ == "__main__":
     table = DemoTable()
+
+    print table.tosql()
+
     str1 = table.tostr()
     print str1
 
     print DemoTable().fromstr(str1).tostr()
+
+    sql = "CREATE TABLE `tb_demo` (\
+              `id` int(11) NOT NULL AUTO_INCREMENT,\
+              `code` varchar(32) NOT NULL DEFAULT 'abc',\
+              `name` varchar(32) DEFAULT NULL,\
+              `valid` tinyint(1) NOT NULL DEFAULT 0,\
+              `create_time` bigint(20) DEFAULT NULL,\
+                  PRIMARY KEY (`id`),\
+                  UNIQUE KEY `unique_key` (`code`,`valid`),\
+                  UNIQUE KEY `unique_index` (`code`,`valid`),\
+                  KEY `normal_key` (`name`,`code`),\
+                  KEY `normal_index` (`name`,`code`)\
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+
+    t = Table().fromsql(sql)
+    print t

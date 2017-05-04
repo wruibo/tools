@@ -1,6 +1,8 @@
 '''
     value from define table
 '''
+import re
+
 from utility.ccast import *
 
 
@@ -12,18 +14,79 @@ class Value:
         if isinstance(other, self.__class__):
             return self.value == other.value
 
+    def tosql(self):
+        return "not null default %s" % self.tostr()
+
+    def fromsql(self, sql):
+        sql = sql.strip()
+
+        regex_value = re.compile(r'(?P<constraint>(not\s+null\s*)?)'
+                                 r'(?P<default>(default\s+)?)'
+                                 r'(?P<value>([^\s]+)?)',
+                                 re.IGNORECASE)
+        mobj = regex_value.match(sql)
+        if mobj:
+            constraint, default, value = mobj.group('constraint', 'default', 'value')
+            constraint, default, value = constraint.strip(), default.strip(), value.strip()
+            if default:
+                ValueCls = [NumberValue, BooleanValue, StringValue]
+                for cls in ValueCls:
+                    if cls.match(value):
+                        return cls(value)
+            elif constraint:
+                if value == 'auto_increment':
+                    return AutoIncValue()
+                else:
+                    return NotNull()
+            else:
+                return DefaultNull()
+
+        return DefaultNull()
+
     def tostr(self):
         return str(self.value)
 
     def fromstr(self, str):
-        ValueCls = [NullValue, AutoIncValue, NumberValue, BooleanValue, StringValue]
+        ValueCls = [DefaultNull, NotNull, NullValue, AutoIncValue, NumberValue, BooleanValue, StringValue]
         for cls in ValueCls:
             if cls.match(str):
                 return cls(str)
 
+
+class DefaultNull(Value):
+    def __init__(self, value="default_null"):
+        Value.__init__(self, value)
+
+    def tosql(self):
+        return "default null"
+
+    @staticmethod
+    def match(str):
+        str = str.strip().lower()
+        if str == "default_null":
+            return True
+        return False
+
+class NotNull(Value):
+    def __init__(self, value="not_null"):
+        Value.__init__(self, value)
+
+    def tosql(self):
+        return "not null"
+
+    @staticmethod
+    def match(str):
+        str = str.strip().lower()
+        if str == "not_null":
+            return True
+        return False
+
 class NullValue(Value):
     def __init__(self, value='null'):
         Value.__init__(self, value)
+
+    def tosql(self):
+        return "%s" % self.value
 
     @staticmethod
     def match(str):
@@ -36,6 +99,9 @@ class NullValue(Value):
 class AutoIncValue(Value):
     def __init__(self, value='auto_increment'):
         Value.__init__(self, value)
+
+    def tosql(self):
+        return "not null %s" % self.tostr()
 
     @staticmethod
     def match(str):

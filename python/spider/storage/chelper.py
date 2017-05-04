@@ -13,19 +13,19 @@ class SQLHelper:
     @staticmethod
     def sql_type(field):
         type = field.type
-        if isinstance(type, Type.Int):
+        if isinstance(type, Int):
             return "integer"
-        elif isinstance(type, Type.BigInt):
+        elif isinstance(type, BigInt):
             return "bigint"
-        elif isinstance(type, Type.Float):
+        elif isinstance(type, Float):
             return "float"
-        elif isinstance(type, Type.Decimal):
+        elif isinstance(type, Decimal):
             return "decimal(%d,%d)" % (type.length, type.precision)
-        elif isinstance(type, Type.Boolean):
+        elif isinstance(type, Boolean):
             return "boolean"
-        elif isinstance(type, Type.String):
+        elif isinstance(type, String):
             return "varchar(%d)" % type.length
-        elif isinstance(type, Type.Text):
+        elif isinstance(type, Text):
             return "text"
         else:
             raise TypeError("unsupport column type: %s" % type.__class__.__name__)
@@ -33,37 +33,37 @@ class SQLHelper:
     @staticmethod
     def sql_default(field):
         value = field.default
-        if isinstance(value, Value.Null):
+        if isinstance(value, NullValue):
             return "default null"
-        elif isinstance(value, Value.AutoInc):
+        elif isinstance(value, AutoIncValue):
             return "auto_increment"
-        elif isinstance(value, Value.Boolean):
+        elif isinstance(value, Boolean):
             return "default %s" % str(value.value).lower()
-        elif isinstance(value, Value.Int) or isinstance(value, Value.BigInt):
+        elif isinstance(value, Int) or isinstance(value, BigInt):
             return "default %d" % value.value
-        elif isinstance(value, Value.Float) or isinstance(value, Value.Decimal):
+        elif isinstance(value, Float) or isinstance(value, Decimal):
             return "default %f" % value.value
-        elif isinstance(value, Value.String) or isinstance(value, Value.Text):
+        elif isinstance(value, String) or isinstance(value, Text):
             return "default \'%s\'" % value.value
         else:
             return ""
 
     @staticmethod
     def sql_key(key):
-        if isinstance(key, Key.NormalKey):
+        if isinstance(key, NormalKey):
             return "\tkey %s(%s)" % (key.name, ",".join(key.fields))
-        elif isinstance(key, Key.UniqueKey):
+        elif isinstance(key, UniqueKey):
             return "\tunique key %s(%s)" % (key.name, ",".join(key.fields))
-        elif isinstance(key, Key.PrimaryKey):
+        elif isinstance(key, PrimaryKey):
             return "\tprimary key (%s)" % ",".join(key.fields)
         else:
             return ""
 
     @staticmethod
     def sql_index(index):
-        if isinstance(index, Index.NormalIndex):
+        if isinstance(index, NormalIndex):
             return "create index %s on %s\n(\n\t%s\n);" % (index.name, index.table, ",\n\t".join(index.fields))
-        elif isinstance(index, Index.UniqueIndex):
+        elif isinstance(index, UniqueIndex):
             return "create unique index %s on %s\n(\n\t%s\n);" % (index.name, index.table, ",\n\t".join(index.fields))
         else:
             return ""
@@ -223,7 +223,6 @@ class DBHelper:
         return cursor.fetchall()
 
 
-from utility.cdir import *
 from utility.cpath import *
 
 

@@ -9,7 +9,6 @@ from utility.clog import logger
 
 from storage.ckey import *
 from storage.ctype import *
-from storage.cindex import *
 from storage.cvalue import *
 from storage.cfield import *
 from storage.ctable import *
@@ -35,43 +34,6 @@ class FSTable:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-    def load(self, dbpath, name):
-        '''
-            load table
-        :return:  self or None
-        '''
-        try:
-            #initialize table parameters
-            self.path = join_paths(dbpath, name)
-            self.name = name
-            self.table_file = join_paths(self.path, "table")
-            self.data_file = join_paths(self.path, "data")
-
-            #table file must be exist
-            if not is_file(self.table_file):
-                raise FSTableOperationError("table file not exist.")
-
-            #load table file
-            with open(self.table_file, 'r') as ftable:
-                self.table = Table().fromstr(ftable.read())
-
-            #load data file
-            if not is_file(self.data_file):
-                #create data file if not exists
-                self._create_data_file()
-            else:
-                #replace old data file if needed
-                with open(self.data_file) as fdata:
-                    nfields = strips(fdata.readline().split(","))
-                    if self.table.nfields() != nfields:
-                        self._replace_data_file()
-
-            logger.info("loading table %s...success.", self.name)
-            return self
-        except Exception, e:
-            logger.info("loading table %s...failed. error: %s", self.name, str(e))
-            raise e
 
     def create(self, dbpath, table):
         '''
@@ -118,6 +80,43 @@ class FSTable:
             return self
         except Exception, e:
             logger.error("create table %s...failed. error: %s", self.name, str(e))
+            raise e
+
+    def load(self, dbpath, name):
+        '''
+            load table
+        :return:  self or None
+        '''
+        try:
+            #initialize table parameters
+            self.path = join_paths(dbpath, name)
+            self.name = name
+            self.table_file = join_paths(self.path, "table")
+            self.data_file = join_paths(self.path, "data")
+
+            #table file must be exist
+            if not is_file(self.table_file):
+                raise FSTableOperationError("table file not exist.")
+
+            #load table file
+            with open(self.table_file, 'r') as ftable:
+                self.table = Table().fromstr(ftable.read())
+
+            #load data file
+            if not is_file(self.data_file):
+                #create data file if not exists
+                self._create_data_file()
+            else:
+                #replace old data file if needed
+                with open(self.data_file) as fdata:
+                    nfields = strips(fdata.readline().split(","))
+                    if self.table.nfields() != nfields:
+                        self._replace_data_file()
+
+            logger.info("loading table %s...success.", self.name)
+            return self
+        except Exception, e:
+            logger.info("loading table %s...failed. error: %s", self.name, str(e))
             raise e
 
     def drop(self):
@@ -227,18 +226,16 @@ class FSTable:
 
 if __name__ == "__main__":
     table = Table("tb_demo")
-    table.field("id", Int(), False, AutoIncValue())
-    table.field("code", String(32), False)
-    table.field("name", String(32), True)
-    table.field("valid", Boolean(), True)
-    table.field("create_time", BigInt(), True)
+    table.field("id", Int(), AutoIncValue())
+    table.field("code", String(32), NotNull())
+    table.field("name", String(32), StringValue("123"))
+    table.field("valid", Boolean())
+    table.field("create_time", BigInt())
 
     table.key(PrimaryKey, "pk_id", "id")
     table.key(NormalKey, "normal_key", "name","code")
     table.key(UniqueKey, "unique_key", "code", "valid")
 
-    table.index(NormalIndex, "normal_index", "name", "code")
-    table.index(UniqueIndex, "unique_index", "code", "valid")
 
     ftable = FSTable()
     ftable.create("./", table)
@@ -247,4 +244,4 @@ if __name__ == "__main__":
     ftable.insert(DemoModel().randoms(10))
 
     ftable1 = FSTable().load("./", table.name)
-    print ftable1.select()
+    print ftable1.table.tosql()

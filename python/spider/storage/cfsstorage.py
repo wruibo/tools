@@ -24,18 +24,23 @@ class FSStorage(Storage):
             open storage or create it if not exist
         :return:
         '''
-        with clock(self.lock):
-            #init storage path
-            self.path = path
+        try:
+            with clock(self.lock):
+                #init storage path
+                self.path = path
 
-            if not path_exists(self.path):
-                #create database
-                self._create()
-            else:
-                # load database
-                self._load()
+                if not path_exists(self.path):
+                    #create database
+                    self._create()
+                else:
+                    # load database
+                    self._load()
 
-            return self
+                return self
+            logger.info("open storage %s...success. %d tables.", self.path, len(self.tables))
+        except Exception, e:
+            logger.error("open storage %s...failed. error: %s", self.path, str(e))
+            raise e
 
     def close(self):
         '''
@@ -53,12 +58,21 @@ class FSStorage(Storage):
         '''
         with clock(self.lock):
             # test if the table has loaded
-            if self._table_loaded(table):
-                logger.info("create table %s...exists.", table.name)
-            else:
-                #create new table
-                table = FSTable().create(self.path, table)
-                self.tables.append(table)
+            for t in self.tables:
+                if t.table == table:
+                    logger.info("create table %s...exists.", table.name)
+                    return
+
+            #create new table
+            table = FSTable().create(self.path, table)
+
+            for i in range(0, len(self.tables)):
+                t = self.tables[i]
+                if t.table.name == table.name:
+                    self.tables.pop(i)
+                    break
+
+            self.tables.append(table)
 
     def drop_table(self, table):
         '''
@@ -132,20 +146,8 @@ class FSStorage(Storage):
         '''
         #load tables in storage
         for table_name in list_dirs(self.path):
-            table = FStable().load(self.path, table_name)
+            table = FSTable().load(self.path, table_name)
             self.tables.append(table)
-
-    def _table_loaded(self, table):
-        '''
-            test if table(schema) has loaded
-        :param table:
-        :return:
-        '''
-        for t in self.tables:
-            if t.table == table:
-                return True
-
-        return False
 
     def _table_name(self, table):
         table_name = table
