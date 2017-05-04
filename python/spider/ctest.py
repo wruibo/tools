@@ -48,6 +48,40 @@ class Que:
 
 
 if __name__ == "__main__":
-    q = Que()
-    for i in q:
-        print i
+    import re
+
+    sql = "CREATE TABLE `tb_demo` (\
+              `id` int(11) NOT NULL AUTO_INCREMENT,\
+              `code` varchar(32) NOT NULL DEFAULT 'abc',\
+              `name` varchar(32) DEFAULT NULL,\
+              `valid` tinyint(1) NOT NULL DEFAULT 0,\
+              `create_time` bigint(20) DEFAULT NULL,\
+                  PRIMARY KEY (`id`),\
+                  UNIQUE KEY `unique_key` (`code`,`valid`),\
+                  UNIQUE KEY `unique_index` (`code`,`valid`),\
+                  KEY `normal_key` (`name`,`code`),\
+                  KEY `normal_index` (`name`,`code`)\
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+
+    regex_keys = re.compile(r'('
+                            r'(unique\s+|primary\s+)?'
+                            r'key\s*'
+                            r'(`?[\w_]+`?\s*)?'
+                            r'\([^\(\)]+\)'
+                            r')',
+                            re.IGNORECASE)
+    mobjs = regex_keys.findall(sql)
+    for mobj in mobjs:
+        print mobj[0]
+
+    print "\n\n"
+    regex_fields =  re.compile(r'('
+                               r'`[\w_]+`\s+'
+                               r'\w+'
+                               r'(\([^\(\)]+\))?\s+'
+                               r'[^,]*'
+                               r')',
+                               re.IGNORECASE)
+    mobjs = regex_fields.findall(sql)
+    for mobj in mobjs:
+        print mobj[0]

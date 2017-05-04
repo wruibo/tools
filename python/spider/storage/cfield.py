@@ -26,7 +26,7 @@ class Field:
         return self.verifier.verify(value)
 
     def tosql(self):
-        return "%s %s %s" % (self.name, self.type.tosql(), self.default.tosql())
+        return "`%s` %s %s" % (self.name, self.type.tosql(), self.default.tosql())
 
     def fromsql(self, sql):
         sql = sql.strip()

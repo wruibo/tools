@@ -59,9 +59,6 @@ class DBTable:
             self.dbc = dbc
             self.name = name
 
-            #load table create sql
-            sql = self._fields()
-
             #create table structure
             sql = "show create table %s;" % self.name
             cursor = self.dbc.cursor()
@@ -157,7 +154,7 @@ class DBTable:
         sql = self.table.tosql()
         self.dbc.cursor().execute(sql)
 
-    def _udpate(self):
+    def _update(self):
         '''
             update table in database
         :return:
@@ -165,12 +162,12 @@ class DBTable:
 
         after_column = None
         columns = self._nfields()
-        for field in table.fields:
+        for field in self.table.fields:
             if not (field.name in columns):
                 if after_column is not None:
-                    sql = "alter table %s add column %s after %s" % (table.name, field.tosql(), after_column)
+                    sql = "alter table %s add column %s after %s" % (self.table.name, field.tosql(), after_column)
                 else:
-                    sql = "alter table %s add column %s;" % (table.name, field.tosql())
+                    sql = "alter table %s add column %s;" % (self.table.name, field.tosql())
                 self.dbc.cursor().execute(sql)
             after_column = field.name
 
@@ -219,9 +216,6 @@ if __name__ == "__main__":
     table.key(PrimaryKey, "pk_id", "id")
     table.key(NormalKey, "normal_key", "name","code")
     table.key(UniqueKey, "unique_key", "code", "valid")
-
-    table.index(NormalIndex, "normal_index", "name", "code")
-    table.index(UniqueIndex, "unique_index", "code", "valid")
 
     from storage.chelper import SQLHelper
     print SQLHelper.sql_create_table(table)

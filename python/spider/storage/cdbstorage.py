@@ -36,16 +36,16 @@ class DBStorage(Storage):
             if not self._exists():
                 #create database
                 self._create()
+                self._use()
             else:
                 # load database
+                self._use()
                 self._load()
 
-            self._use()
-
             return self
-            logger.info("open storage mysql://%s:%s@%s:%d/%s...success. %d tables.", user, passwd, host, port, self.dbn, len(self.tables))
+            logger.info("open storage mysql://%s:%s@%s:%d/%s...success. %d tables.", user, pwd, host, port, self.dbn, len(self.tables))
         except Exception, e:
-            logger.error("open storage mysql://%s:%s@%s:%d/%s...failed. error: %s", user, passwd, host, port, self.dbn, str(e))
+            logger.error("open storage mysql://%s:%s@%s:%d/%s...failed. error: %s", user, pwd, host, port, self.dbn, str(e))
             raise e
 
     def close(self):
@@ -57,9 +57,9 @@ class DBStorage(Storage):
         try:
             if self.dbc is not None:
                 self.dbc.close()
-            logger.info("close storage mysql://%s:%s@%s:%d/%s...success.", self.user, self.passwd, self.host, self.port, self.dbn)
+            logger.info("close storage mysql://%s:%s@%s:%d/%s...success.", self.user, self.pwd, self.host, self.port, self.dbn)
         except Exception, e:
-            logger.info("close storage mysql://%s:%s@%s:%d/%s...failed. error: %s", self.user, self.passwd, self.host, self.port, self.dbn, str(e))
+            logger.info("close storage mysql://%s:%s@%s:%d/%s...failed. error: %s", self.user, self.pwd, self.host, self.port, self.dbn, str(e))
             raise e
 
     def create_table(self, table):
@@ -185,7 +185,7 @@ class DBStorage(Storage):
             switch connection to current database
         :return:
         '''
-        sql = "use %s;" % self.name
+        sql = "use %s;" % self.dbn
         self.dbc.cursor().execute(sql)
 
 
@@ -197,15 +197,7 @@ class DBStorage(Storage):
 
 if __name__ == "__main__":
     from storage.ctable import *
-    from storage.crecord import *
 
-    storage = DBStorage("localhost", "root", "root", "db_spider")
-    table = DemoTable()
-    table.create(storage)
-    table.truncate()
-
-    table.insert(DemoRecord.random_records(10))
-
-    for record in table.getall(DemoRecord):
-        print record
+    storage = DBStorage().open("localhost", "root", "root", "db_spider")
+    table = storage.create_table(DemoTable())
 

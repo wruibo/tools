@@ -64,7 +64,10 @@ class Table:
         sql_keys = ",\n".join(sql_keys)
 
         #table sql
-        sql_table = "create table %s\n(\n%s\n\n%s\n);" % (self.name, sql_fields, sql_keys)
+        if sql_keys:
+            sql_table = "create table if not exists `%s`\n(\n%s,\n%s\n);" % (self.name, sql_fields, sql_keys)
+        else:
+            sql_table = "create table if not exists `%s`\n(\n%s\n);" % (self.name, sql_fields)
 
         return sql_table
 
@@ -74,19 +77,21 @@ class Table:
         :param sql:
         :return:
         '''
-        regex_fields = re.compile(r"(`\w+`\s+\w+(\([,\d\s]+\))?([^,\)]+)?)[,|\)]", re.IGNORECASE)
+        regex_fields = re.compile(r'('
+                                  r'`[\w_]+`\s+'
+                                  r'\w+'
+                                  r'(\([^\(\)]+\))?\s+'
+                                  r'[^,]*'
+                                  r')',
+                                  re.IGNORECASE)
 
-        #regex_keys = re.compile(r"(\w+\s+)?key\s*(`\w+`)?\s*\([^\(\)]+\)[\s,|\)]", re.IGNORECASE)
-
-        regex_keys = re.compile(r'((unique|primary)?'
-                               r'key'
-                               r'(`)?'
-                               r'[\w_]+'
-                               r'(`)?'
-                               r'\('
-                               r'[`\w,\s]+'
-                               r'\))',
-                               re.IGNORECASE)
+        regex_keys = re.compile(r'('
+                                r'(unique\s+|primary\s+)?'
+                                r'key\s*'
+                                r'(`?[\w_]+`?\s*)?'
+                                r'\([^\(\)]+\)'
+                                r')',
+                                re.IGNORECASE)
 
         #extract fields
         mobjs = regex_fields.findall(sql)
@@ -130,8 +135,8 @@ class Table:
         :param str:
         :return:
         '''
-        SectionRegex = re.compile("^\s*\[\s*(?P<section>\w+)\s*\]\s*$")
-        NameRegex = re.compile("\s*name\s*=\s*(?P<name>\w+)\s*")
+        regex_section = re.compile("^\s*\[\s*(?P<section>\w+)\s*\]\s*$")
+        regex_name = re.compile("\s*name\s*=\s*(?P<name>\w+)\s*")
         section = None
         lines = str.splitlines()
         for line in lines:
@@ -139,14 +144,14 @@ class Table:
                 continue
 
 
-            msec = SectionRegex.match(line)
+            msec = regex_section.match(line)
             if msec:
                 section = msec.group('section')
                 section = section.lower()
             else:
                 if section:
                     if section == 'table':
-                        mname = NameRegex.match(line)
+                        mname = regex_name.match(line)
                         if mname:
                             self.name = mname.group('name')
                     elif section == 'fields':
@@ -169,6 +174,7 @@ class DemoTable(Table):
         self.field("name", String(32), StringValue("abc"))
         self.field("valid", Boolean())
         self.field("create_time", BigInt())
+        self.field("update_time", BigInt())
 
         self.key(PrimaryKey, "pk_id", "id")
         self.key(NormalKey, "normal_key", "name", "code")
@@ -185,18 +191,4 @@ if __name__ == "__main__":
 
     print DemoTable().fromstr(str1).tostr()
 
-    sql = "CREATE TABLE `tb_demo` (\
-              `id` int(11) NOT NULL AUTO_INCREMENT,\
-              `code` varchar(32) NOT NULL DEFAULT 'abc',\
-              `name` varchar(32) DEFAULT NULL,\
-              `valid` tinyint(1) NOT NULL DEFAULT 0,\
-              `create_time` bigint(20) DEFAULT NULL,\
-                  PRIMARY KEY (`id`),\
-                  UNIQUE KEY `unique_key` (`code`,`valid`),\
-                  UNIQUE KEY `unique_index` (`code`,`valid`),\
-                  KEY `normal_key` (`name`,`code`),\
-                  KEY `normal_index` (`name`,`code`)\
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8"
-
-    t = Table().fromsql(sql)
-    print t
+    print DemoTable().tosql()

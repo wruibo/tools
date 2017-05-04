@@ -3,7 +3,6 @@
 '''
 import re
 
-
 class Type:
     def __init__(self):
         pass

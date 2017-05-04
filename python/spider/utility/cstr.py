@@ -13,13 +13,25 @@ def strips(strs, chars=None):
         return strs.strip(chars)
 
 
-def quote(str, q="'"):
-    return "%s%s%s" % (q, str, q)
+def quotes(s, q="'"):
+    if isinstance(s, str):
+        return "%s%s%s" % (q, s, q)
+    else:
+        strs = []
+        for ss in s:
+            strs.append("%s%s%s" % (q, ss, q))
+        return strs
 
+def unquotes(s, q="'\""):
+    if isinstance(s, str):
+        return s.strip(q)
+    else:
+        strs = []
+        for ss in s:
+            strs.append(ss.strip(q))
+        return strs
 
-def unquote(str):
-    return str.strip("'\"")
 
 if __name__ == "__main__":
-    print quote("123", '"')
-    print unquote("\'a\'")
+    print quotes(("123","345"), '"')
+    print unquotes("\'a\'")

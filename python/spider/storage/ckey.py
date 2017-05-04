@@ -3,6 +3,8 @@
 '''
 import re
 
+from utility.cstr import quotes
+
 
 class Key:
     def __init__(self, type=None, name=None, *fields):
@@ -17,7 +19,7 @@ class Key:
         return False
 
     def tosql(self):
-        return "%s %s(%s)" % (self.type, self.name, ",".join(self.fields))
+        return "%s `%s`(%s)" % (self.type, self.name, ",".join(quotes(self.fields, '`')))
 
     def fromsql(self, sql):
         sql = sql.strip()
