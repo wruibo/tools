@@ -5,7 +5,8 @@
 
 class Storage:
     def __init__(self):
-        pass
+        self.tindexs = {} # table index by name
+        self.tables = []  # tables in storage
 
     def open(self, *args, **kwargs):
         '''
@@ -17,6 +18,10 @@ class Storage:
         pass
 
     def close(self):
+        '''
+            close storage
+        :return:
+        '''
         pass
 
     def create_table(self, table):
@@ -27,35 +32,61 @@ class Storage:
         '''
         pass
 
-    def drop_table(self, table):
+    def describe_tables(self):
+        '''
+            describe all table structures
+        :return:
+        '''
+        pass
+
+    def drop_table(self, name):
         '''
             drop table in storage
-        :param table:
+        :param name:
         :return:
         '''
         pass
 
-    def truncate_table(self, table):
+    def drop_tables(self):
         '''
-            truncate table in storage
-        :param table:
+            clear all tables in storage
         :return:
         '''
         pass
 
-    def select_from_table(self, table):
+    def truncate_table(self, name):
         '''
-            select data from table in storage
-        :param table:
+            truncate table data
+        :param name:
         :return:
         '''
-        pass
+        table = self.tables[self.tindexs[name]]
+        table.truncate()
 
-    def insert_into_table(self, table, models):
+    def select_from_table(self, name):
         '''
-            insert data into table in storage
-        :param table:
+            select all records from table
+        :param name:
+        :return:
+        '''
+        table = self.tables[self.tindexs[name]]
+        return table.select()
+
+    def insert_into_table(self, name, models):
+        '''
+            insert records into table
+        :param name:
         :param models:
         :return:
         '''
-        pass
+        table = self.tables[self.tindexs[name]]
+        table.insert(models)
+
+    def _rebuild_tindex(self):
+        '''
+            rebuild table index->pos
+        :return:
+        '''
+        self.tindexs = {}
+        for idx in range(0, len(self.tables)):
+            self.tindexs[self.tables[idx].table.name] = idx

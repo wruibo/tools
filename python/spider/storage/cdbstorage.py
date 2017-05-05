@@ -20,8 +20,6 @@ class DBStorage(Storage):
         self.dbn = None # database name
         self.dbc = None #database connection
 
-        self.tables = []
-
     def open(self, host, user, pwd, dbn, port=3306):
         '''
             open database or create it if not exist
@@ -41,6 +39,8 @@ class DBStorage(Storage):
                 # load database
                 self._use()
                 self._load()
+
+            self._rebuild_tindex()
 
             return self
             logger.info("open storage mysql://%s:%s@%s:%d/%s...success. %d tables.", user, pwd, host, port, self.dbn, len(self.tables))
@@ -85,54 +85,42 @@ class DBStorage(Storage):
 
         self.tables.append(dbtable)
 
-    def drop_table(self, table):
+        self._rebuild_tindex()
+
+    def describe_tables(self):
+        '''
+            describe all table structures
+        :return:
+        '''
+        tables = []
+        for table in self.tables:
+            tables.append(table.desc())
+        return tables
+
+
+    def drop_table(self, name):
         '''
             drop table in current database
         :param table:
         :return:
         '''
-        table_name = self._table_name(table)
-
         for table in self.tables:
-            if table.name==table:
+            if table.name == name:
                 table.drop()
                 self.tables.remove(table)
 
+        self._rebuild_tindex()
 
-    def truncate_table(self, table):
+    def drop_tables(self):
         '''
-            truncate table data
-        :param table:
+            clear all tables in storage
         :return:
         '''
-        table_name = self._table_name(table)
-
         for table in self.tables:
-            if table.name==table_name:
-                table.truncate()
+            table.drop()
+        self.tables = []
 
-    def select_from_table(self, table):
-        '''
-            select all records from table
-        :param table:
-        :return:
-        '''
-        table_name = self._table_name(table)
-        for table in self.tables:
-            if table.name==table_name:
-                return table.select()
-
-    def insert_into_table(self, table, models):
-        '''
-            insert records into table
-        :param table:
-        :param models:
-        :return:
-        '''
-        table_name = self._table_name(table)
-        for table in self.tables:
-            if table.name == table_name:
-                table.insert(models)
+        self._rebuild_tindex()
 
     def _exists(self):
         '''
@@ -189,15 +177,6 @@ class DBStorage(Storage):
         self.dbc.cursor().execute(sql)
 
 
-    def _table_name(self, table):
-        table_name = table
-        if issubclass(table.__class__, Table):
-            table_name = table.name
-        return table_name
-
 if __name__ == "__main__":
-    from storage.ctable import *
-
-    storage = DBStorage().open("localhost", "root", "root", "db_spider")
-    table = storage.create_table(DemoTable())
+    pass
 

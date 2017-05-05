@@ -5,6 +5,7 @@
 from utility.cstr import *
 from utility.cpath import *
 from utility.clog import logger
+from utility.cutil import is_subset
 
 
 from storage.ckey import *
@@ -12,19 +13,18 @@ from storage.ctype import *
 from storage.cvalue import *
 from storage.cfield import *
 from storage.ctable import *
+from storage.citable import *
 from storage.cverifier import *
 
 FSTableOperationError = Exception
 
 
-class DBTable:
+class DBTable(ITable):
     '''
         table base on file
     '''
     def __init__(self):
         self.dbc = None #database connection
-        self.name = None #table name
-        self.table = None #table structure
 
     def create(self, dbc, table):
         '''
@@ -34,14 +34,26 @@ class DBTable:
         try:
             #initialize table parameters
             self.dbc = dbc
-            self.name = table.name
             self.table = table
+            self.name = table.name
 
             #check if table has exists
-            if self._exists():
-                self._update()
+            if self._exists_table():
+                #exists table
+                old_table = self.desc()
+                if old_table != self.table:
+                    if is_subset(old_table.nfields(), self.table.nfields()):
+                        #upgrade table
+                        self._upgrade_table()
+                    else:
+                        #replace table
+                        self._replace_table
+                else:
+                    #table is the same as in database
+                    pass
             else:
-                self._create()
+                #create new table
+                self._create_table()
 
             logger.info("create table %s...success.", self.name)
             return self
@@ -63,7 +75,7 @@ class DBTable:
             sql = "show create table %s;" % self.name
             cursor = self.dbc.cursor()
             cursor.execute(sql)
-            create_sql = cursor.fetchall()[0][0]
+            create_sql = cursor.fetchall()[0][1]
 
             self.table = Table().fromsql(create_sql)
 
@@ -71,6 +83,25 @@ class DBTable:
             return self
         except Exception, e:
             logger.info("loading table %s...failed. error: %s", self.name, str(e))
+            raise e
+
+    def desc(self):
+        '''
+               descrite table from storage
+           :return:  Table
+           '''
+        try:
+            sql = "show create table %s;" % self.name
+            cursor = self.dbc.cursor()
+            cursor.execute(sql)
+            create_sql = cursor.fetchall()[0][1]
+
+            self.table = Table().fromsql(create_sql)
+
+            logger.info("describe table %s...success", self.name)
+
+        except Exception, e:
+            logger.error("describe table %s...failed. error %s", self.name, str(e))
             raise e
 
     def drop(self):
@@ -130,12 +161,19 @@ class DBTable:
         :return:
         '''
         try:
-            nfields, values = self.table.nfields(), []
+            #get fields except default auto increment field
+            nfields = []
+            for field in self.table.fields:
+                if not isinstance(field.default, AutoIncValue):
+                    nfields.append(field.name)
+
+            #
+            values = []
             for model in models:
                 value = []
                 for nfield in nfields:
                     value.append(model.get(nfield))
-                values.append("(%s)" % ",".join(values))
+                values.append("(%s)" % ",".join(value))
 
             sql = "insert into %s(%s) values %s;" % (self.name, ",".join(nfields), "".join(values))
             self.dbc.cursor().execute(sql)
@@ -145,8 +183,7 @@ class DBTable:
             logger.error("insert into table %s...failed. error %s", self.name, str(e))
             raise e
 
-
-    def _create(self):
+    def _create_table(self):
         '''
             create table in database
         :return:
@@ -154,16 +191,30 @@ class DBTable:
         sql = self.table.tosql()
         self.dbc.cursor().execute(sql)
 
-    def _update(self):
+    def _replace_table(self):
+        '''
+            replace old table
+        :return:
+        '''
+        from time import strftime
+
+        #rename old table
+        old_table_name = "%s_old_%s" % (self.name, strftime("%Y%m%d%H%M%S"))
+        sql = "rename table %s to %s;" % (self.name, old_table_name)
+        sql.dbc.cursor().execute(sql)
+
+        #create new table
+        self._create_table()
+
+    def _upgrade_table(self):
         '''
             update table in database
         :return:
         '''
-
         after_column = None
-        columns = self._nfields()
+        noldfields = self._table_fields()
         for field in self.table.fields:
-            if not (field.name in columns):
+            if not (field.name in noldfields):
                 if after_column is not None:
                     sql = "alter table %s add column %s after %s" % (self.table.name, field.tosql(), after_column)
                 else:
@@ -171,7 +222,7 @@ class DBTable:
                 self.dbc.cursor().execute(sql)
             after_column = field.name
 
-    def _exists(self):
+    def _exists_table(self):
         '''
             test if table has exist
         :return:
@@ -189,7 +240,7 @@ class DBTable:
 
         return False
 
-    def _nfields(self):
+    def _table_fields(self):
         '''
             get table field names in database
         :return:

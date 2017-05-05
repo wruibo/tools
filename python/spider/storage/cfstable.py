@@ -1,77 +1,78 @@
 '''
     file system table
 '''
+import threading
 
 from utility.cstr import *
 from utility.cpath import *
 from utility.clog import logger
+from utility.clock import clock
+from utility.cutil import is_subset
 
-
-from storage.ckey import *
-from storage.ctype import *
-from storage.cvalue import *
-from storage.cfield import *
 from storage.ctable import *
+from storage.citable import *
 from storage.cverifier import *
 
 FSTableOperationError = Exception
 
 
-class FSTable:
+class FSTable(ITable):
     '''
         table base on file
     '''
     def __init__(self):
         self.path = None
-        self.name = None
         self.table_file = None
         self.data_file = None
 
-        self.table = None
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.lock = threading.Lock() #lock for operate table data
 
     def create(self, dbpath, table):
         '''
             create table
-        :return boolean, true for create success
+        :return self
         '''
         try:
             #initialize table parameters
-            self.path = join_paths(dbpath, table.name)
+            self.table = table
             self.name = table.name
+
+            self.path = join_paths(dbpath, table.name)
             self.table_file = join_paths(self.path, "table")
             self.data_file = join_paths(self.path, "data")
-            self.table = table
 
-            #create table directory
+            #create table directory if it is not exists
             make_dirs(self.path)
 
-            #create table file
+            #create or replace table file
             if is_file(self.table_file):
+
                 #replace old table file if needed
-                with open(self.table_file) as ftable:
-                    try:
-                        table = Table().fromstr(ftable.read())
-                        if self.table != table:
-                            self._replace_table_file()
-                    except:
+                old_table = self.desc()
+                if self.table != old_table:
+                    if is_subset(old_table.nfields(), self.table.nfields()):
+                        #upgrade data file
+                        self._upgrade_data_file()
+                    else:
+                        #replace data file
                         self._replace_table_file()
+                else:
+                    #new table is same as exists table
+                    pass
             else:
                 #create new table file
                 self._create_table_file()
 
-            #create data file
+            #create or upgrade or replace data file
             if is_file(self.data_file):
                 #replace old data file if needed
                 with open(self.data_file) as fdata:
                     nfields = strips(fdata.readline().split(","))
                     if self.table.nfields() != nfields:
-                        self._replace_data_file()
+                        if is_subset(nfields, self.table.nfields()):
+                            self._upgrade_data_file()
+                        else:
+                            self._replace_data_file()
             else:
                 #create new data file
                 self._create_data_file()
@@ -85,22 +86,17 @@ class FSTable:
     def load(self, dbpath, name):
         '''
             load table
-        :return:  self or None
+        :return:  self
         '''
         try:
             #initialize table parameters
-            self.path = join_paths(dbpath, name)
             self.name = name
+
+            self.path = join_paths(dbpath, name)
             self.table_file = join_paths(self.path, "table")
             self.data_file = join_paths(self.path, "data")
 
-            #table file must be exist
-            if not is_file(self.table_file):
-                raise FSTableOperationError("table file not exist.")
-
-            #load table file
-            with open(self.table_file, 'r') as ftable:
-                self.table = Table().fromstr(ftable.read())
+            self.table = self.desc()
 
             #load data file
             if not is_file(self.data_file):
@@ -111,12 +107,28 @@ class FSTable:
                 with open(self.data_file) as fdata:
                     nfields = strips(fdata.readline().split(","))
                     if self.table.nfields() != nfields:
-                        self._replace_data_file()
+                        if is_subset(nfields, self.table.nfields()):
+                            self._upgrade_data_file()
+                        else:
+                            self._replace_data_file()
 
             logger.info("loading table %s...success.", self.name)
             return self
         except Exception, e:
             logger.info("loading table %s...failed. error: %s", self.name, str(e))
+            raise e
+
+    def desc(self):
+        '''
+               descrite table from storage
+           :return:  Table
+        '''
+        try:
+            with open(self.table_file) as ftable:
+                table = Table().fromstr(ftable.read())
+                return table
+        except Exception, e:
+            logger.info("describe table %s...failed. error: %s", self.name, str(e))
             raise e
 
     def drop(self):
@@ -128,6 +140,7 @@ class FSTable:
             remove_dir(self.path)
         except Exception, e:
             logger.error("drop table %s...failed. error %s", self.name, str(e))
+            raise e
 
 
     def truncate(self):
@@ -136,33 +149,41 @@ class FSTable:
         :return:
         '''
         try:
-            remove_files(self.data_file)
-            self._create_data_file()
+            with clock(self.lock):
+                remove_files(self.data_file)
+                self._create_data_file()
         except Exception, e:
             logger.error("truncate table %s...failed. error %s", self.name, str(e))
+            raise e
+
 
     def select(self):
         '''
             select all data from table
         :return:
         '''
-        with open(self.data_file, "r") as fdata:
-            models = []
+        try:
+            with clock(self.lock):
+                with open(self.data_file, "r") as fdata:
+                    models = []
 
-            #read field names
-            nfields = fdata.readline().strip().split(",")
-            #read data records
-            data = fdata.readline()
-            while data:
-                data = data.strip()
-                vfields = data.split(",")
-                model = {}
-                for idx in range(0, len(nfields)):
-                    model[nfields[idx]] = str2obj(vfields[idx])
-                models.append(model)
-                data = fdata.readline()
+                    #read field names
+                    nfields = strips(fdata.readline().strip().split(","))
+                    #read data records
+                    data = fdata.readline()
+                    while data:
+                        data = data.strip()
+                        vfields = strips(data.split(","))
+                        model = {}
+                        for idx in range(0, len(nfields)):
+                            model[nfields[idx]] = str2obj(vfields[idx], ',')
+                        models.append(model)
+                        data = fdata.readline()
 
-            return models
+                    return models
+        except Exception, e:
+            logger.info("select data from table %s...failed. error: %s", self.name, str(e))
+            raise e
 
 
     def insert(self, models):
@@ -171,14 +192,19 @@ class FSTable:
         :param models:
         :return:
         '''
-        with open(self.data_file, "a") as fdata:
-            lines = []
-            for model in models:
-                vfields = []
-                for nfield in self.table.nfields():
-                    vfields.append(objtostr(model.get(nfield)))
-                lines.append("%s\n"%",".join(vfields))
-            fdata.writelines(lines)
+        try:
+            with clock(self.lock):
+                with open(self.data_file, "a") as fdata:
+                    lines = []
+                    for model in models:
+                        vfields = []
+                        for nfield in self.table.nfields():
+                            vfields.append(objtostr(model.get(nfield), ','))
+                        lines.append("%s\n" % ",".join(vfields))
+                    fdata.writelines(lines)
+        except Exception, e:
+            logger.info("insert data to table %s...failed. error: %s", self.name, str(e))
+            raise e
 
     def _create_table_file(self):
         '''
@@ -194,13 +220,11 @@ class FSTable:
         :return:
         '''
         if is_file(self.table_file):
-            import time
-            old_table_file = "%s.old.%s" % (self.table_file, str(time.time()))
+            from time import strftime
+            old_table_file = "%s.old.%s" % (self.table_file, strftime("%Y%m%d%H%M%S"))
             move(self.table_file, old_table_file)
-            self._create_table_file()
-        else:
-            raise FSTableOperationError("replace table file failed. error: %s is not file.", self.table_file)
 
+        self._create_table_file()
 
     def _create_data_file(self):
         '''
@@ -216,32 +240,58 @@ class FSTable:
         :return:
         '''
         if is_file(self.data_file):
-            import time
-            old_data_file = "%s.old.%s" %(self.data_file, str(time.time()))
+            from time import strftime
+            old_data_file = "%s.old.%s" % (self.data_file, strftime("%Y%m%d%H%M%S"))
             move(self.data_file, old_data_file)
-            self._create_data_file()
-        else:
-            raise FSTableOperationError("replace data file failed. error: %s is not file.", self.data_file)
 
+        self._create_data_file()
+
+    def _upgrade_data_file(self):
+        '''
+            upgrade data file to new table structure
+        :return:
+        '''
+        #new fields for table
+        newfields = self.table.nfields()
+
+        #create new data file
+        from time import strftime
+        new_data_file = "%s.new.%s" % (self.data_file, strftime("%Y%m%d%H%M%S"))
+        with open(new_data_file, 'w') as fnewdata:
+            #write table header first
+            fnewdata.write(",".join(self.table.nfields()) + "\n")
+
+            #move old data to new data file
+            with open(self.data_file) as folddata:
+                #read old data file headers
+                oldfields = {}
+                noldfields = strips(folddata.readline().split(","))
+                for i in range(0, len(noldfields)):
+                    oldfields[noldfields[i]] = i
+
+                #move old data to new data file
+                old_data = folddata.readline()
+                while old_data:
+                    old_columns = strips(old_data.split(","))
+
+                    new_columns = []
+                    for i in range(0, len(newfields)):
+                        idx = oldfields.get(newfields[i].name, None)
+                        if idx:
+                            #new column exists in old column
+                            new_columns.append(old_columns[idx])
+                        else:
+                            #new column not exists in old column
+                            new_columns.append(newfields[i].default.value)
+
+                    fnewdata.write("%s\n".join(new_columns))
+
+                    old_data = folddata.readline()
+
+        #replace old data file with new data file
+        old_data_file = "%s.old.%s" % (self.data_file, strftime("%Y%m%d%H%M%S"))
+        move(self.data_file, old_data_file)
+        move(new_data_file, self.data_file)
 
 if __name__ == "__main__":
-    table = Table("tb_demo")
-    table.field("id", Int(), AutoIncValue())
-    table.field("code", String(32), NotNull())
-    table.field("name", String(32), StringValue("123"))
-    table.field("valid", Boolean())
-    table.field("create_time", BigInt())
-
-    table.key(PrimaryKey, "pk_id", "id")
-    table.key(NormalKey, "normal_key", "name","code")
-    table.key(UniqueKey, "unique_key", "code", "valid")
-
-
-    ftable = FSTable()
-    ftable.create("./", table)
-
-    from storage.cmodel import DemoModel
-    ftable.insert(DemoModel().randoms(10))
-
-    ftable1 = FSTable().load("./", table.name)
-    print ftable1.table.tosql()
+    pass

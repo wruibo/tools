@@ -164,31 +164,5 @@ class Table:
                     pass
         return self
 
-
-class DemoTable(Table):
-    def __init__(self, name="tb_demo"):
-        Table.__init__(self, name)
-
-        self.field("id", Int(), AutoIncValue())
-        self.field("code", String(32))
-        self.field("name", String(32), StringValue("abc"))
-        self.field("valid", Boolean())
-        self.field("create_time", BigInt())
-        self.field("update_time", BigInt())
-
-        self.key(PrimaryKey, "pk_id", "id")
-        self.key(NormalKey, "normal_key", "name", "code")
-        self.key(UniqueKey, "unique_key", "code", "valid")
-
-
 if __name__ == "__main__":
-    table = DemoTable()
-
-    print table.tosql()
-
-    str1 = table.tostr()
-    print str1
-
-    print DemoTable().fromstr(str1).tostr()
-
-    print DemoTable().tosql()
+    pass

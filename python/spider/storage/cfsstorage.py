@@ -14,9 +14,9 @@ from storage.cstorage import Storage
 
 class FSStorage(Storage):
     def __init__(self):
+        Storage.__init__(self)
         self.path = None #storage path
-        self.tables = [] #file system tables
-        self.lock = threading.Lock() #database lock
+        self.lock = threading.Lock() #lock for operate database table
 
 
     def open(self, path):
@@ -35,6 +35,8 @@ class FSStorage(Storage):
                 else:
                     # load database
                     self._load()
+
+                self._rebuild_tindex()
 
                 return self
             logger.info("open storage %s...success. %d tables.", self.path, len(self.tables))
@@ -74,60 +76,45 @@ class FSStorage(Storage):
 
             self.tables.append(table)
 
-    def drop_table(self, table):
+            self._rebuild_tindex()
+
+    def describe_tables(self):
+        '''
+            describe all table structures
+        :return:
+        '''
+        with clock(self.lock):
+            tables = []
+            for table in self.tables:
+                tables.append(table.desc())
+            return tables
+
+    def drop_table(self, name):
         '''
             drop table in current database
         :param table:
         :return:
         '''
-        table_name = self._table_name(table)
-
         with clock(self.lock):
             for table in self.tables:
-                if table.name==table:
+                if table.name == name:
                     table.drop()
                     self.tables.remove(table)
+                    break
 
+        self._rebuild_tindex()
 
-    def truncate_table(self, table):
+    def drop_tables(self):
         '''
-            truncate table data
-        :param table:
+            clear all tables in storage
         :return:
         '''
-        table_name = self._table_name(table)
-
         with clock(self.lock):
             for table in self.tables:
-                if table.name==table_name:
-                    table.truncate()
+                table.drop()
+            self.tables = []
 
-    def select_from_table(self, table):
-        '''
-            select all records from table
-        :param table:
-        :return:
-        '''
-        table_name = self._table_name(table)
-
-        with clock(self.lock):
-            for table in self.tables:
-                if table.name==table_name:
-                    return table.select()
-
-    def insert_into_table(self, table, models):
-        '''
-            insert records into table
-        :param table:
-        :param models:
-        :return:
-        '''
-        table_name = self._table_name(table)
-
-        with clock(self.lock):
-            for table in self.tables:
-                if table.name == table_name:
-                    table.insert(models)
+        self._rebuild_tindex()
 
     def _create(self):
         '''
@@ -149,22 +136,5 @@ class FSStorage(Storage):
             table = FSTable().load(self.path, table_name)
             self.tables.append(table)
 
-    def _table_name(self, table):
-        table_name = table
-        if issubclass(table.__class__, Table):
-            table_name = table.name
-        return table_name
-
 if __name__ == "__main__":
-    storage = FSStorage().open("./database")
-
-    from storage.ctable import DemoTable
-
-    table = DemoTable()
-    storage.create_table(table)
-
-    from storage.cmodel import DemoModel
-
-    storage.insert_into_table(table, DemoModel().randoms(5))
-
-    print storage.select_from_table(table)
+    pass
