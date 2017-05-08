@@ -55,7 +55,7 @@ def bool2str(b):
     '''
     if not isinstance(b, bool):
         raise ValueCastError("input value type is %s, expect bool." % b.__class__.__name__)
-    return str(b).lower()
+    return str(b)
 
 def str2bool(s):
     '''
@@ -133,20 +133,18 @@ def typecls(s):
     '''
     s = s.lower()
 
-    #test none
-    if s=='none':
+    if s=='none' or s=='null':
+        # test none
         return None
-
-    #test boolean
-    if s=='true' or s=='false':
+    elif s=='true' or s=='false':
+        # test boolean
         return bool
-
-    #test numeric
-    if isnum(s):
+    elif isnum(s):
+        # test numeric
         return numcls(s)
-
-    #string
-    return str
+    else:
+        #string
+        return str
 
 def objtostr(obj, escaped=None):
     '''
