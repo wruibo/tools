@@ -252,7 +252,7 @@ class FSTable(ITable):
         :return:
         '''
         #new fields for table
-        newfields = self.table.nfields()
+        newfields = self.table.fields
 
         #create new data file
         from time import strftime
@@ -279,10 +279,10 @@ class FSTable(ITable):
                         idx = oldfields.get(newfields[i].name, None)
                         if idx:
                             #new column exists in old column
-                            new_columns.append(old_columns[idx])
+                            new_columns.append(objtostr(old_columns[idx], ","))
                         else:
                             #new column not exists in old column
-                            new_columns.append(newfields[i].default.value)
+                            new_columns.append(objtostr(newfields[i].default.value, ","))
 
                     fnewdata.write("%s\n".join(new_columns))
 

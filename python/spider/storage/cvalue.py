@@ -31,8 +31,6 @@ class Value:
         if mobj:
             constraint, default, value = mobj.group('constraint', 'default', 'value')
             constraint, default, value = constraint.strip(), default.strip(), value.strip()
-
-            if value:
                 if value.lower() == 'auto_increment':
                     return AutoIncValue()
                 elif value.lower() == 'null':

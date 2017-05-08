@@ -96,10 +96,10 @@ class DBTable(ITable):
             cursor.execute(sql)
             create_sql = cursor.fetchall()[0][1]
 
-            self.table = Table().fromsql(create_sql)
-
+            table = Table().fromsql(create_sql)
             logger.info("describe table %s...success", self.name)
 
+            return table
         except Exception, e:
             logger.error("describe table %s...failed. error %s", self.name, str(e))
             raise e
@@ -144,7 +144,11 @@ class DBTable(ITable):
            for result in results:
                model = {}
                for idx in range(0, len(result)):
-                   model[nfields[idx]] = result[idx]
+                   nfield = nfields[idx]
+                   vfield = result[idx]
+                   if isinstance(vfield, str):
+                       vfield = unescapes(vfield)
+                   model[nfield] = vfield
                models.append(model)
            logger.info("select from table %s...success", self.name)
            return models
@@ -167,16 +171,22 @@ class DBTable(ITable):
                 if not isinstance(field.default, AutoIncValue):
                     nfields.append(field.name)
 
-            #
+            #prepare the values to be inserted
             values = []
             for model in models:
                 value = []
                 for nfield in nfields:
-                    value.append(model.get(nfield))
+                    vfield = model.get(nfield)
+                    if isinstance(vfield, str):
+                        value.append(quotes(escapes(vfield)))
+                    else:
+                        value.append(objtostr(vfield))
+
                 values.append("(%s)" % ",".join(value))
 
-            sql = "insert into %s(%s) values %s;" % (self.name, ",".join(nfields), "".join(values))
+            sql = "insert into %s(%s) values %s;" % (self.name, ",".join(nfields), ",".join(values))
             self.dbc.cursor().execute(sql)
+            self.dbc.commit()
 
             logger.info("insert into table %s...success", self.name)
         except Exception, e:
