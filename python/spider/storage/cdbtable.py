@@ -137,7 +137,7 @@ class DBTable(ITable):
         '''
         try:
            nfields = self.table.nfields()
-           sql, models = "select %s from %s;" % (",".join(nfields), self.name), []
+           sql, models = "select %s from %s;" % (",".join(quotes(nfields, '`')), self.name), []
            cursor = self.dbc.cursor()
            cursor.execute(sql)
            results = cursor.fetchall()
@@ -184,7 +184,8 @@ class DBTable(ITable):
 
                 values.append("(%s)" % ",".join(value))
 
-            sql = "insert into %s(%s) values %s;" % (self.name, ",".join(nfields), ",".join(values))
+            sql = "insert into %s(%s) values %s;" % (self.name, ",".join(quotes(nfields, '`')), ",".join(values))
+            print sql
             self.dbc.cursor().execute(sql)
             self.dbc.commit()
 

@@ -50,12 +50,8 @@ class FSTable(ITable):
                 #replace old table file if needed
                 old_table = self.desc()
                 if self.table != old_table:
-                    if is_subset(old_table.nfields(), self.table.nfields()):
-                        #upgrade data file
-                        self._upgrade_data_file()
-                    else:
-                        #replace data file
-                        self._replace_table_file()
+                    #replace table file
+                    self._replace_table_file()
                 else:
                     #new table is same as exists table
                     pass
@@ -277,14 +273,14 @@ class FSTable(ITable):
                     new_columns = []
                     for i in range(0, len(newfields)):
                         idx = oldfields.get(newfields[i].name, None)
-                        if idx:
+                        if idx is not None:
                             #new column exists in old column
                             new_columns.append(objtostr(old_columns[idx], ","))
                         else:
                             #new column not exists in old column
-                            new_columns.append(objtostr(newfields[i].default.value, ","))
+                            new_columns.append(objtostr(newfields[i].default.default(), ","))
 
-                    fnewdata.write("%s\n".join(new_columns))
+                    fnewdata.write("%s\n" % ",".join(new_columns))
 
                     old_data = folddata.readline()
 

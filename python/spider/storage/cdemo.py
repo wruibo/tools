@@ -12,7 +12,7 @@ class DemoTable(Table):
         Table.__init__(self, name)
 
         self.field("id", Int(), AutoIncValue())
-        self.field("code", String(32), NotNull())
+        self.field("code", String(32), NotNullValue())
         self.field("name", String(32), StringValue("abc"))
         self.field("valid", Boolean(), BooleanValue(False))
         self.field("create_time", BigInt())
@@ -43,10 +43,10 @@ class UpgradeDemoTable(Table):
         Table.__init__(self, name)
 
         self.field("id", Int(), AutoIncValue())
-        self.field("code", String(32), NotNull())
+        self.field("code", String(32), NotNullValue())
         self.field("name", String(32), StringValue("abc"))
         self.field("age", Int(), NumberValue(0))
-        self.field("desc", Text(), DefaultNull())
+        self.field("desc", Text(), DefaultNullValue())
         self.field("valid", Boolean(), BooleanValue(False))
         self.field("create_time", BigInt())
         self.field("update_time", BigInt(), NumberValue(0))
@@ -72,7 +72,7 @@ class UpgradeDemoModel(Model):
 
         models = []
         for i in range(1, num+1):
-            models.append(UpgradeDemoModel(code="code%d" % i, name="name%d" % i, valid=True, create_time=time.time()))
+            models.append(UpgradeDemoModel(code="code1%d" % i, name="name%d" % i, valid=True, create_time=time.time()))
         return models
 
 

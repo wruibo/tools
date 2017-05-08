@@ -31,23 +31,10 @@ class Type:
                 return TypeCls[cls]()
 
     def tostr(self):
-        return "%s()" % self.__class__.__name__.lower()
+        return "%s()" % self.__class__.__name__
 
     def fromstr(self, str):
-        TypeCls = {Int.__name__.lower(): Int, BigInt.__name__.lower(): BigInt, Float.__name__.lower(): Float, Decimal.__name__.lower(): Decimal, Boolean.__name__.lower(): Boolean, String.__name__.lower(): String, Text.__name__.lower(): Text}
-        regex_type = re.compile(r'^\s*(?P<class>[\w]+)'
-                                r'\s*\('
-                                r'(?P<args>[\s\w,]*)'
-                                r'\)\s*')
-
-        mobj = regex_type.match(str)
-        if mobj:
-            cls, args = mobj.group('class', 'args')
-            cls = cls.lower()
-            if args.strip():
-                return TypeCls[cls](*args.split(','))
-            else:
-                return TypeCls[cls]()
+        return eval(str)
 
 class Int(Type):
     def __init__(self, *args):

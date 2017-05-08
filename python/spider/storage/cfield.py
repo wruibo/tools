@@ -11,7 +11,7 @@ from storage.cverifier import *
 
 
 class Field:
-    def __init__(self, name=None, type=None, default=DefaultNull(), verifier=DefaultVerifier()):
+    def __init__(self, name=None, type=None, default=DefaultNullValue(), verifier=DefaultVerifier()):
         self.name = name
         self.type = type
         self.default = default

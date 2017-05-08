@@ -31,15 +31,13 @@ class Value:
         if mobj:
             constraint, default, value = mobj.group('constraint', 'default', 'value')
             constraint, default, value = constraint.strip(), default.strip(), value.strip()
-                if value.lower() == 'auto_increment':
-                    return AutoIncValue()
-                elif value.lower() == 'null':
-                    return DefaultNullValue()
-                else:
-                    vcls = {int.__name__: NumberValue, long.__name__: NumberValue, float.__name__: NumberValue, bool.__name__: BooleanValue, str.__name__: StringValue}
-                    return vcls[typecls(value).__name__](value)
+            if value.lower() == 'auto_increment':
+                return AutoIncValue()
+            elif value.lower() == 'null':
+                return DefaultNullValue()
             else:
-                return NotNullValue()
+                vcls = {int.__name__: NumberValue, long.__name__: NumberValue, float.__name__: NumberValue, bool.__name__: BooleanValue, str.__name__: StringValue}
+                return vcls[typecls(value).__name__](value)
         else:
             return DefaultNullValue()
 

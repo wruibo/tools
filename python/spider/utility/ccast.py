@@ -11,7 +11,7 @@ def isnone(s):
     :return:
     '''
     s = s.strip().strip("'\"").lower()
-    if s == 'none':
+    if s == 'none' or s == 'null':
         return True
     return False
 

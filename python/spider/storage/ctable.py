@@ -25,7 +25,7 @@ class Table:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def field(self, name, type, default=DefaultNull(), verifier=DefaultVerifier()):
+    def field(self, name, type, default=DefaultNullValue(), verifier=DefaultVerifier()):
         self.fields.append(Field(name, type, default, verifier))
 
     def key(self, keycls, name, *fields):
