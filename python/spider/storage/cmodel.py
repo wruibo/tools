@@ -24,6 +24,5 @@ class Model(dict):
     def __setattr__(self, key, value):
         self[key] = value
 
-
 if __name__ == "__main__":
     pass

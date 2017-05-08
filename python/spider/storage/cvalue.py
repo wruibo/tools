@@ -34,7 +34,7 @@ class Value:
                     if cls.match(value):
                         return cls(value)
             elif constraint:
-                if value == 'auto_increment':
+                if value.lower() == 'auto_increment':
                     return AutoIncValue()
                 else:
                     return NotNull()
@@ -54,7 +54,7 @@ class Value:
 
 
 class DefaultNull(Value):
-    def __init__(self, value="default_null"):
+    def __init__(self, value="null"):
         Value.__init__(self, value)
 
     def tosql(self):
