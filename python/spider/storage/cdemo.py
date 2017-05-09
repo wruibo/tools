@@ -8,6 +8,13 @@ class DemoTable(Table):
     '''
         demo table
     '''
+    name = "tb_demo"
+
+    id = Field("id", Int(), AutoIncValue())
+    code = Field("code", Int(), StringValue(32), NotNullValue())
+
+    pk = PrimaryKey(id, code)
+
     def __init__(self, name="tb_demo"):
         Table.__init__(self, name)
 
@@ -23,6 +30,8 @@ class DemoTable(Table):
 
 
 class DemoModel(Model):
+    table = DemoTable()
+
     def __init__(self, **kwargs):
         self.code = kwargs.get("code", None)
         self.name = kwargs.get("name", None)
@@ -58,6 +67,8 @@ class UpgradeDemoTable(Table):
 
 
 class UpgradeDemoModel(Model):
+    table = UpgradeDemoTable()
+
     def __init__(self, **kwargs):
         self.code = kwargs.get("code", None)
         self.name = kwargs.get("name", None)
@@ -75,8 +86,12 @@ class UpgradeDemoModel(Model):
             models.append(UpgradeDemoModel(code="code1%d" % i, name="name%d" % i, valid=True, create_time=time.time()))
         return models
 
+class TestModel(Model):
+    table = DemoTable
 
 if __name__ == "__main__":
+    model = TestModel()
+
     #create storage first
     dbstorage = DBStorage().open("localhost", "root", "root", "db_demo")
     fsstorage = FSStorage().open("./storage/db_demo")

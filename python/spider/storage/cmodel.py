@@ -5,11 +5,15 @@
 
 class MetaModel(type):
     def __new__(cls, name, bases, attrs):
+        if name == 'Model':
+            return type.__new__(cls, name, bases, attrs)
+
+        table = attrs.get('table')
+        attrs["id"] = table.id
         return type.__new__(cls, name, bases, attrs)
 
     def __init__(self, *args, **kargs):
         pass
-
 
 class Model(dict):
     __metaclass__ = MetaModel
