@@ -11,9 +11,9 @@ class DemoTable(Table):
     name = "tb_demo"
 
     id = Field("id", Int(), AutoIncValue())
-    code = Field("code", Int(), StringValue(32), NotNullValue())
+    code = Field("code", String(32), StringValue("abc"), NotNullValue())
 
-    pk = PrimaryKey(id, code)
+    pk = PrimaryKey("pk", "code")
 
     def __init__(self, name="tb_demo"):
         Table.__init__(self, name)

@@ -8,10 +8,22 @@ from storage.cfield import *
 from storage.cverifier import *
 
 
+class MetaTable(type):
+    def __new__(cls, name, bases, attrs):
+        if name == 'Table':
+            return type.__new__(cls, name, bases, attrs)
+
+        return type.__new__(cls, name, bases, attrs)
+
+    def __init__(self, *args, **kargs):
+        pass
+
 class Table:
     '''
         base table class for storage
     '''
+    __metaclass__ = MetaTable
+
     def __init__(self, name=None):
         self.name = name
         self.fields = []
