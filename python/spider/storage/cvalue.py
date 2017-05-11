@@ -62,7 +62,7 @@ class NotNullValue(Value):
         Value.__init__(self)
 
     def default(self):
-        raise NotNullValueError("value can not be null.")
+        return None
 
     def tosql(self):
         return "not null"
@@ -73,9 +73,10 @@ class NotNullValue(Value):
 class AutoIncValue(Value):
     def __init__(self, value='auto_increment'):
         Value.__init__(self, value)
+        self.counter = 1
 
     def default(self):
-        raise AutoIncValueError("value is auto increment.")
+        return self.counter
 
     def tosql(self):
         return "not null auto_increment"

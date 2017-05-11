@@ -9,25 +9,44 @@ from storage.cverifier import *
 
 
 class MetaTable(type):
+    '''
+        meta class of table
+    '''
     def __new__(cls, name, bases, attrs):
         if name == 'Table':
+            attrs['name'] = None
+            attrs['fields'] = []
+            attrs['keys'] = []
             return type.__new__(cls, name, bases, attrs)
 
+        #process fields and keys of table
+        fields, keys = [], []
+        for key, value in attrs.items():
+            if isinstance(value, Field):
+                value.name = key
+                fields.append(value)
+                attrs.pop(key)
+            elif issubclass(value.__class__, Key):
+                value.name = key
+                keys.append(value)
+                attrs.pop(key)
+            else:
+                pass
+
+        #process table name
+        table_name = "tb"
+        for s in name:
+            if s.isupper():
+                table_name = "%s_%s" % (table_name, s.lower())
+            else:
+                table_name = "%s%s" % (table_name, s)
+
+        #set the table name, fields, keys attributes
+        attrs['name'] = table_name
+        attrs['fields'] = fields
+        attrs['keys'] = keys
+
         return type.__new__(cls, name, bases, attrs)
-
-    def __init__(self, *args, **kargs):
-        pass
-
-class Table:
-    '''
-        base table class for storage
-    '''
-    __metaclass__ = MetaTable
-
-    def __init__(self, name=None):
-        self.name = name
-        self.fields = []
-        self.keys = []
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -37,11 +56,11 @@ class Table:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def field(self, name, type, default=DefaultNullValue(), verifier=DefaultVerifier()):
-        self.fields.append(Field(name, type, default, verifier))
-
-    def key(self, keycls, name, *fields):
-        self.keys.append(keycls(name, *fields))
+class Table:
+    '''
+        base table class for storage
+    '''
+    __metaclass__ = MetaTable
 
     def nfields(self):
         names = []
@@ -89,6 +108,11 @@ class Table:
         :param sql:
         :return:
         '''
+        regex_name = re.compile(r'\s*create\s+table\s+'
+                                r'[^\(]*'
+                                r'`(\w+)`\s*\(',
+                                re.IGNORECASE)
+
         regex_fields = re.compile(r'('
                                   r'`[\w_]+`\s+'
                                   r'\w+'
@@ -104,6 +128,11 @@ class Table:
                                 r'\([^\(\)]+\)'
                                 r')',
                                 re.IGNORECASE)
+
+        #extract table name
+        mobj = regex_name.match(sql)
+        if mobj:
+            self.name = mobj.group(1)
 
         #extract fields
         mobjs = regex_fields.findall(sql)

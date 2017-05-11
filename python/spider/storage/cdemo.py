@@ -5,38 +5,19 @@ from storage.cfsstorage import *
 
 
 class DemoTable(Table):
-    '''
-        demo table
-    '''
-    name = "tb_demo"
-
     id = Field("id", Int(), AutoIncValue())
-    code = Field("code", String(32), StringValue("abc"), NotNullValue())
+    code = Field("code", String(32), NotNullValue())
+    name = Field("name", String(32), StringValue("abc"))
+    valid = Field("valid", Boolean(), BooleanValue(False))
+    create_time = Field("create_time", BigInt())
 
-    pk = PrimaryKey("pk", "code")
-
-    def __init__(self, name="tb_demo"):
-        Table.__init__(self, name)
-
-        self.field("id", Int(), AutoIncValue())
-        self.field("code", String(32), NotNullValue())
-        self.field("name", String(32), StringValue("abc"))
-        self.field("valid", Boolean(), BooleanValue(False))
-        self.field("create_time", BigInt())
-
-        self.key(PrimaryKey, "pk_id", "id")
-        self.key(NormalKey, "normal_key", "name", "code")
-        self.key(UniqueKey, "unique_key", "code", "valid")
+    pk_id = PrimaryKey("pk_id", "id")
+    normal_key = NormalKey("normal_key", "name", "code")
+    unique_key = UniqueKey("unique_key", "code", "valid")
 
 
 class DemoModel(Model):
     table = DemoTable()
-
-    def __init__(self, **kwargs):
-        self.code = kwargs.get("code", None)
-        self.name = kwargs.get("name", None)
-        self.valid = kwargs.get("valid", False)
-        self.create_time = kwargs.get("create_time", 0)
 
     def randoms(self, num):
         import time
@@ -48,35 +29,22 @@ class DemoModel(Model):
 
 
 class UpgradeDemoTable(Table):
-    def __init__(self, name="tb_demo"):
-        Table.__init__(self, name)
+    id = Field("id", Int(), AutoIncValue())
+    code = Field("code", String(32), NotNullValue())
+    name = Field("name", String(32), StringValue("abc"))
+    age = Field("age", Int(), NumberValue(0))
+    desc = Field("desc", Text(), DefaultNullValue())
+    valid = Field("valid", Boolean(), BooleanValue(False))
+    create_time = Field("create_time", BigInt())
 
-        self.field("id", Int(), AutoIncValue())
-        self.field("code", String(32), NotNullValue())
-        self.field("name", String(32), StringValue("abc"))
-        self.field("age", Int(), NumberValue(0))
-        self.field("desc", Text(), DefaultNullValue())
-        self.field("valid", Boolean(), BooleanValue(False))
-        self.field("create_time", BigInt())
-        self.field("update_time", BigInt(), NumberValue(0))
-
-        self.key(PrimaryKey, "pk_id", "id")
-        self.key(NormalKey, "desc_key", "desc")
-        self.key(NormalKey, "normal_key", "name", "code")
-        self.key(UniqueKey, "unique_key", "code", "valid")
+    pk_id = PrimaryKey("pk_id", "id")
+    valid_key = NormalKey("valid_key", "valid")
+    normal_key = NormalKey("normal_key", "name", "code")
+    unique_key = UniqueKey("unique_key", "code", "valid")
 
 
 class UpgradeDemoModel(Model):
     table = UpgradeDemoTable()
-
-    def __init__(self, **kwargs):
-        self.code = kwargs.get("code", None)
-        self.name = kwargs.get("name", None)
-        self.age = kwargs.get("age", 0)
-        self.desc = kwargs.get("desc", "desc")
-        self.valid = kwargs.get("valid", False)
-        self.create_time = kwargs.get("create_time", 0)
-        self.update_time = kwargs.get("update_time", 0)
 
     def randoms(self, num):
         import time
@@ -86,12 +54,7 @@ class UpgradeDemoModel(Model):
             models.append(UpgradeDemoModel(code="code1%d" % i, name="name%d" % i, valid=True, create_time=time.time()))
         return models
 
-class TestModel(Model):
-    table = DemoTable
-
 if __name__ == "__main__":
-    model = TestModel()
-
     #create storage first
     dbstorage = DBStorage().open("localhost", "root", "root", "db_demo")
     fsstorage = FSStorage().open("./storage/db_demo")

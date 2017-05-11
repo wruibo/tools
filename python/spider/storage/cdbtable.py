@@ -185,7 +185,6 @@ class DBTable(ITable):
                 values.append("(%s)" % ",".join(value))
 
             sql = "insert into %s(%s) values %s;" % (self.name, ",".join(quotes(nfields, '`')), ",".join(values))
-            print sql
             self.dbc.cursor().execute(sql)
             self.dbc.commit()
 
