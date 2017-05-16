@@ -9,6 +9,12 @@ from storage.ctype import *
 from storage.cvalue import *
 from storage.cverifier import *
 
+FIELD_ORDER_VALUE = 1
+
+def field_order_value():
+    global FIELD_ORDER_VALUE
+    FIELD_ORDER_VALUE += 1
+    return FIELD_ORDER_VALUE
 
 class Field:
     def __init__(self, name=None, type=None, default=DefaultNullValue(), verifier=DefaultVerifier()):
@@ -16,11 +22,15 @@ class Field:
         self.type = type
         self.default = default
         self.verifier = verifier
+        self.order_value = field_order_value()
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.name==other.name and self.type==other.type
         return False
+
+    def __cmp__(self, other):
+        return self.order_value - other.order_value
 
     def verify(self, value):
         return self.verifier.verify(value)

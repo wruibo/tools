@@ -19,24 +19,23 @@ class MetaModel(type):
 
         return type.__new__(cls, name, bases, attrs)
 
-    def __init__(self, *args, **kwargs):
-        pass
-
 class Model(dict):
     __metaclass__ = MetaModel
 
     def __init__(self, **kwargs):
-        for name, field in self.fields.items():
-            self[name] = field.default.default()
-
-        for key in kwargs.keys():
-            self[key] = kwargs.get(key, self.fields[key].default.default())
+        for name, value in kwargs.items():
+            self[name] = value
 
     def __getattr__(self, name):
-        return self.get(name, self.fields[name].default.default())
+        value = self[name]
+        if value is None:
+            return self.fields[name].default.default()
 
     def __setattr__(self, name, value):
         self[name] = value
+
+    def get(self, name):
+        return dict.get(self, name, self.fields[name].default.default())
 
 if __name__ == "__main__":
     pass

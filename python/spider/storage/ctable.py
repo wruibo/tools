@@ -21,17 +21,23 @@ class MetaTable(type):
 
         #process fields and keys of table
         fields, keys = [], []
-        for key, value in attrs.items():
+        for name, value in attrs.items():
             if isinstance(value, Field):
-                value.name = key
+                if value.name is None:
+                    value.name = name
                 fields.append(value)
-                attrs.pop(key)
+                attrs.pop(name)
             elif issubclass(value.__class__, Key):
-                value.name = key
+                if value.name is None:
+                    value.name = name
                 keys.append(value)
-                attrs.pop(key)
+                attrs.pop(name)
             else:
                 pass
+
+        #order the fields and keys
+        fields.sort()
+        keys.sort()
 
         #process table name
         table_name = "tb"
@@ -61,6 +67,10 @@ class Table:
         base table class for storage
     '''
     __metaclass__ = MetaTable
+
+    def __init__(self, name=None):
+        if name is not None:
+            self.name = name
 
     def nfields(self):
         names = []

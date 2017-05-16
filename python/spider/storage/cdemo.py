@@ -5,19 +5,19 @@ from storage.cfsstorage import *
 
 
 class DemoTable(Table):
-    id = Field("id", Int(), AutoIncValue())
-    code = Field("code", String(32), NotNullValue())
-    name = Field("name", String(32), StringValue("abc"))
-    valid = Field("valid", Boolean(), BooleanValue(False))
-    create_time = Field("create_time", BigInt())
+    f1 = Field("id", Int(), AutoIncValue())
+    f2 = Field("code", String(32), NotNullValue())
+    f3 = Field("name", String(32), StringValue("abc"))
+    f4 = Field("valid", Boolean(), BooleanValue(False))
+    f5 = Field("create_time", BigInt())
 
-    pk_id = PrimaryKey("pk_id", "id")
-    normal_key = NormalKey("normal_key", "name", "code")
-    unique_key = UniqueKey("unique_key", "code", "valid")
+    k1 = PrimaryKey("pk_id", "id")
+    k2 = NormalKey("normal_key", "name", "code")
+    k3 = UniqueKey("unique_key", "code", "valid")
 
 
 class DemoModel(Model):
-    table = DemoTable()
+    table = DemoTable("tb_demo")
 
     def randoms(self, num):
         import time
@@ -29,22 +29,22 @@ class DemoModel(Model):
 
 
 class UpgradeDemoTable(Table):
-    id = Field("id", Int(), AutoIncValue())
-    code = Field("code", String(32), NotNullValue())
-    name = Field("name", String(32), StringValue("abc"))
-    age = Field("age", Int(), NumberValue(0))
-    desc = Field("desc", Text(), DefaultNullValue())
-    valid = Field("valid", Boolean(), BooleanValue(False))
-    create_time = Field("create_time", BigInt())
+    f1 = Field("id", Int(), AutoIncValue())
+    f2 = Field("code", String(32), NotNullValue())
+    f3 = Field("name", String(32), StringValue("abc"))
+    f4 = Field("age", Int(), NumberValue(0))
+    f5 = Field("desc", Text(), DefaultNullValue())
+    f6 = Field("valid", Boolean(), BooleanValue(False))
+    f7 = Field("create_time", BigInt())
 
-    pk_id = PrimaryKey("pk_id", "id")
-    valid_key = NormalKey("valid_key", "valid")
-    normal_key = NormalKey("normal_key", "name", "code")
-    unique_key = UniqueKey("unique_key", "code", "valid")
+    k1 = PrimaryKey("pk_id", "id")
+    k2 = NormalKey("valid_key", "valid")
+    k3 = NormalKey("normal_key", "name", "code")
+    k4 = UniqueKey("unique_key", "code", "valid")
 
 
 class UpgradeDemoModel(Model):
-    table = UpgradeDemoTable()
+    table = UpgradeDemoTable("tb_demo")
 
     def randoms(self, num):
         import time
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     fsstorage.drop_tables()
 
     #create demo table
-    table1 = DemoTable()
+    table1 = DemoTable("tb_demo")
 
     #create table1 first
     dbstorage.create_table(table1)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     fsstorage.select_from_table(table1.name)
 
     #create upgrade demo table
-    table2 = UpgradeDemoTable()
+    table2 = UpgradeDemoTable("tb_demo")
 
     #upgrade table1 to table2
     dbstorage.create_table(table2)

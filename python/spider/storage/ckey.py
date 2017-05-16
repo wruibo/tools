@@ -5,18 +5,28 @@ import re
 
 from utility.cstr import quotes
 
+KEY_ORDER_VALUE = 1
+
+def key_order_value():
+    global KEY_ORDER_VALUE
+    KEY_ORDER_VALUE += 1
+    return KEY_ORDER_VALUE
 
 class Key:
     def __init__(self, type=None, name=None, *fields):
         self.type = type
         self.name = name
         self.fields = list(fields)
+        self.order_value = key_order_value()
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
            return self.name == other.name and self.fields == other.fields
 
         return False
+
+    def __cmp__(self, other):
+        return self.order_value - other.order_value
 
     def tosql(self):
         return "%s `%s`(%s)" % (self.type, self.name, ",".join(quotes(self.fields, '`')))
