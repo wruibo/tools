@@ -4,43 +4,80 @@
 import os
 
 
-class cfile:
-    def __init__(self):
-        pass
+class File:
+    def __init__(self, file):
+        self.file = file
 
     @staticmethod
-    def create(path):
-        pass
+    def open(path, mode, buffering=-1):
+        file = open(path, mode, buffering)
+        if not file:
+            return None
 
-    @staticmethod
-    def write(path, str, mode="w"):
-        f = open(path, mode)
-        f.write(str)
-        f.close()
+        return File(file)
+
+    def head(self, lines=1):
+        '''
+            read @lines head lines
+        :param lines:
+        :return:
+        '''
+        #move to file head
+        self.file.seek(0, 0)
+
+        #read lines
+        rlines = []
+        line = self.file.readline()
+        while lines > 0 and line:
+            rlines.append(line)
+            line = self.file.readline()
+            lines -= 1
+
+        return None if len(rlines)==0 else rlines
+
+    def tail(self, lines=1):
+        '''
+            read @lines tail lines
+        :param lines:
+        :return:
+        '''
+        #get the file size
+        fsize = self.file.tell()
+
+        #read step size in bytes
+        rpos, stepsz = 0, 256
+        rpos += stepsz
+        rpos = rpos if fsize > rpos else fsize
+
+        #move to the end of file
+        self.file.seek(-rpos, 2)
+        rlines = self.file.readlines()
+        while len(rlines) < lines and rpos < fsize:
+            rpos += stepsz
+            rpos = rpos if fsize > rpos else fsize
+
+            rlines = self.file.readlines()
+
+        return None if len(rlines)==0 else rlines[-lines:]
+
+    def first_line(self):
+        '''
+            read first line
+        :return:
+        '''
+        lines = self.head(1)
+        return None if lines is None else lines[0]
+
+    def last_line(self):
+        '''
+            read the last line
+        :return:
+        '''
+        lines = self.tail(1)
+        return None if lines is None else lines[-1]
 
 
-    @staticmethod
-    def read(path, mode="r"):
-        if not os.path.isfile(path):
-            return ""
-
-        f = open(path, mode)
-        str = f.read()
-        f.close()
-
-        return str
-
-
-class TFFile:
-    '''
-        thread safe file
-    '''
-    def __init__(self, name, mode=None, buffering=None):
-        self
-        pass
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+if __name__ == "__main__":
+    file = File.open("cini.py", 'r')
+    print "first line: %s" % file.head(3)
+    print "last line: %s" % file.tail(1)
