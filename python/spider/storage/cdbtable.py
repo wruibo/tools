@@ -278,5 +278,3 @@ if __name__ == "__main__":
     table.key(NormalKey, "normal_key", "name","code")
     table.key(UniqueKey, "unique_key", "code", "valid")
 
-    from storage.chelper import SQLHelper
-    print SQLHelper.sql_create_table(table)

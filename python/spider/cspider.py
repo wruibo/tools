@@ -10,7 +10,6 @@ from cstorage import *
 from cextractor import *
 from clauncher import *
 
-
 class Spider(threading.Thread, Launcher):
     '''
         spider class, schedule the linker manager, crawler manager, parser manager, extractor manager
