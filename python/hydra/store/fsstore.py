@@ -7,14 +7,14 @@ from util.path import *
 from util.log import Logger
 from util.lock import Lock
 
-from store.store import Store
+from store.istore import IStore
 from store.table import Table
 from store.fstable import FSTable
 
 
-class FSStore(Store):
+class FSStore(IStore):
     def __init__(self):
-        Store.__init__(self)
+        IStore.__init__(self)
         self.path = None #store path
         self.lock = threading.Lock() #lock for operate database table
 

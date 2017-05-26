@@ -1,11 +1,8 @@
 '''
     table for store
 '''
-from store import *
-from store.type import *
-from store.value import *
+from store.key import *
 from store.field import *
-from store.verifier import *
 
 
 class MetaTable(type):
@@ -21,17 +18,17 @@ class MetaTable(type):
 
         #process fields and keys of table
         fields, keys = [], []
-        for name, value in attrs.items():
-            if isinstance(value, Field):
-                if value.name is None:
-                    value.name = name
-                fields.append(value)
-                attrs.pop(name)
-            elif issubclass(value.__class__, Key):
-                if value.name is None:
-                    value.name = name
-                keys.append(value)
-                attrs.pop(name)
+        for n, v in attrs.items():
+            if isinstance(v, Field):
+                if v.name is None:
+                    v.name = n
+                fields.append(v)
+                attrs.pop(n)
+            elif issubclass(v.__class__, Key):
+                if v.name is None:
+                    v.name = n
+                keys.append(v)
+                attrs.pop(n)
             else:
                 pass
 
@@ -147,12 +144,16 @@ class Table:
         #extract fields
         mobjs = regex_fields.findall(sql)
         for mobj in mobjs:
-            self.fields.append(Field().fromsql(mobj[0]))
+            field = Field().fromsql(mobj[0])
+            if field:
+                self.fields.append(field)
 
         #extract keys
         mobjs = regex_keys.findall(sql)
         for mobj in mobjs:
-            self.keys.append(Key().fromsql(mobj[0]))
+            key = Key().fromsql(mobj[0])
+            if key:
+                self.keys.append(key)
 
         return self
 

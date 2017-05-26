@@ -4,13 +4,13 @@
 import MySQLdb
 
 from util.log import Logger
-from store.store import Store
+from store.istore import IStore
 from store.dbtable import DBTable
 
 
-class DBStore(Store):
+class DBStore(IStore):
     def __init__(self):
-        Store.__init__(self)
+        IStore.__init__(self)
 
         self.host = None
         self.port = None

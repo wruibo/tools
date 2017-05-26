@@ -1,5 +1,8 @@
 from util.timer import *
+
+from store.key import *
 from store.table import *
+from store.model import *
 from store.dbstore import *
 from store.fsstore import *
 

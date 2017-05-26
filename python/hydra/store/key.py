@@ -32,13 +32,14 @@ class Key:
         return "%s `%s`(%s)" % (self.type, self.name, ",".join(quotes(self.fields, '`')))
 
     def fromsql(self, sql):
-        sql = sql.strip()
+        KeyCls = {"normal": NormalKey, "unique": UniqueKey, "primary": PrimaryKey}
 
-        regex_key = re.compile(r'(?P<type>(unique|primary)?)'
-                               r'(?P<key>key)'
+        sql = sql.strip()
+        regex_key = re.compile(r'(?P<type>(unique|primary)?)\s*'
+                               r'(?P<key>key)\s*'
                                r'(`)?'
-                               r'(?P<name>[\w_]+)'
-                               r'(`)?'
+                               r'(?P<name>[\w_]*)'
+                               r'(`)?\s*'
                                r'\('
                                r'(?P<fields>[`\w,\s]+)'
                                r'\)',
@@ -46,8 +47,18 @@ class Key:
 
         mobj = regex_key.match(sql)
         if mobj:
-            type, key, name, fields = mobj.group('type', 'key', 'name', 'fields')
-            pass
+            type, key, name, sfields = mobj.group('type', 'key', 'name', 'fields')
+
+            cls = "normal" if type is None  else type.lower()
+
+            fields = []
+            sfields = sfields.split(',')
+            for field in sfields:
+                field = field.strip().strip('`')
+                if field:
+                    fields.append(field)
+
+            return KeyCls[cls](name, *fields)
 
     def tostr(self):
         return "class=%s;name=%s;fields=%s" % (self.__class__.__name__, self.name, ",".join(self.fields))
