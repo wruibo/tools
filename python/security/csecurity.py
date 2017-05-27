@@ -195,4 +195,3 @@ def JensenRatio(assetsRevenues, marketRevenues, rf):
     assetsBetaFactor = BetaFactor(assetsRevenues, marketRevenues)
 
     return assetsExpect - (rf + assetsBetaFactor * (marketExpect - rf))
-
