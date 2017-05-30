@@ -2,45 +2,95 @@ import os, re, gzip, zlib
 import urllib2, cookielib
 from StringIO import StringIO
 
+class HttpHandler:
+    def __init__(self):
+        pass
 
-class Http:
-    def __init__(self, workdir = "./crawler"):
-        #create working directory
-        self.__workdir = workdir
-        self.__cookie_file_path = workdir+"/cookies"
+    def handle_request(self):
+        pass
+
+    def handle_response(self):
+        pass
+
+    def handle_error(self):
+        pass
+
+
+class HttpClients:
+    def __init__(self):
+        pass
+
+
+class HttpClient:
+    def __init__(self):
+        #working directory for http client
+        self.workdir = os.getenv('HOME', "~") + "/hydra"
+        #cookie file path for http client cookies
+        self.cookie_file_path = self.workdir+"/cookies"
 
         #initialize handlers
-        self.__header_handler = HeaderHandler()
-        self.__cookie_handler = CookieHandler()
-        self.__decompress_handler = DecompressHandler()
+        self.header_handler = HeaderHandler()
+        self.cookie_handler = CookieHandler()
+        self.decompress_handler = DecompressHandler()
 
-        #initialize urllib2 opener
-        self.__opener = urllib2.build_opener()
+        #urllib2 opener as http client
+        self.opener = None
 
-    def init(self):
+        import threading
+        threading.Thread
+
+    def create(self):
+        '''
+            create a http client instance using urllib2
+        :return: http client instance
+        '''
+        #create the workdir if not exist
+        if not os.path.exists(self.workdir):
+            os.mkdir(self.workdir)
+
         #load cookie data for cookie handler
-        if os.path.exists(self.__cookie_file_path):
-            self.__cookie_handler.load(self.__cookie_file_path)
+        if os.path.exists(self.cookie_file_path):
+            self.cookie_handler.load(self.cookie_file_path)
 
-        #add special handlers
-        self.__opener.add_handler(self.__header_handler)
-        self.__opener.add_handler(self.__cookie_handler)
-        self.__opener.add_handler(self.__decompress_handler)
+        #build the opener with urllib2
+        self.opener = urllib2.build_opener(self.header_handler, self.cookie_handler, self.decompress_handler)
+
+        #return self
+        return self
 
     def open(self, url):
         try:
-            response = self.__opener.open(url)
+            response = self.opener.open(url)
             content = response.read()
         except Exception, e:
             return Response(url, "exception", str(e.__class__.__name__)+":"+str(e))
         else:
             return Response(url, response.getcode(), response.msg, response.headers, content)
 
+    def get(self, url, headers=None, handler=None):
+        '''
+            get url
+        :param url:
+        :param headers:
+        :param handler:
+        :return:
+        '''
+        try:
+            if handler is None:
+                client = self.opener.open(url,)
+        except Exception, e:
+            pass
+        else:
+            pass
+
+    def post(self, url, data=None, headers=None, handler=None):
+        pass
+
     def download(self, url, fpath):
         file = None
         try:
             file = open(fpath, "wb")
-            response = self.__opener.open(url)
+            response = self.opener.open(url)
             content = response.read(16*1024)
             while content:
                 file.write(content)
@@ -54,18 +104,18 @@ class Http:
                 file.close()
 
     def set_cookie(self, cookie_string):
-        return self.__cookie_handler.set(cookie_string)
+        return self.cookie_handler.set(cookie_string)
 
     def set_header(self, name, value):
-        return self.__header_handler.set(name, value)
+        return self.header_handler.set(name, value)
 
     def destroy(self):
         #create working directory
-        if not os.path.exists(self.__workdir):
-            os.makedirs(self.__workdir)
+        if not os.path.exists(self.workdir):
+            os.makedirs(self.workdir)
 
         #save cookie data of cookie handler
-        self.__cookie_handler.save(self.__cookie_file_path)
+        self.cookie_handler.save(self.cookie_file_path)
 
 class Cookie:
     def __init__(self):
@@ -315,6 +365,8 @@ class DecompressHandler(urllib2.BaseHandler):
 
     https_response = http_response
 
+#http instance for http request
+http = Http().init()
 
 if __name__ == "__main__":
     crawler = Crawler()

@@ -49,6 +49,12 @@ class Benchmark:
 
         return self
 
+    def load_benchmark(self, index):
+        pass
+
+    def load_industry(self, indexs):
+        pass
+
 
 class Portfolio:
     '''
@@ -68,8 +74,6 @@ class Brinson:
     def init(self, benchmark, industry, portfolio):
         # benchmark for portfolio
         self.benchmark = benchmark
-        # industry for benchmark
-        self.industry = industry
         # portfolio to be attributed
         self.portfolio = portfolio
 
