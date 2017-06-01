@@ -1,65 +1,63 @@
 '''
     performance attribution algorithms
 '''
-import csv
-
+import re, xlrd
 
 class BLoader:
     '''
         benchmark data loader
     '''
-    def __init__(self):
-        pass
+    def __init__(self, source_file):
+        self.source_file = source_file
 
-    def load(self, source):
+    def load(self):
         '''
-            load benchmark data from @source, source may be the following formats:
-        file:
-            csv file split with ',', content with:
-             date, value
-             2017-05-12, 3214
-             ...,...
-        list:
-            [
-                ['2017-05-12', 3214]
-                [...,...]
-            ]
-        dict:
-            {
-                '2017-05-12':3214,
-                ...,...
-            }
-
-        :param source: file/list/dict
+            load benchmark data from excel file
         :return:
         '''
-        if isinstance(source, dict):
-            self.indexs = source
-        elif isinstance(source, list):
-            for index in source:
-                self.indexs[index[0]] = index[1]
-        elif isinstance(source, str):
-            for line in open(source, 'r'):
-                date, value = line.split(',')
-                self.indexs[date] = value
-        else:
-            pass
+        iindexs, sindustries = {}, {}
+
+        file = xlrd.open_workbook(self.source_file)
+        for name in file.sheet_names():
+            sheet = file.sheet_by_name(name)
+            if name == 'industry':
+                for rowx in range(sheet.nrows):
+                    scode, icode = sheet.row_values(rowx)
+                    sindustries[scode] = icode
+            elif re.match('[\d]+-[\d]+-[\d]+', name):
+                for rowx in range(sheet.nrows):
+                    code, weight, open_index, close_index = sheet.row_values(rowx)
+                    iindexs[name] = {code:[weight, open_index, close_index]}
+            else:
+                pass
 
         return self
-
-    def load_benchmark(self, index):
-        pass
-
-    def load_industry(self, indexs):
-        pass
-
 
 class PLoader:
     '''
         portfolio data loader
     '''
-    def __init__(self):
-        pass
+    def __init__(self, source_file):
+        self.source_file = source_file
+
+    def load(self):
+        '''
+            load portfolio data form excel file
+        :return:
+        '''
+        holdings = {}
+
+        file = xlrd.open_workbook(self.source_file)
+        for name in file.sheet_names():
+            sheet = file.sheet_by_name(name)
+            if re.match('[\d]+-[\d]+-[\d]+', name):
+                for rowx in range(sheet.nrows):
+                    code, weight, open_price, close_price = sheet.row_values(rowx)
+                    holdings[name] = {code:[weight, open_price, close_price]}
+            else:
+                pass
+
+        return holdings
 
 
 class Benchmark:
@@ -67,12 +65,8 @@ class Benchmark:
         benchmark information for brinson analysis
     '''
     def __init__(self):
-        #benchmark index: date->[open-price, close-price]
-        self.bindexs = None
-        #industry index: code->{date->[open-price, close-price]}
+        #daily industry indexs: date->{code->[weight, open-index, close-index]}
         self.iindexs = None
-        #industry weight in benchmark: industry code->weight
-        self.iweights = None
         #stock industries in benchmark: stock code->industry code
         self.sindustries = None
 
@@ -83,7 +77,7 @@ class Benchmark:
         :param loader:
         :return:
         '''
-        self.bindexs, self.iindexs, self.iweights, self.sindustries = loader.load()
+        self.iindexs, self.sindustries = loader.load()
         return self
 
 
@@ -92,7 +86,7 @@ class Portfolio:
         portfolio information for analysis
     '''
     def __init__(self):
-        #daily equity holdings after daily transaction ends: date->{code->[holds, open-price, close-price]}
+        #daily stock holdings after daily transaction ends: date->{code->[weight, open-price, close-price]}
         self.holdings = None
 
     def load(self, loader):
@@ -125,25 +119,53 @@ class Brinson:
     def analyse(self):
         '''
             brinson analyse for portfolio with specified benchmark
-        :return:
+        :return: [benchmark return, portfolio return, excess return, asset selection return, stock selection return, interaction return]
         '''
         attribution_results = []
         for date, stocks in self.portfolio.holdings:
+
             #compute benchmark return as q1
-            q1 = (self.benchmark.bindexs[date][1] - self.benchmark.bindexs[date][0]) / self.benchmark.bindexs[date][0]
+            q1 = 0.0
+            for weight, open_index, close_index in self.benchmark.iindexs[date].values():
+                q1 += weight*(close_index-open_index)/open_index
+            br = q1
 
             #compute portfolio return as q4
-            openv, closev = 0, 0
-            for count, open, close in stocks.values():
-                 openv += count*open
-                 closev += count*close
-            q4 = (closev - openv) / openv
+            q4 = 0.0
+            for weight, open_price, close_price in stocks.values():
+                q4 += weight*(close_price-open_price)/open_price
+            pr = q4
 
-            #compute industry selection return
-            for code, holds in stocks.items():
-                pass
+            #compute industry and stock selection as q2 & q3
+            q2, q3 = 0.0, 0.0
+            for scode, holds in stocks.items():
+                sweight, open_price, close_price = holds
+                icode = self.benchmark.sindustries[scode]
+                iweight, open_index, close_index = self.benchmark.iindexs[date][icode]
 
-            #compute stock selection return
-            #compute interaction return
+                q2 += sweight*(close_index-open_index)/open_index
+                q3 += iweight*(close_price-open_price)/open_price
+
+            #compute attribution for portfilio
+            ar = q2-q1
+            sr = q3-q1
+            ir = q4-q3-q2+q1
+            tr = q4-q1
+
+            #add to results
+            attribution_results.append([br, pr, tr, ar, sr, ir])
 
         return attribution_results
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 3:
+        print "Usage: python perf.py <benchmark file> <portfolio file>"
+        exit()
+
+    benchmark = Benchmark().load(BLoader(sys.argv[1]))
+    portfolio = Portfolio().load(PLoader(sys.argv[2]))
+
+    results = Brinson().init(benchmark, portfolio).analyse()
+    for result in results:
+        print result
