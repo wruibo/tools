@@ -16,3 +16,17 @@ class Engine(threading.Thread):
 
     def run(self):
         pass
+
+
+if __name__ == "__main__":
+    from net import http
+    resp = http.client.get("http://www.caifuqiao.cn/")
+    print resp
+
+    resp = http.client.get("http://www.sohu.com/")
+    print resp
+
+    resp = http.client.get("http://www.sina.com.cn/")
+    print resp
+
+    http.client.close()

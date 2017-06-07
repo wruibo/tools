@@ -3,6 +3,7 @@
 '''
 import re, xlrd
 
+
 class BLoader:
     '''
         benchmark data loader
@@ -12,26 +13,42 @@ class BLoader:
 
     def load(self):
         '''
-            load benchmark data from excel file
+            load benchmark data from excel file, file format:
+        sheet name:
+            yyyy-mm--dd
+        sheet columns
+            code, weight, open, close
         :return:
         '''
-        iindexs, sindustries = {}, {}
+        prices = {}
 
         file = xlrd.open_workbook(self.source_file)
-        for name in file.sheet_names():
-            sheet = file.sheet_by_name(name)
-            if name == 'industry':
-                for rowx in range(sheet.nrows):
-                    scode, icode = sheet.row_values(rowx)
-                    sindustries[scode] = icode
-            elif re.match('[\d]+-[\d]+-[\d]+', name):
-                for rowx in range(sheet.nrows):
-                    code, weight, open_index, close_index = sheet.row_values(rowx)
-                    iindexs[name] = {code:[weight, open_index, close_index]}
+        for date in file.sheet_names():
+            sheet = file.sheet_by_name(date)
+            if re.match(r'[\d]+-[\d]+-[\d]+', date):
+                if not self.check(sheet):
+                    raise "benchmark file format is not valid."
+                prices[date] = {}
+                for rowx in range(1, sheet.nrows):
+                    code, weight, open, close = sheet.row_values(rowx)
+                    prices[date][code] = [weight, open, close]
             else:
                 pass
 
-        return self
+        return prices
+
+    def check(self, sheet):
+        '''
+            check sheet format
+        :param sheet:
+        :return:
+        '''
+        if sheet.nrows > 0:
+            code, weight, open, close = sheet.row_values(0)
+            if code=='code' and weight=='weight' and open=='open' and close=='close':
+                return True
+        return False
+
 
 class PLoader:
     '''
@@ -42,22 +59,41 @@ class PLoader:
 
     def load(self):
         '''
-            load portfolio data form excel file
+            load portfolio data form excel file, file format
+        sheet name:
+            yyyy-mm--dd
+        sheet columns
+            code, category weight, open, close
         :return:
         '''
-        holdings = {}
+        prices = {}
 
         file = xlrd.open_workbook(self.source_file)
-        for name in file.sheet_names():
-            sheet = file.sheet_by_name(name)
-            if re.match('[\d]+-[\d]+-[\d]+', name):
-                for rowx in range(sheet.nrows):
-                    code, weight, open_price, close_price = sheet.row_values(rowx)
-                    holdings[name] = {code:[weight, open_price, close_price]}
+        for date in file.sheet_names():
+            sheet = file.sheet_by_name(date)
+            if re.match('[\d]+-[\d]+-[\d]+', date):
+                if not self.check(sheet):
+                    raise "portfolio file format is not valid."
+                prices[date] = {}
+                for rowx in range(1, sheet.nrows):
+                    code, category, weight, open, close = sheet.row_values(rowx)
+                    prices[date][code] = [category, weight, open, close]
             else:
                 pass
 
-        return holdings
+        return prices
+
+    def check(self, sheet):
+        '''
+            check sheet format
+        :param sheet:
+        :return:
+        '''
+        if sheet.nrows > 0:
+            code, category, weight, open, close = sheet.row_values(0)
+            if code=='code' and category=='category' and weight=='weight' and open=='open' and close=='close':
+                return True
+        return False
 
 
 class Benchmark:
@@ -65,11 +101,8 @@ class Benchmark:
         benchmark information for brinson analysis
     '''
     def __init__(self):
-        #daily industry indexs: date->{code->[weight, open-index, close-index]}
-        self.iindexs = None
-        #stock industries in benchmark: stock code->industry code
-        self.sindustries = None
-
+        #daily benchmark prices: date->{code->[weight, open, close]}
+        self.prices = None
 
     def load(self, loader):
         '''
@@ -77,7 +110,7 @@ class Benchmark:
         :param loader:
         :return:
         '''
-        self.iindexs, self.sindustries = loader.load()
+        self.prices = loader.load()
         return self
 
 
@@ -86,8 +119,8 @@ class Portfolio:
         portfolio information for analysis
     '''
     def __init__(self):
-        #daily stock holdings after daily transaction ends: date->{code->[weight, open-price, close-price]}
-        self.holdings = None
+        #daily portfolio prices: date->{code->[category, weight, open, close]}
+        self.prices = None
 
     def load(self, loader):
         '''
@@ -95,7 +128,7 @@ class Portfolio:
         :param loader:
         :return:
         '''
-        self.holdings = loader.load()
+        self.prices = loader.load()
         return self
 
 class Brinson:
@@ -122,29 +155,23 @@ class Brinson:
         :return: [benchmark return, portfolio return, excess return, asset selection return, stock selection return, interaction return]
         '''
         attribution_results = []
-        for date, stocks in self.portfolio.holdings:
+        for date, property in self.portfolio.prices.items():
 
             #compute benchmark return as q1
             q1 = 0.0
-            for weight, open_index, close_index in self.benchmark.iindexs[date].values():
-                q1 += weight*(close_index-open_index)/open_index
+            for weight, open, close in self.benchmark.prices[date].values():
+                q1 += weight*(close-open)/open
             br = q1
 
-            #compute portfolio return as q4
-            q4 = 0.0
-            for weight, open_price, close_price in stocks.values():
-                q4 += weight*(close_price-open_price)/open_price
+            #compute industry selection as q2, stock selection as q3, portfolio return as q4
+            q2, q3, q4 = 0.0, 0.0, 0.0
+            for category, pweight, popen, pclose in property.values():
+                cweight, copen, cclose = self.benchmark.prices[date][category]
+                q2 += pweight * (cclose - copen) / copen
+                q3 += cweight * (pclose - popen) / popen
+                q4 += pweight*(pclose-popen)/popen
+
             pr = q4
-
-            #compute industry and stock selection as q2 & q3
-            q2, q3 = 0.0, 0.0
-            for scode, holds in stocks.items():
-                sweight, open_price, close_price = holds
-                icode = self.benchmark.sindustries[scode]
-                iweight, open_index, close_index = self.benchmark.iindexs[date][icode]
-
-                q2 += sweight*(close_index-open_index)/open_index
-                q3 += iweight*(close_price-open_price)/open_price
 
             #compute attribution for portfilio
             ar = q2-q1
@@ -153,19 +180,28 @@ class Brinson:
             tr = q4-q1
 
             #add to results
-            attribution_results.append([br, pr, tr, ar, sr, ir])
+            attribution_results.append([date, br, pr, tr, ar, sr, ir])
 
         return attribution_results
 
 if __name__ == "__main__":
     import sys
+    usage = "Usage: python perf.py <benchmark file> <portfolio file>\n" \
+            "benchmark file format:\n" \
+            "   sheet name: yyyy-mm--dd\n" \
+            "   sheet columns: code, weight, open, close\n" \
+            "portfolio file format:\n" \
+            "   sheet name: yyyy-mm--dd\n" \
+            "   sheet columns: code, category, weight, open, close\n"
+
     if len(sys.argv) != 3:
-        print "Usage: python perf.py <benchmark file> <portfolio file>"
+        print usage
         exit()
 
     benchmark = Benchmark().load(BLoader(sys.argv[1]))
     portfolio = Portfolio().load(PLoader(sys.argv[2]))
 
+    print "date, br, pr, tr, ar, sr, ir"
     results = Brinson().init(benchmark, portfolio).analyse()
     for result in results:
         print result

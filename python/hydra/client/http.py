@@ -2,6 +2,8 @@ import os, re, gzip, zlib
 import urllib2, cookielib
 from StringIO import StringIO
 
+
+
 class HttpHandler:
     def __init__(self):
         pass
@@ -35,9 +37,6 @@ class HttpClient:
 
         #urllib2 opener as http client
         self.opener = None
-
-        import threading
-        threading.Thread
 
     def create(self):
         '''
