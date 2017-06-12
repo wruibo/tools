@@ -18,7 +18,7 @@ class MetaTable(type):
 
         #process fields and keys of table
         fields, keys = [], []
-        for n, v in attrs.items():
+        for n, v in list(attrs.items()):
             if isinstance(v, Field):
                 if v.name is None:
                     v.name = n
@@ -59,11 +59,10 @@ class MetaTable(type):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-class Table:
+class Table(metaclass=MetaTable):
     '''
         base table class for store
     '''
-    __metaclass__ = MetaTable
 
     def __init__(self, name=None):
         if name is not None:

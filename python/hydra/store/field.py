@@ -67,17 +67,17 @@ if __name__ == "__main__":
     field5 = Field("create_time", BigInt())
 
     if field1 == field2:
-        print "hello"
+        print("hello")
 
-    print field1.tostr()
-    print field2.tostr()
-    print field3.tostr()
-    print field4.tostr()
-    print field5.tostr()
+    print(field1.tostr())
+    print(field2.tostr())
+    print(field3.tostr())
+    print(field4.tostr())
+    print(field5.tostr())
 
-    print Field().fromstr(field1.tostr()).tostr()
-    print Field().fromstr(field2.tostr()).tostr()
-    print Field().fromstr(field3.tostr()).tostr()
-    print Field().fromstr(field4.tostr()).tostr()
-    print Field().fromstr(field5.tostr()).tostr()
+    print(Field().fromstr(field1.tostr()).tostr())
+    print(Field().fromstr(field2.tostr()).tostr())
+    print(Field().fromstr(field3.tostr()).tostr())
+    print(Field().fromstr(field4.tostr()).tostr())
+    print(Field().fromstr(field5.tostr()).tostr())
 

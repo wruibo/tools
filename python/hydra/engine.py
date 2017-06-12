@@ -19,14 +19,14 @@ class Engine(threading.Thread):
 
 
 if __name__ == "__main__":
-    from net import http
+    from .net import http
     resp = http.client.get("http://www.caifuqiao.cn/")
-    print resp
+    print(resp)
 
     resp = http.client.get("http://www.sohu.com/")
-    print resp
+    print(resp)
 
     resp = http.client.get("http://www.sina.com.cn/")
-    print resp
+    print(resp)
 
     http.client.close()

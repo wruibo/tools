@@ -40,7 +40,7 @@ class FSStore(IStore):
 
                 return self
             Logger.info("open store %s...success. %d tables.", self.path, len(self.tables))
-        except Exception, e:
+        except Exception as e:
             Logger.error("open store %s...failed. error: %s", self.path, str(e))
             raise e
 

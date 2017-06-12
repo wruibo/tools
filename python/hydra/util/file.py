@@ -79,5 +79,5 @@ class File:
 
 if __name__ == "__main__":
     file = File.open("ini.py", 'r')
-    print "first line: %s" % file.head(3)
-    print "last line: %s" % file.tail(1)
+    print("first line: %s" % file.head(3))
+    print("last line: %s" % file.tail(1))

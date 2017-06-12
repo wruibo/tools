@@ -1,7 +1,7 @@
 '''
     database store
 '''
-import MySQLdb
+import pymysql
 
 from util.log import Logger
 from store.istore import IStore
@@ -29,7 +29,7 @@ class DBStore(IStore):
         try:
             self.host, self.port, self.user, self.pwd = host, port, user, pwd
             self.dbn = dbn
-            self.dbc = MySQLdb.connect(host=host, user=user, passwd=pwd, port=port)
+            self.dbc = pymysql.connect(host=host, user=user, passwd=pwd, port=port)
 
             if not self._exists():
                 #create database
@@ -44,7 +44,7 @@ class DBStore(IStore):
 
             return self
             Logger.info("open store mysql://%s:%s@%s:%d/%s...success. %d tables.", user, pwd, host, port, self.dbn, len(self.tables))
-        except Exception, e:
+        except Exception as e:
             Logger.error("open store mysql://%s:%s@%s:%d/%s...failed. error: %s", user, pwd, host, port, self.dbn, str(e))
             raise e
 
@@ -58,7 +58,7 @@ class DBStore(IStore):
             if self.dbc is not None:
                 self.dbc.close()
             Logger.info("close store mysql://%s:%s@%s:%d/%s...success.", self.user, self.pwd, self.host, self.port, self.dbn)
-        except Exception, e:
+        except Exception as e:
             Logger.info("close store mysql://%s:%s@%s:%d/%s...failed. error: %s", self.user, self.pwd, self.host, self.port, self.dbn, str(e))
             raise e
 

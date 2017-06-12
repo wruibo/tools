@@ -99,10 +99,10 @@ if __name__ == "__main__":
     str2 = key2.tostr()
     str3 = key3.tostr()
 
-    print str1
-    print str2
-    print str3
+    print(str1)
+    print(str2)
+    print(str3)
 
-    print Key().fromstr(str1).tostr()
-    print Key().fromstr(str2).tostr()
-    print Key().fromstr(str3).tostr()
+    print(Key().fromstr(str1).tostr())
+    print(Key().fromstr(str2).tostr())
+    print(Key().fromstr(str3).tostr())

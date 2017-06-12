@@ -3,11 +3,11 @@
 '''
 import time, json, threading
 
-from ccrawler import *
-from cparser import *
-from clinker import *
+from .ccrawler import *
+from .cparser import *
+from .clinker import *
 from cstorage import *
-from cextractor import *
+from .cextractor import *
 from clauncher import *
 
 class Spider(threading.Thread, Launcher):
@@ -173,7 +173,7 @@ class SpiderMgr(threading.Thread, Launcher):
                                 self.__spiders.append(spider)
 
                 fspiders.close()
-        except Exception, e:
+        except Exception as e:
             Logger.error("spider manager: launch error: %s", e.message)
         else:
             Logger.info("spider manager: load spiders, %d spiders launched.", len(self.__spiders))
@@ -204,7 +204,7 @@ class SpiderMgr(threading.Thread, Launcher):
 
             fspiders.close()
 
-        except Exception, e:
+        except Exception as e:
             Logger.error("spider manager: shutdown error: %s", e.message)
         else:
             Logger.info("spider manager: shutdown finished, %d spiders shutdown.", len(self.__spiders))

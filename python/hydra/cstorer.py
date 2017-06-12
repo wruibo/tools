@@ -1,6 +1,6 @@
 import MySQLdb
 
-from cpipe import Pipe
+from .cpipe import Pipe
 
 
 class Storer(Pipe):
@@ -209,7 +209,7 @@ class testa:
         pass
 
     def connect(self):
-        print "connect"
+        print("connect")
 
 def fun(name):
     name = "abc"
@@ -220,13 +220,13 @@ if __name__ == "__main__":
     cursor.execute("show databases;")
     results = cursor.fetchall()
     for result in results:
-        print result
+        print(result)
 
     cursor.execute("use xy;")
     results = cursor.execute("show tables;")
     results = cursor.fetchall()
     for result in results:
-        print result
+        print(result)
 
     cursor.execute("truncate tb_test;")
 
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     cursor1.execute("select * from tb_test;")
     result = cursor1.fetchone()
     for i in range(1, 4):
-        print result
+        print(result)
         result = cursor1.fetchone()
 
     for i in range(4, 7):
@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     result = cursor1.fetchone()
     for i in range(1, 4):
-        print result
+        print(result)
         result = cursor1.fetchone()
 
     db.close()

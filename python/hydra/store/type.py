@@ -105,10 +105,10 @@ if __name__ == "__main__":
     str2 = type2.tostr()
     str3 = type3.tostr()
 
-    print str1
-    print str2
-    print str3
+    print(str1)
+    print(str2)
+    print(str3)
 
-    print Type().fromstr(str1).tostr()
-    print Type().fromstr(str2).tostr()
-    print Type().fromstr(str3).tostr()
+    print(Type().fromstr(str1).tostr())
+    print(Type().fromstr(str2).tostr())
+    print(Type().fromstr(str3).tostr())

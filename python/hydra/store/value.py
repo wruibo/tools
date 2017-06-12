@@ -36,7 +36,7 @@ class Value:
             elif value.lower() == 'null':
                 return DefaultNullValue()
             else:
-                vcls = {int.__name__: NumberValue, long.__name__: NumberValue, float.__name__: NumberValue, bool.__name__: BooleanValue, str.__name__: StringValue}
+                vcls = {int.__name__: NumberValue, int.__name__: NumberValue, float.__name__: NumberValue, bool.__name__: BooleanValue, str.__name__: StringValue}
                 return vcls[typecls(value).__name__](value)
         else:
             return DefaultNullValue()
@@ -138,19 +138,19 @@ if __name__ == "__main__":
     str5 = value5.tostr()
     str6 = value6.tostr()
 
-    print str1
-    print str2
-    print str3
-    print str4
-    print str5
-    print str6
+    print(str1)
+    print(str2)
+    print(str3)
+    print(str4)
+    print(str5)
+    print(str6)
 
-    print Value().fromstr(str1).tostr()
-    print Value().fromstr(str2).tostr()
-    print Value().fromstr(str3).tostr()
-    print Value().fromstr(str4).tostr()
-    print Value().fromstr(str5).tostr()
-    print Value().fromstr(str6).tostr()
+    print(Value().fromstr(str1).tostr())
+    print(Value().fromstr(str2).tostr())
+    print(Value().fromstr(str3).tostr())
+    print(Value().fromstr(str4).tostr())
+    print(Value().fromstr(str5).tostr())
+    print(Value().fromstr(str6).tostr())
 
     str1 = value1.tosql()
     str2 = value2.tosql()
@@ -159,16 +159,16 @@ if __name__ == "__main__":
     str5 = value5.tosql()
     str6 = value6.tosql()
 
-    print str1
-    print str2
-    print str3
-    print str4
-    print str5
-    print str6
+    print(str1)
+    print(str2)
+    print(str3)
+    print(str4)
+    print(str5)
+    print(str6)
 
-    print Value().fromsql(str1).tosql()
-    print Value().fromsql(str2).tosql()
-    print Value().fromsql(str3).tosql()
-    print Value().fromsql(str4).tosql()
-    print Value().fromsql(str5).tosql()
-    print Value().fromsql(str6).tosql()
+    print(Value().fromsql(str1).tosql())
+    print(Value().fromsql(str2).tosql())
+    print(Value().fromsql(str3).tosql())
+    print(Value().fromsql(str4).tosql())
+    print(Value().fromsql(str5).tosql())
+    print(Value().fromsql(str6).tosql())

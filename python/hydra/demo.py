@@ -1,8 +1,8 @@
-from util.timer import *
-from store.istore import *
-from store import *
-from store.dbstore import *
-from store.fsstore import *
+from .util.timer import *
+from .store.istore import *
+from .store import *
+from .store.dbstore import *
+from .store.fsstore import *
 
 class DemoTable(Table):
     f1 = Field("id", Int(), AutoIncValue())

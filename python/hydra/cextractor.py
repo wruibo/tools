@@ -4,9 +4,9 @@
 
 from clauncher import Launcher
 
-from cfilter import WhiteListFilter
-from chelper import Helper
-from util.log import Logger
+from .cfilter import WhiteListFilter
+from .chelper import Helper
+from .util.log import Logger
 
 
 class Extractor(Launcher):
@@ -28,9 +28,9 @@ class Extractor(Launcher):
         try:
             time_used, ret = Helper.timerun(self._launch)
             Logger.info("extractor: launch extractor - %s, time used: %fs", self.name(), time_used)
-        except IOError, e:
+        except IOError as e:
             pass
-        except Exception, e:
+        except Exception as e:
             Logger.info("extractor: launch extractor - %s, error: %s", self.name(), e.message)
 
     def persist(self):
@@ -41,7 +41,7 @@ class Extractor(Launcher):
         try:
             time_used, ret = Helper.timerun(self._persist)
             Logger.info("extractor: persist extractor - %s, time used: %fs", self.name(), time_used)
-        except Exception, e:
+        except Exception as e:
             Logger.info("extractor: persist extractor - %s, error: %s", self.name(), e.message)
 
     def shutdown(self):
@@ -52,7 +52,7 @@ class Extractor(Launcher):
         try:
             time_used, ret = Helper.timerun(self._shutdown)
             Logger.info("extractor: shutdown extractor - %s, time used: %fs", self.name(), time_used)
-        except Exception, e:
+        except Exception as e:
             Logger.info("extractor: shutdown extractor - %s, error: %s", self.name(), e.message)
 
     def filter(self, *cond):

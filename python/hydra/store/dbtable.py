@@ -57,7 +57,7 @@ class DBTable(ITable):
 
             Logger.info("create table %s...success.", self.name)
             return self
-        except Exception, e:
+        except Exception as e:
             Logger.error("create table %s...failed. error: %s", self.name, str(e))
             raise e
 
@@ -81,7 +81,7 @@ class DBTable(ITable):
 
             Logger.info("loading table %s...success.", self.name)
             return self
-        except Exception, e:
+        except Exception as e:
             Logger.info("loading table %s...failed. error: %s", self.name, str(e))
             raise e
 
@@ -100,7 +100,7 @@ class DBTable(ITable):
             Logger.info("describe table %s...success", self.name)
 
             return table
-        except Exception, e:
+        except Exception as e:
             Logger.error("describe table %s...failed. error %s", self.name, str(e))
             raise e
 
@@ -113,7 +113,7 @@ class DBTable(ITable):
             sql = "drop table if exists %s;" % self.name
             self.dbc.cursor().execute(sql)
             Logger.info("drop table %s...success", self.name)
-        except Exception, e:
+        except Exception as e:
             Logger.error("drop table %s...failed. error %s", self.name, str(e))
             raise e
 
@@ -126,7 +126,7 @@ class DBTable(ITable):
             sql = "truncate table %s;" % table.name
             self.dbc.cursor().execute(sql)
             Logger.info("truncate table %s...success", self.name)
-        except Exception, e:
+        except Exception as e:
             Logger.error("truncate table %s...failed. error %s", self.name, str(e))
             raise e
 
@@ -153,7 +153,7 @@ class DBTable(ITable):
            Logger.info("select from table %s...success", self.name)
            return models
 
-        except Exception, e:
+        except Exception as e:
            Logger.error("select from table %s...failed. error %s", self.name, str(e))
            raise e
 
@@ -189,7 +189,7 @@ class DBTable(ITable):
             self.dbc.commit()
 
             Logger.info("insert into table %s...success", self.name)
-        except Exception, e:
+        except Exception as e:
             Logger.error("insert into table %s...failed. error %s", self.name, str(e))
             raise e
 

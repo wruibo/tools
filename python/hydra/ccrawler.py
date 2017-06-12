@@ -1,6 +1,6 @@
 import os, re, gzip, zlib
-import urllib2, cookielib
-from StringIO import StringIO
+import urllib.request, urllib.error, urllib.parse, http.cookiejar
+from io import StringIO
 
 
 class Crawler:
@@ -15,7 +15,7 @@ class Crawler:
         self.__decompress_handler = DecompressHandler()
 
         #initialize urllib2 opener
-        self.__opener = urllib2.build_opener()
+        self.__opener = urllib.request.build_opener()
 
     def init(self):
         #load cookie data for cookie handler
@@ -31,7 +31,7 @@ class Crawler:
         try:
             response = self.__opener.open(url)
             content = response.read()
-        except Exception, e:
+        except Exception as e:
             return Response(url, "exception", str(e.__class__.__name__)+":"+str(e))
         else:
             return Response(url, response.getcode(), response.msg, response.headers, content)
@@ -45,7 +45,7 @@ class Crawler:
             while content:
                 file.write(content)
                 content = response.read(16*1024)
-        except Exception, e:
+        except Exception as e:
             return Response(url, "exception", str(e.__class__.__name__) + ":" + str(e))
         else:
             return Response(url, response.getcode(), response.msg, response.headers, fpath)
@@ -103,7 +103,7 @@ class Cookie:
             secure = dict.get("secure", False)
             expires = dict.get("expires", None)
             if expires is not None:
-                expires = cookielib.http2time(expires)
+                expires = http.cookiejar.http2time(expires)
 
             discard = dict.get("discard", False)
             comment = dict.get("comment", None)
@@ -111,7 +111,7 @@ class Cookie:
             rest = {}
 
             #create cookielib.Cookie object
-            cookie = cookielib.Cookie(
+            cookie = http.cookiejar.Cookie(
                 version, name, value,
                 port, port_specified,
                 domain, domain_specified, domain_initial_dot,
@@ -125,7 +125,7 @@ class Cookie:
             )
 
             return cookie
-        except Exception, e:
+        except Exception as e:
             return None
 
     @staticmethod
@@ -168,7 +168,7 @@ class Response:
 
     def __str__(self):
         str = "%s\n%s %s\n" % (self.url, self.code, self.message)
-        for name, value in self.headers.items():
+        for name, value in list(self.headers.items()):
             str += "%s:%s\n" % (name, value)
         str += "\n"+self.content
 
@@ -227,7 +227,7 @@ class Response:
         return charset
 
 
-class HeaderHandler(urllib2.BaseHandler):
+class HeaderHandler(urllib.request.BaseHandler):
     '''
         add header for each request
     '''
@@ -245,7 +245,7 @@ class HeaderHandler(urllib2.BaseHandler):
         return True
 
     def http_request(self, req):
-        for name, value in self.headers.items():
+        for name, value in list(self.headers.items()):
             req.add_header(name, value)
             req.add_unredirected_header(name, value)
 
@@ -254,12 +254,12 @@ class HeaderHandler(urllib2.BaseHandler):
     https_request = http_request
 
 
-class CookieHandler(urllib2.BaseHandler):
+class CookieHandler(urllib.request.BaseHandler):
     '''
         manage cookie of browser
     '''
     def __init__(self):
-        self.__cookiejar = cookielib.MozillaCookieJar()
+        self.__cookiejar = http.cookiejar.MozillaCookieJar()
 
     def load(self, filename):
         self.__cookiejar.load(filename)
@@ -287,7 +287,7 @@ class CookieHandler(urllib2.BaseHandler):
     https_response = http_response
 
 
-class DecompressHandler(urllib2.BaseHandler):
+class DecompressHandler(urllib.request.BaseHandler):
     '''
         decompress response content
     '''
@@ -324,13 +324,13 @@ if __name__ == "__main__":
     crawler.set_cookie("Set-Cookie: token=615347353461caaf28eb4023230faa80; expires=Tue, 04-Apr-2017 09:16:00 GMT; Max-Age=432000; domain=www.caifuqiao.cn; path=/")
 
     resp = crawler.download("https://ss2.baidu.com/-vo3dSag_xI4khGko9WTAnF6hhy/image/h%3D200/sign=b4d9c7399582d158a4825eb1b00819d5/aa18972bd40735fa831d0f6e97510fb30e240873.jpg", "/tmp/baidu.jpg")
-    print resp
+    print(resp)
 
     resp = crawler.download("http://www.baidu.com/", "/tmp/baidu.html")
-    print resp
+    print(resp)
 
     resp = crawler.download("https://www.caifuqiao.cn/Product/Detail/attachmentDownload?attachmentId=799720", "/tmp/caifuqiao.pdf")
-    print resp
-    print resp.ctype(), resp.ftype(), resp.fname()
+    print(resp)
+    print(resp.ctype(), resp.ftype(), resp.fname())
 
     crawler.destroy()

@@ -139,7 +139,7 @@ def list_files(path, onlyname=True):
 
 
 if __name__ == "__main__":
-    print join_paths('/path1/', '/path2/', 'file')
-    print is_relative_path("path/")
-    print list_files('/tmp')
-    print list_dirs('/tmp')
+    print(join_paths('/path1/', '/path2/', 'file'))
+    print(is_relative_path("path/"))
+    print(list_files('/tmp'))
+    print(list_dirs('/tmp'))

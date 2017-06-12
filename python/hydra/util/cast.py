@@ -84,7 +84,7 @@ def num2str(n):
     :param n:
     :return:
     '''
-    if not (isinstance(n, int) or isinstance(n, float) or isinstance(n, long)):
+    if not (isinstance(n, int) or isinstance(n, float) or isinstance(n, int)):
         raise ValueCastError("input value type is %s, expect int,long or float." % n.__class__.__name__)
     return str(n)
 
@@ -123,7 +123,7 @@ def numcls(s):
         if isinstance(v, int):
             return int
         else:
-            return long
+            return int
 
 def typecls(s):
     '''
@@ -152,7 +152,7 @@ def objtostr(obj, escaped=None):
     :param obj:
     :return:
     '''
-    castfunc = {int.__name__:num2str, float.__name__:num2str, long.__name__:num2str, bool.__name__:bool2str, None.__class__.__name__:none2str}
+    castfunc = {int.__name__:num2str, float.__name__:num2str, int.__name__:num2str, bool.__name__:bool2str, None.__class__.__name__:none2str}
 
     s = castfunc.get(obj.__class__.__name__, str)(obj)
     if escaped:
@@ -166,7 +166,7 @@ def str2obj(s, escaped=None):
     :param str:
     :return:
     '''
-    castfunc = {int: str2num, float: str2num, long: str2num, bool: str2bool, None: str2none}
+    castfunc = {int: str2num, float: str2num, int: str2num, bool: str2bool, None: str2none}
 
     if escaped:
         for c in escaped:
@@ -178,6 +178,6 @@ def str2obj(s, escaped=None):
 
 
 if __name__ == "__main__":
-    print objtostr("123", ",|")
+    print(objtostr("123", ",|"))
 
-    print str2obj("123.4")
+    print(str2obj("123.4"))

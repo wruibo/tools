@@ -60,7 +60,7 @@ if __name__ == "__main__":
     #url = "../path/file"
     #url = "mailto:abc@abc.com"
 
-    print curi.parse(url)
-    print curi.protocol(url)
-    print curi.host(url)
-    print curi.path(url)
+    print(curi.parse(url))
+    print(curi.protocol(url))
+    print(curi.host(url))
+    print(curi.path(url))

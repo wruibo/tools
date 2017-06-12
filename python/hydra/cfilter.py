@@ -6,8 +6,8 @@ import re
 
 from clauncher import Launcher
 
-from chelper import Helper
-from util.log import Logger
+from .chelper import Helper
+from .util.log import Logger
 
 
 class Filter(Launcher):
@@ -25,9 +25,9 @@ class Filter(Launcher):
         try:
             time_used, ret = Helper.timerun(self._launch)
             Logger.info("filter: launch filter - %s, time used: %fs", self.name(), time_used)
-        except IOError, e:
+        except IOError as e:
             pass
-        except Exception, e:
+        except Exception as e:
             Logger.info("filter: launch filter - %s, error: %s", self.name(), e.message)
 
     def persist(self):
@@ -38,7 +38,7 @@ class Filter(Launcher):
         try:
             time_used, ret = Helper.timerun(self._persist)
             Logger.info("filter: persist filter - %s, time used: %fs", self.name(), time_used)
-        except Exception, e:
+        except Exception as e:
             Logger.info("filter: persist filter - %s, error: %s", self.name(), e.message)
 
     def shutdown(self):
@@ -49,7 +49,7 @@ class Filter(Launcher):
         try:
             time_used, ret = Helper.timerun(self._shutdown)
             Logger.info("filter: shutdown filter - %s, time used: %fs", self.name(), time_used)
-        except Exception, e:
+        except Exception as e:
             Logger.info("filter: shutdown filter - %s, error: %s", self.name(), e.message)
 
     def filter(self, *cond):
@@ -191,9 +191,9 @@ if __name__ == "__main__":
 
     filter.filter("http://www.baidu.com/a", "http://wwww.caifuqiao.cn/.*")
 
-    print filter.accept("http://www.baidu.com/")
-    print filter.accept("http://www.baidu.com/a/b")
-    print filter.accept("http://www.baidu1.com/")
+    print(filter.accept("http://www.baidu.com/"))
+    print(filter.accept("http://www.baidu.com/a/b"))
+    print(filter.accept("http://www.baidu1.com/"))
 
     filter.shutdown()
 
@@ -202,8 +202,8 @@ if __name__ == "__main__":
 
     filter.filter("http://www.baidu.com/a", "http://wwww.caifuqiao.cn/.*")
 
-    print filter.accept("http://www.baidu.com/")
-    print filter.accept("http://www.baidu.com/a/b")
-    print filter.accept("http://www.baidu1.com/")
+    print(filter.accept("http://www.baidu.com/"))
+    print(filter.accept("http://www.baidu.com/a/b"))
+    print(filter.accept("http://www.baidu1.com/"))
 
     filter.shutdown()

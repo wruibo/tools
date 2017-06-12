@@ -93,5 +93,5 @@ def unquotes(ss, q="'\""):
 
 
 if __name__ == "__main__":
-    print quotes(("123","345"), '"')
-    print unquotes("\'a\'")
+    print(quotes(("123","345"), '"'))
+    print(unquotes("\'a\'"))

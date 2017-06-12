@@ -4,9 +4,9 @@
 
 from clauncher import Launcher
 
-from cfilter import WhiteListFilter
-from chelper import Helper
-from util.log import Logger
+from .cfilter import WhiteListFilter
+from .chelper import Helper
+from .util.log import Logger
 
 
 class Parser(Launcher):
@@ -206,7 +206,7 @@ class ParserMgr(Launcher):
         return parser_manager
 
 if __name__ == "__main__":
-    from ccrawler import *
+    from .ccrawler import *
     from cprotocol import Uri
 
     crawler_manager = CrawlerMgr.default("/tmp/spider/crawler")
@@ -218,4 +218,4 @@ if __name__ == "__main__":
     links = parser_manager.parse(uri, resp.content())
 
     for link in links:
-        print link.url()
+        print(link.url())

@@ -13,17 +13,17 @@ class TestProperty:
 
 def log(func):
     def aa(*args, **kwargs):
-        print "log"
+        print("log")
         func(*args, **kwargs)
     return aa
 
 @log
 def now():
     import time
-    print time.time()
+    print(time.time())
 
 def fn(self, name="ena"):
-    print "abc"
+    print("abc")
 
 Hello = type('Hello', (object,), dict(hello=fn, hello1=fn))
 
@@ -32,7 +32,7 @@ class QueIter:
     def __init__(self, count):
         self.count = count
 
-    def next(self):
+    def __next__(self):
         self.count -= 1
         if self.count == 0:
             raise StopIteration
@@ -72,9 +72,9 @@ if __name__ == "__main__":
                             re.IGNORECASE)
     mobjs = regex_keys.findall(sql)
     for mobj in mobjs:
-        print mobj[0]
+        print(mobj[0])
 
-    print "\n\n"
+    print("\n\n")
     regex_fields =  re.compile(r'('
                                r'`[\w_]+`\s+'
                                r'\w+'
@@ -84,4 +84,4 @@ if __name__ == "__main__":
                                re.IGNORECASE)
     mobjs = regex_fields.findall(sql)
     for mobj in mobjs:
-        print mobj[0]
+        print(mobj[0])

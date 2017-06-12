@@ -10,7 +10,7 @@ class MetaModel(type):
 
         #set the model attributes&fields from table
         fields = {}
-        for key, value in attrs.items():
+        for key, value in list(attrs.items()):
             if issubclass(value.__class__, Table):
                 for field in value.fields:
                     fields[field.name] = field
@@ -19,11 +19,9 @@ class MetaModel(type):
 
         return type.__new__(cls, name, bases, attrs)
 
-class Model(dict):
-    __metaclass__ = MetaModel
-
+class Model(dict, metaclass=MetaModel):
     def __init__(self, **kwargs):
-        for name, value in kwargs.items():
+        for name, value in list(kwargs.items()):
             self[name] = value
 
     def __getattr__(self, name):

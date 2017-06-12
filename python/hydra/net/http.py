@@ -2,9 +2,22 @@
     http module
 '''
 import os, re, gzip, zlib
-import urllib2, cookielib
-from StringIO import StringIO
+import urllib.request, urllib.error, urllib.parse, http.cookiejar
+from io import StringIO
 
+
+class Cookie:
+    pass
+
+
+class Header:
+    pass
+
+class Request:
+    pass
+
+class Response:
+    pass
 
 class HttpClient:
     class ClientCookie:
@@ -41,7 +54,7 @@ class HttpClient:
             secure = dict.get("secure", False)
             expires = dict.get("expires", None)
             if expires is not None:
-                expires = cookielib.http2time(expires)
+                expires = http.cookiejar.http2time(expires)
 
             discard = dict.get("discard", False)
             comment = dict.get("comment", None)
@@ -49,7 +62,7 @@ class HttpClient:
             rest = {}
 
             # create cookielib.Cookie object
-            cookie = cookielib.Cookie(
+            cookie = http.cookiejar.Cookie(
                 version, name, value,
                 port, port_specified,
                 domain, domain_specified, domain_initial_dot,
@@ -87,7 +100,7 @@ class HttpClient:
 
             return None
 
-    class ClientHandler(urllib2.BaseHandler):
+    class ClientHandler(urllib.request.BaseHandler):
         DEFAULT_HEADERS = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
             "Accept": "text/html, application/xhtml+xml, application/xml; q=0.9, image/webp, */*; q=0.8",
@@ -96,7 +109,7 @@ class HttpClient:
 
         def __init__(self):
             self.headers = self.DEFAULT_HEADERS
-            self.cookies = cookielib.MozillaCookieJar()
+            self.cookies = http.cookiejar.MozillaCookieJar()
 
         def load_cookie(self, fpath):
             self.cookies.load(fpath)
@@ -116,7 +129,7 @@ class HttpClient:
             return HttpClient.ClientCookie().make(cookie_string)
 
         def _request_add_headers(self, request):
-            for name, value in self.headers.items():
+            for name, value in list(self.headers.items()):
                 request.add_header(name, value)
                 request.add_unredirected_header(name, value)
             return self
@@ -136,7 +149,7 @@ class HttpClient:
             else:
                 fp = response.fp
 
-            new_response = urllib2.addinfourl(fp, response.info(), response.geturl(), response.getcode())
+            new_response = urllib.addinfourl(fp, response.info(), response.geturl(), response.getcode())
             new_response.msg = response.msg
             return new_response
 
@@ -169,7 +182,7 @@ class HttpClient:
             self.client_handler.load_cookie(self.cookie_file_path)
 
         #urllib2 opener as http client
-        self.client = urllib2.build_opener(self.client_handler)
+        self.client = urllib.request.build_opener(self.client_handler)
 
     def set_cookie(self, cookie_string):
         return self.client_handler.set_cookie(cookie_string)
@@ -181,14 +194,14 @@ class HttpClient:
         try:
             response = self.client.open(url)
             return response.getcode(), response.msg, response.headers.dict, response.read()
-        except Exception, e:
+        except Exception as e:
             return -1, str(e.__class__.__name__)+":"+str(e), None, None
 
     def post(self, url, data=None, headers=None):
         try:
             response = self.client.open(url, data)
             return response.getcode(), response.msg, response.headers, response.read()
-        except Exception, e:
+        except Exception as e:
             return -1, str(e.__class__.__name__)+":"+str(e), None, None
 
     def download(self, url, fpath):
@@ -202,7 +215,7 @@ class HttpClient:
                     f.write(content)
                     content = response.read(RDSZ)
             return response.getcode(), response.msg, response.headers, fpath
-        except Exception, e:
+        except Exception as e:
             return -1, str(e.__class__.__name__) + ":" + str(e), None, None
 
     def close(self):
@@ -218,15 +231,15 @@ client = HttpClient()
 
 if __name__ == "__main__":
     client.set_cookie("Set-Cookie: userId=68131; expires=Tue, 04-Apr-2017 09:16:00 GMT; Max-Age=432000; domain=www.caifuqiao.cn; path=/")
-    client.set_cookie("Set-Cookie: token=615347353461caaf28eb4023230faa80; expires=Tue, 04-Apr-2017 09:16:00 GMT; Max-Age=432000; domain=www.caifuqiao.cn; path=/")
+    client.set_cookie("Set-Cookie: token=b5b0d334273a82053a8c50775a675690; expires=Tue, 04-Apr-2018 09:16:00 GMT; Max-Age=432000; domain=www.caifuqiao.cn; path=/")
 
     resp = client.download("https://ss2.baidu.com/-vo3dSag_xI4khGko9WTAnF6hhy/image/h%3D200/sign=b4d9c7399582d158a4825eb1b00819d5/aa18972bd40735fa831d0f6e97510fb30e240873.jpg", "/Users/polly/Temp/baidu.jpg")
-    print resp
+    print(resp)
 
-    resp = client.download("http://www.baidu.com/", "/Users/polly/Temp/baidu.html")
-    print resp
+    resp = client.download("https://www.baidu.com/", "/Users/polly/Temp/baidu.html")
+    print(resp)
 
     resp = client.download("https://www.caifuqiao.cn/Product/Detail/attachmentDownload?attachmentId=799720", "/Users/polly/Temp/caifuqiao.pdf")
-    print resp
+    print(resp)
 
     client.close()

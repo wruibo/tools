@@ -18,7 +18,7 @@ class Helper:
         return None
 
     @staticmethod
-    def unicode(content, charset = None):
+    def str(content, charset = None):
         #try to get charset of content from itself
         if charset is None:
             charset = Helper.charset(content)

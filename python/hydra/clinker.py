@@ -9,12 +9,12 @@ import time
 from clauncher import Launcher
 from cprotocol import Uri
 
-from cfilter import WhiteListFilter
-from chelper import Helper
-from util.log import Logger
+from .cfilter import WhiteListFilter
+from .chelper import Helper
+from .util.log import Logger
 
 class CConfig:
-    def __init__(self, is_origin = False, crawl_period = sys.maxint):
+    def __init__(self, is_origin = False, crawl_period = sys.maxsize):
         '''
             initialize link crawl configure
         :param is_origin: boolean, where the link is origin link
@@ -267,7 +267,7 @@ class CLinks:
         :return: boolean
         '''
         key = self._key(uri)
-        return self.__index.has_key(key)
+        return key in self.__index
 
     def push(self, uri):
         '''
@@ -276,7 +276,7 @@ class CLinks:
         :return:
         '''
         key = self._key(uri)
-        if not self.__index.has_key(key):
+        if key not in self.__index:
             self.__links.append(CLink(uri))
             self.__index[key] = len(self.__links) - 1
 
@@ -306,7 +306,7 @@ class CLinks:
         #use url md5 as index key
         key = self._key(uri)
 
-        if self.__index.has_key(key):
+        if key in self.__index:
             #old link for linker
             id = self.__index.get(key)
 
@@ -358,9 +358,9 @@ class Linker(Launcher):
         try:
             time_used, ret = Helper.timerun(self._launch)
             Logger.info("linker: launch linker - %s, time used: %fs", self.name(), time_used)
-        except IOError, e:
+        except IOError as e:
             pass
-        except Exception, e:
+        except Exception as e:
             Logger.info("linker: launch linker - %s, error: %s", self.name(), e.message)
 
     def persist(self):
@@ -371,7 +371,7 @@ class Linker(Launcher):
         try:
             time_used, ret = Helper.timerun(self._persist)
             Logger.info("linker: persist linker - %s, time used: %fs", self.name(), time_used)
-        except Exception, e:
+        except Exception as e:
             Logger.info("linker: persist linker - %s, error: %s", self.name(), e.message)
 
     def shutdown(self):
@@ -382,7 +382,7 @@ class Linker(Launcher):
         try:
             time_used, ret = Helper.timerun(self._shutdown)
             Logger.info("linker: shutdown linker - %s, time used: %fs", self.name(), time_used)
-        except Exception, e:
+        except Exception as e:
             Logger.info("linker: shutdown linker - %s, error: %s", self.name(), e.message)
 
     def filter(self, *cond):

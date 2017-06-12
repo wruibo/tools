@@ -75,7 +75,7 @@ class FSTable(ITable):
 
             Logger.info("create table %s...success.", self.name)
             return self
-        except Exception, e:
+        except Exception as e:
             Logger.error("create table %s...failed. error: %s", self.name, str(e))
             raise e
 
@@ -110,7 +110,7 @@ class FSTable(ITable):
 
             Logger.info("loading table %s...success.", self.name)
             return self
-        except Exception, e:
+        except Exception as e:
             Logger.info("loading table %s...failed. error: %s", self.name, str(e))
             raise e
 
@@ -123,7 +123,7 @@ class FSTable(ITable):
             with open(self.table_file) as ftable:
                 table = Table().fromstr(ftable.read())
                 return table
-        except Exception, e:
+        except Exception as e:
             Logger.info("describe table %s...failed. error: %s", self.name, str(e))
             raise e
 
@@ -134,7 +134,7 @@ class FSTable(ITable):
         '''
         try:
             remove_dir(self.path)
-        except Exception, e:
+        except Exception as e:
             Logger.error("drop table %s...failed. error %s", self.name, str(e))
             raise e
 
@@ -148,7 +148,7 @@ class FSTable(ITable):
             with Lock(self.lock):
                 remove_files(self.data_file)
                 self._create_data_file()
-        except Exception, e:
+        except Exception as e:
             Logger.error("truncate table %s...failed. error %s", self.name, str(e))
             raise e
 
@@ -177,7 +177,7 @@ class FSTable(ITable):
                         data = fdata.readline()
 
                     return models
-        except Exception, e:
+        except Exception as e:
             Logger.info("select data from table %s...failed. error: %s", self.name, str(e))
             raise e
 
@@ -198,7 +198,7 @@ class FSTable(ITable):
                             vfields.append(objtostr(model.get(nfield), ','))
                         lines.append("%s\n" % ",".join(vfields))
                     fdata.writelines(lines)
-        except Exception, e:
+        except Exception as e:
             Logger.info("insert data to table %s...failed. error: %s", self.name, str(e))
             raise e
 

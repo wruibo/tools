@@ -20,4 +20,4 @@ if __name__ == "__main__":
     lock = threading.Lock()
     lock = threading.RLock()
     with Lock(lock):
-        print "hello in lock"
+        print("hello in lock")
