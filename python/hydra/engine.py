@@ -19,14 +19,7 @@ class Engine(threading.Thread):
 
 
 if __name__ == "__main__":
-    from .net import ihttp
-    resp = ihttp.client.get("http://www.caifuqiao.cn/")
-    print(resp)
+    from hydra.net.http import get, getx, getb, getj
+    r = getx("http://www.baidu.com/")
 
-    resp = ihttp.client.get("http://www.sohu.com/")
-    print(resp)
-
-    resp = ihttp.client.get("http://www.sina.com.cn/")
-    print(resp)
-
-    ihttp.client.close()
+    print(r)
