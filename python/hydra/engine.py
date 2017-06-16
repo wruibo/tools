@@ -19,7 +19,8 @@ class Engine(threading.Thread):
 
 
 if __name__ == "__main__":
-    from hydra.net.http import get, getx, getb, getj
-    r = getx("http://www.baidu.com/")
+    from hydra.net.http import get, getx, getb, getj, getf
+    r = getf("http://www.csindex.com.cn/sseportal/upload/399704-399706hbook.pdf", "/tmp/")
+
 
     print(r)

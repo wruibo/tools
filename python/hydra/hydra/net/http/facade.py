@@ -97,8 +97,12 @@ class ResponseFileFromRequestsFacade(ResponseFromRequestFacade):
 
     def hold_file(self, response, path, resume):
         import os, sys
-        if os.path.exists(path) and not os.path.isfile(path):
-            pass
+        if os.path.exists(path):
+            if not os.path.isfile(path):
+                pass
+            else:
+                #get file name from header
+                pass
         else:
             with open(path, 'wb') as f:
                 while True:

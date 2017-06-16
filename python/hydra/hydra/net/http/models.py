@@ -1,7 +1,17 @@
 '''
     models for session request&response
 '''
+class Header:
+    def __init__(self):
+        pass
 
+class Cookies:
+    def __init__(self):
+        pass
+
+class Request:
+    def __init__(self):
+        pass
 
 class Response:
     def __init__(self):
