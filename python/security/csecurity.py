@@ -36,9 +36,6 @@ def Revenue(datePrices, baseDatePrice = None, strDateFormat = "%Y%m%d"):
     dates = carray.LeftShiftSub(dates, baseDatePrice[0], cutil.DaysBetween, strDateFormat)
     prices = carray.CycleGrowthRate(prices, baseDatePrice[1])
 
-    print dates
-    print prices
-
     return carray.M(carray.DivArray(prices, dates), 365)
 
 def SlowMaxDrawdown(prices):

@@ -32,22 +32,26 @@ class _LoaderZZ(_Loader):
             price = Price()
 
             price.time = elmt.getAttribute("tdd") if elmt.hasAttribute("tdd") else None
-            price.open = elmt.getAttribute("op") if elmt.hasAttribute("op") else None
-            price.close = elmt.getAttribute("ep") if elmt.hasAttribute("ep") else None
-            price.high = elmt.getAttribute("hp") if elmt.hasAttribute("hp") else None
-            price.low = elmt.getAttribute("lp") if elmt.hasAttribute("lp") else None
-            price.volume = elmt.getAttribute("vol") if elmt.hasAttribute("vol") else None
-            price.amount = elmt.getAttribute("tot") if elmt.hasAttribute("tot") else None
+            price.open = float(elmt.getAttribute("op")) if elmt.hasAttribute("op") else None
+            price.close = float(elmt.getAttribute("ep")) if elmt.hasAttribute("ep") else None
+            price.high = float(elmt.getAttribute("hp")) if elmt.hasAttribute("hp") else None
+            price.low = float(elmt.getAttribute("lp")) if elmt.hasAttribute("lp") else None
+            price.volume = float(elmt.getAttribute("vol")) if elmt.hasAttribute("vol") else None
+            price.amount = float(elmt.getAttribute("tot")) if elmt.hasAttribute("tot") else None
 
             index.prices.append(price)
 
         return index
 
-
+float()
 _loaders = {
+    "shzz": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000001.xml"),
     "sz50": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000016.xml"),
     "hs300": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000300.xml"),
-    "zz500": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000905.xml")
+    "zz100": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000903.xml"),
+    "zz200": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000904.xml"),
+    "zz500": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000905.xml"),
+    "zz700": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000907.xml")
 }
 
 
