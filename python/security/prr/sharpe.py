@@ -13,8 +13,11 @@
 
 
 class Sharpe:
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, table, date_column_name="date", risk_free_rate_column_name="rfr", nav_column_name="nav"):
+        self._table = table # table object for holding input data
+        self._date_column_name=date_column_name # date column name in table
+        self._risk_free_rate_column_name = risk_free_rate_column_name # risk free rate column name in table
+        self._nav_column_name = nav_column_name # net asset value column name in table
 
     def run(self):
         pass
