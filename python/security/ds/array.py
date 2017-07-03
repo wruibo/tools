@@ -1,0 +1,3 @@
+"""
+    array for data process
+"""
