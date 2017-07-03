@@ -10,14 +10,30 @@
     :param rf: float, interval risk free return rate, same interval with @revenues
     :return: float, sharpe ratio fo the assets
 """
+from ds import xmath
+from ds import type
 
 
 class Sharpe:
-    def __init__(self, table, date_column_name="date", risk_free_rate_column_name="rfr", nav_column_name="nav"):
+    def __init__(self, table, time_column_name="date", time_column_cls=type.Day, risk_free_rate_column_name="rfr", *nav_column_names):
         self._table = table # table object for holding input data
-        self._date_column_name=date_column_name # date column name in table
+        self._time_column_name = time_column_name # time column name in table
+        self._time_column_cls = time_column_cls  # time column type class in table
         self._risk_free_rate_column_name = risk_free_rate_column_name # risk free rate column name in table
-        self._nav_column_name = nav_column_name # net asset value column name in table
+        self._nav_column_names = nav_column_names # net asset value column name in table
 
     def run(self):
-        pass
+        """
+            compute sharpe ratio for each portfolios
+        :return:
+        """
+        # make the interpolation columns
+        interpolation_columns = [self._risk_free_rate_column_name]
+        interpolation_columns.extend(self._nav_column_names)
+
+        # interpolate nav based on the date column
+        table = xmath.linear_interpolation(self._table, self._time_column_name, self._time_column_cls, interpolation_columns)
+
+
+
+
