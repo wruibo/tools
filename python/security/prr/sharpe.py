@@ -11,29 +11,33 @@
     :return: float, sharpe ratio fo the assets
 """
 from ds import xmath
-from ds import type
+from prr import xreturn
 
 
 class Sharpe:
-    def __init__(self, table, time_column_name="date", time_column_cls=type.Day, risk_free_rate_column_name="rfr", *nav_column_names):
+    def __init__(self, table, date_column_name, date_format, nav_column_name, risk_free_rate):
         self._table = table # table object for holding input data
-        self._time_column_name = time_column_name # time column name in table
-        self._time_column_cls = time_column_cls  # time column type class in table
-        self._risk_free_rate_column_name = risk_free_rate_column_name # risk free rate column name in table
-        self._nav_column_names = nav_column_names # net asset value column name in table
+        self._date_column_name = date_column_name # date column name in table
+        self._date_format = date_format  # time column type class in table
+        self._nav_column_name = nav_column_name # net asset value column name in table
+        self._risk_free_rate = risk_free_rate # risk free asset return rate
 
     def run(self):
         """
             compute sharpe ratio for each portfolios
         :return:
         """
-        # make the interpolation columns
-        interpolation_columns = [self._risk_free_rate_column_name]
-        interpolation_columns.extend(self._nav_column_names)
-
         # interpolate nav based on the date column
-        table = xmath.linear_interpolation(self._table, self._time_column_name, self._time_column_cls, interpolation_columns)
+        table = self._table
 
+        # compute year return rate based on the nav
+        rates = xreturn.rate(table, self._date_column_name, self._date_format, self._nav_column_name)
 
+        # compute the asset excess expect return over the risk free asset return
+        er = xmath.avg(rates) - self._risk_free_rate
 
+        # calculate the asset revenue standard deviation
+        sd = xmath.stddev(*table.col(self._nav_column_name).rows())
 
+        # sharpe ratio
+        return er/sd

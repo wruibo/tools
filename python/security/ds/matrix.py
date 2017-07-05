@@ -4,34 +4,30 @@
 
 
 class Row:
-    def __init__(self, matrix):
-        self._matrix = matrix
+    def __init__(self):
         self._cols = []
-
-    def add(self, *col):
-        #add column values in row
-        self._cols += col
 
     def col(self, num):
         return self.cols[num-1]
 
-    def cols(self):
-        return self._cols
+    def cols(self, cols=None):
+        if cols is None:
+            return self._cols
+
+        self._cols = cols
 
 
 class Column:
-    def __init__(self, matrix):
-        self._matrix = matrix
+    def __init__(self):
         self._rows = []
-
-    def add(self, *row):
-        self._rows += row
 
     def row(self, num):
         return self._rows[num-1]
 
-    def rows(self):
-        return self._rows
+    def rows(self, rows=None):
+        if rows is None:
+            return self._rows
+        self._rows = rows
 
 
 class Matrix:
@@ -57,26 +53,71 @@ class Matrix:
         return self.__str__()
 
     def row(self, num):
+        """
+            get row specified by row @num, add new row if it is not exist
+        :param num:  row number start from 1
+        :return: @Row object
+        """
         # add new row
         if len(self._rows)<num:
-            self._rows.append(Row(self))
+            self._rows.append(Row())
 
         # return row at @num
         return self._rows[num-1]
 
     def col(self, num):
+        """
+            get column specified by column @num, add new column if it is not exist
+        :param num: column number start from 1
+        :return: @Column object
+        """
         # add new column
         if len(self._cols)<num:
-            self._cols.append(Column(self))
+            self._cols.append(Column())
 
         # return column at @num
         return self._cols[num-1]
 
+    def rows(self, *numbers):
+        """
+            get rows by specified row @numbers, return all rows if not specified
+        :param numbers: row numbers
+        :return: rows with column data
+        """
+        if len(numbers)==0:
+            numbers = range(1, len(self._rows)+1)
+
+        rows = []
+
+        for n in numbers:
+            rows.append(self._rows[n-1].cols())
+
+        return rows
+
+    def cols(self, *numbers):
+        """
+            get columns by specified column @numbers, return all columns if not specified
+        :param columns: column numbers
+        :return: columns with row data
+        """
+        if len(numbers) == 0:
+            numbers = range(1, len(self._cols) + 1)
+
+        cols = []
+
+        for n in numbers:
+            cols.append(self._cols[n - 1].rows())
+
+        return cols
+
 
 if __name__ == "__main__":
     matrix = Matrix()
-    matrix.row(1).add(1, 2, 3)
-    matrix.row(2).add(4, 5, 6)
-    matrix.row(3).add(7, 8, 9)
+    matrix.row(1).cols([1, 2, 3])
+    matrix.row(2).cols([4, 5, 6])
+    matrix.row(3).cols([7, 8, 9])
 
     print(matrix)
+
+    print(matrix.rows(1, 2))
+    print(matrix.cols(1, 2))

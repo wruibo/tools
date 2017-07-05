@@ -195,13 +195,13 @@ if __name__ == "__main__":
             "   sheet columns: code, category, weight, open, close\n"
 
     if len(sys.argv) != 3:
-        print usage
+        print(usage)
         exit()
 
     benchmark = Benchmark().load(BLoader(sys.argv[1]))
     portfolio = Portfolio().load(PLoader(sys.argv[2]))
 
-    print "date, br, pr, tr, ar, sr, ir"
+    print("date, br, pr, tr, ar, sr, ir")
     results = Brinson().init(benchmark, portfolio).analyse()
     for result in results:
-        print result
+        print(result)

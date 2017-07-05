@@ -43,7 +43,6 @@ class _LoaderZZ(_Loader):
 
         return index
 
-float()
 _loaders = {
     "shzz": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000001.xml"),
     "sz50": _LoaderZZ("http://www.csindex.com.cn/sseportal/Day-K/000016.xml"),

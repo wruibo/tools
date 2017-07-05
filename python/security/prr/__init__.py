@@ -1,4 +1,4 @@
 """
     portfolio risk & return analysis
 """
-__all__ = ["dd", "mdd"]
+__all__ = ["mdd", "sharp", "xreturn"]

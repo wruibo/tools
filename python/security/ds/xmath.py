@@ -82,5 +82,5 @@ def cor(a1, a2):
 
 
 def linear_interpolation(table, base_column, base_column_cls, *interpolation_columns):
- pass
+    pass
 
