@@ -1,13 +1,13 @@
 """
     return for asset
 """
-from util import date
+from util import mtx, date
 
 
-def rate(table, date_column_name, date_format, nav_column_name, period=365):
+def rate(matrix, date_column, date_format, nav_column, period=365):
     """
-        compute period return rates based on the input table data
-    :param table:
+        compute period return rates based on the input matrix or table data
+    :param matrix:
     :param date_column_name:
     :param date_format:
     :param nav_column_name:
@@ -15,7 +15,7 @@ def rate(table, date_column_name, date_format, nav_column_name, period=365):
     :return:
     """
     period_rates, last_date, last_nav = [], None, None
-    date_navs = table.cols(date_column_name, nav_column_name)
+    date_navs = mtx.rotate(matrix.cols(date_column, nav_column))
 
     for curr_date, curr_nav in date_navs:
         if last_date is None:

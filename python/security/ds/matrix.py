@@ -4,8 +4,8 @@
 
 
 class Row:
-    def __init__(self):
-        self._cols = []
+    def __init__(self, cols=[]):
+        self._cols = cols
 
     def col(self, num):
         return self.cols[num-1]
@@ -18,8 +18,8 @@ class Row:
 
 
 class Column:
-    def __init__(self):
-        self._rows = []
+    def __init__(self, rows=[]):
+        self._rows = rows
 
     def row(self, num):
         return self._rows[num-1]
@@ -51,6 +51,38 @@ class Matrix:
 
     def __repr__(self):
         return self.__str__()
+
+    def init(self, rows=None, cols=None):
+        if not((rows is None) != (cols is None)):
+            return
+
+        # generate rows using columns
+        if rows is None:
+            rows = []
+            for i in range(0, len(cols[0])):
+                row = []
+                for j in range(0, len(cols)):
+                    row.append(cols[j][i])
+                rows.append(row)
+
+        # generate columns using rows
+        if cols is None:
+            cols = []
+            for i in range(0, len(rows[0])):
+                col = []
+                for j in range(0, len(rows)):
+                    col.append(rows[j][i])
+                cols.append(col)
+
+        # initialize the matrix with row values
+        for i in range(1, len(rows) + 1):
+            self.row(i).cols(rows[i - 1])
+
+        # initialize the matrix with column values
+        for i in range(1, len(cols)+1):
+            self.col(i).rows(cols[i-1])
+
+        return self
 
     def row(self, num):
         """

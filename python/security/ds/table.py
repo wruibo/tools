@@ -20,23 +20,27 @@ class Row:
     def name(self):
         return self._name
 
-    def add_cols(self, cols):
-        self._cols.update(cols)
-        for name, value in cols.items():
-            self._table.col(name).add_row(self._name, value)
-        return self
+    def col(self, name, value=None):
+        # return column value of @name in row
+        if value is None:
+            return self._cols.get(name)
 
-    def add_col(self, name, value):
+        # set column value of @name in row
         self._cols[name] = value
 
-    def col(self, name, default=None):
-        return self._cols.get(name, default)
+    def cols(self, cols=None):
+        # return column values of row
+        if cols is None:
+            values = []
+            for ncol in self._table.col_names():
+                values.append(self._cols.get(ncol))
+            return values
 
-    def cols(self, default=None):
-        values = []
-        for ncol in self._table.col_names():
-            values.append(self._cols.get(ncol, default))
-        return values
+        # set column values of row
+        self._cols.update(cols)
+        for name, value in cols.items():
+            self._table.col(name).row(self._name, value)
+        return self
 
 
 class Column:
@@ -49,23 +53,27 @@ class Column:
     def name(self):
         return self._name
 
-    def add_rows(self, rows):
-        self._rows.update(rows)
-        for name, value in rows.items():
-            self._table.row(name).add_col(self._name, value)
-        return self
+    def row(self, name, value=None):
+        # return row value of @name in column
+        if value is None:
+            return self._rows.get(name)
 
-    def add_row(self, name, value):
+        # set row value of @name in column
         self._rows[name] = value
 
-    def row(self, name, default=None):
-        return self._rows.get(name, default)
+    def rows(self, rows=None):
+        # return row values of column
+        if rows is None:
+            values = []
+            for nrow in self._table.row_names():
+                values.append(self._rows.get(nrow))
+            return values
 
-    def rows(self, default=None):
-        values = []
-        for nrow in self._table.row_names():
-            values.append(self._rows.get(nrow, default))
-        return values
+        # set row values of column
+        self._rows.update(rows)
+        for name, value in rows.items():
+            self._table.row(name).col(self._name, value)
+        return self
 
 
 class Table:
@@ -123,9 +131,9 @@ class Table:
             self._cols[name] = Column(name, self)
         return self._cols.get(name)
 
-    def rows(self, *rows):
+    def rows(self, *names):
         """
-            extract row values from table, or extract specified rows if @rows given, results:
+            extract row values from table, or extract specified rows if @names given, results:
             [
                 [c11, c12, c13, ...],
                 [c21, c22, c23, ...],
@@ -134,18 +142,18 @@ class Table:
         :param rows: row names specified
         :return: list with row's column values
         """
-        if len(rows)==0:
-            rows = self._rows.keys()
+        if len(names)==0:
+            names = self._rows.keys()
 
         values = []
-        for row in rows:
-            values.append(self._rows[row].cols())
+        for name in names:
+            values.append(self._rows[name].cols())
 
         return values
 
-    def cols(self, *columns):
+    def cols(self, *names):
         """
-            extract column values from table, or extract specified columns if @columns given, results:
+            extract column values from table, or extract specified columns if @names given, results:
             [
                 [r11, r12, r13, ...],
                 [r21, r22, r23, ...],
@@ -154,12 +162,12 @@ class Table:
         :param columns: column names specified
         :return: list with column's row values
         """
-        if len(columns)==0:
+        if len(names)==0:
             columns = self._cols.keys()
 
         values = []
-        for column in columns:
-            values.append(self._cols[column].rows())
+        for name in names:
+            values.append(self._cols[name].rows())
 
         return values
 
@@ -172,10 +180,10 @@ class Table:
 if __name__ == "__main__":
     table = Table()
 
-    table.col("abc").add_rows({'1': 2.07, '2': 2.08, '3': 2.09})
-    table.col("price").add_rows({'1':1.01, '2':1.02, '3':1.03})
-    table.col("rate").add_rows({'1':2.01, '2':2.02, '3':2.03})
-    table.row("rate1").add_cols({'1': 3.07, '2': 3.08, '3': 3.09})
+    table.col("abc").rows({'1': 2.07, '2': 2.08, '3': 2.09})
+    table.col("price").rows({'1':1.01, '2':1.02, '3':1.03})
+    table.col("rate").rows({'1':2.01, '2':2.02, '3':2.03})
+    table.row("rate1").cols({'1': 3.07, '2': 3.08, '3': 3.09})
 
     print(table)
 

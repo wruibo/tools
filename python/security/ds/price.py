@@ -1,10 +1,9 @@
 """
     price structure for index,stock,bonds
 """
-from ds.data import Data
 
 
-class Price(Data):
+class Price:
     '''
         a price record for index
     '''

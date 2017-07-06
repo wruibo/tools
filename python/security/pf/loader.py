@@ -3,7 +3,8 @@
 """
 import requests, json
 
-from util import data
+from pf import fund
+from util import type, mtx
 
 
 class LoaderSimuwang:
@@ -29,14 +30,29 @@ class LoaderSimuwang:
         url = self.URL_FORMAT % (code)
         json_data = json.loads(requests.get(url, headers=self.HEADERS).text)
 
+        # extract fund name
+        name = json_data.get('title')[0]
+
         # extract fund data from json content
-        data.cols2rows(json_data.get('categories'), json_data.get('nav_list'))
+        navs = mtx.rotate([json_data.get('categories'), type.floats(json_data.get('nav_list')), type.floats(json_data.get('nav_list'))])
+
+        return fund.Fund(code, name, navs)
 
 
 def load(code):
     return LoaderSimuwang().load(code)
 
-
-
 if __name__ == "__main__":
-    print(load("HF00000SCO"))
+    from ds import matrix
+    from prr import sharpe
+
+    print(load("HF000010YC"))
+    codes = ["HF000010YC", "HF00000SCO", "HF00000Z6H", "HF00001BPV", "HF0000137H"]
+    sharpes = []
+    for code in codes:
+        f = load(code)
+        mnavs = matrix.Matrix().init(rows=f.navs)
+        sharpes.append(sharpe.Sharpe(mnavs, 1, "%Y-%m-%d", 3, 0.016).run(True))
+
+    print(codes)
+    print(sharpes)

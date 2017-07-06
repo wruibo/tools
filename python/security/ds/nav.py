@@ -1,9 +1,9 @@
 """
     net value data structure
 """
-from ds.data import Data
 
-class Nav(Data):
+
+class Nav:
     def __init__(self):
         self.date = None # net value date
         self.nav = None # net asset value

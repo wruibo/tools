@@ -1,10 +1,9 @@
 """
     pair<key, value> structure definition
 """
-from ds.data import Data
 
 
-class Pair(Data):
+class Pair:
     def __init__(self, key=None, value=None):
         self.key = key
         self.value = value
