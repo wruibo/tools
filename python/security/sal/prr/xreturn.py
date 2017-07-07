@@ -1,21 +1,20 @@
 """
     return for asset
 """
-from util import mtx, date
+from util import xmatrix, xdate
 
 
-def rate(matrix, date_column, date_format, nav_column, period=365):
+def rate(matrix, date_column, nav_column, period=365):
     """
         compute period return rates based on the input matrix or table data
     :param matrix:
-    :param date_column_name:
-    :param date_format:
-    :param nav_column_name:
+    :param date_column:
+    :param nav_column:
     :param period:
     :return:
     """
     period_rates, last_date, last_nav = [], None, None
-    date_navs = mtx.rotate(matrix.cols(date_column, nav_column))
+    date_navs = xmatrix.rotate(matrix.cols(date_column, nav_column))
 
     for curr_date, curr_nav in date_navs:
         if last_date is None:
@@ -23,7 +22,7 @@ def rate(matrix, date_column, date_format, nav_column, period=365):
             last_nav = curr_nav
             continue
 
-        days = date.days_between(last_date, curr_date, date_format)
+        days = curr_date-last_date
         rate = (curr_nav-last_nav)/last_nav
 
         period_rate = rate*period/days

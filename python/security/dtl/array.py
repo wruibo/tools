@@ -1,3 +1,6 @@
+"""
+    array for data process
+"""
 '''
     useful array data process functions
 '''

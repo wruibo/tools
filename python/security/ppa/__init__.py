@@ -1,3 +1,0 @@
-'''
-    portfolio performance attribution analysis
-'''

@@ -1,7 +1,7 @@
 """
     index data class
 """
-from ds.price import Price
+from dtl.price import Price
 
 
 class Index:

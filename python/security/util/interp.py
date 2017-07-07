@@ -1,10 +1,8 @@
 """
     interpolation algorithms
 """
-import datetime
 
-
-def linear(xys, clsx, step):
+def linear(xys, step):
     """
         linear interpolation for input values @xys:
         [
@@ -13,7 +11,6 @@ def linear(xys, clsx, step):
             [...]
         ]
     :param xys: matrix base on row records
-    :param clsx: x column class for compute
     :param step: step for interpolation of column x
     :param ys: columns want to be interplated
     :return: matrix with x & ys
@@ -38,10 +35,10 @@ def linear(xys, clsx, step):
         x1, y1s = xys[i][0], xys[i][1:]
 
         # total steps need to interpolate
-        x10, steps = clsx(x1)-clsx(x0), int((clsx(x1)-clsx(x0))/step) - 1
+        x10, steps = x1-x0, int((x1-x0)/step) - 1
         for j in range(1, steps+1):
-            x= str(clsx(x0)+j*step)
-            ys, xx0 = [x], clsx(x)-clsx(x0)
+            x= x0+j*step
+            ys, xx0 = [x], x-x0
             for k in range(0, len(y0s)):
                 y = y0s[k] + ((y1s[k]-y0s[k])/x10) * xx0
                 ys.append(y)
@@ -55,31 +52,8 @@ def linear(xys, clsx, step):
 
     return result
 
-
-class Day:
-    def __init__(self, date):
-        if isinstance(date, str):
-            self._date = datetime.datetime.strptime(date, "%Y-%m-%d")
-        else:
-            self._date = date
-
-    @property
-    def date(self):
-        return self._date
-
-    def __str__(self):
-        return self._date.strftime("%Y-%m-%d")
-
-    def __add__(self, days):
-        return Day(self._date + datetime.timedelta(days))
-
-    def __sub__(self, day):
-        if isinstance(day, int):
-            return self._date - datetime.timedelta(day)
-
-        return abs((self._date - day._date).days)
-
 if __name__ == "__main__":
-    xys = [["2012-01-01",1],["2012-01-03",3],["2012-01-08",8]]
-    result = linear(xys, Day, 1)
+    from util import xtype
+    xys = [[xtype.XDay("2012-01-01", "%Y-%m-%d"),1],[xtype.XDay("2012-01-03", "%Y-%m-%d"),3],[xtype.XDay("2012-01-08", "%Y-%m-%d"),8]]
+    result = linear(xys, 1)
     print(result)

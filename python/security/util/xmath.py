@@ -11,7 +11,7 @@ def avg(values):
     :param values: list, list of sample values
     :return: float, average of sample values
     """
-    return sum(values) / len(values)
+    return float(sum(values)) / len(values)
 
 
 def var(values):

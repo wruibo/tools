@@ -37,7 +37,7 @@ class Matrix:
 
     def __str__(self):
         # every formatted rows and item width in character
-        str_rows, WIDTH = [], 10
+        str_rows, WIDTH = [], 12
 
         # format every row values
         for row in self._rows:
