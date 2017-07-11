@@ -1,13 +1,279 @@
 """
-    table for holding data, format:
-         row1   row2  ...  rowN
-    col1  X11    X12  ...   X1N
-    col2  X21    X22  ...   X2N
-      .    .      .          .
-      .    .      .          .
-      .    .      .          .
-    colM  XM1    XM2  ...   XMN
+    table for holding data
 """
+
+
+class Table:
+    """
+        table base class for holding table data, like:
+             col1   col2  ...  colN
+        row1  X11    X12  ...   X1N
+        row2  X21    X22  ...   X2N
+          .    .      .          .
+          .    .      .          .
+          .    .      .          .
+        rowM  XM1    XM2  ...   XMN
+
+        the table data can be storage by row data, column data, or named row/column data
+    """
+    def __init__(self):
+        pass
+
+    def rrows(self, *rows):
+        """
+             get one or multi rows from table by specified row numbers @rows
+         :param rows: row numbers want to get
+         :return: rows got from table
+         """
+        pass
+
+    def rcols(self, *cols):
+        """
+            get all rows by specified column numbers @cols from table
+        :param cols: column numbers
+        :return: all rows got from table
+        """
+        pass
+
+    def crows(self, *rows):
+        """
+            get all columns by specified row numbers @rows from table
+        :param rows: row numbers
+        :return: all columns got from table
+        """
+        pass
+
+    def rcols(self, *cols):
+        """
+            get one or multi columns from row storage table
+        :param cols: column numbers(start from 1) want to get
+        :return:
+        """
+        pass
+
+
+class RTable(Table):
+    """
+        table with rows storage, format:
+        [
+            [R11    R12  ...   R1N],
+            [R21    R22  ...   R2N],
+            [.    .      .      .],
+            [.    .      .      .],
+            [.    .      .      .],
+            [RM1    RM2  ...  RMN]
+        ]
+    """
+    def __init__(self, rows=[[]]):
+        """
+            init table with row storage structure
+        :param rows:
+        """
+        self._rows = rows
+
+    def __str__(self):
+        # every formatted rows and item width in character
+        srows, SEP, WIDTH = [], ',', 12
+
+        # format every row values
+        for row in self._rows:
+            scols = []
+            for col in row:
+                scols.append(str(col).center(WIDTH, ' '))
+            srows.append(SEP.join(scols))
+
+        # format all row values
+        return '\n'.join(srows)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def rrows(self, *rows):
+        """
+            get one or multi rows by specified row numbers @rows from table
+        :param rows: row numbers(start from 1) want to get
+        :return: rows got from table
+        """
+        # default get all rows
+        if len(rows)==0:
+            return self._rows
+
+        # get the specified @rows
+        results = []
+        for rnum in rows:
+            results.append(self._rows[rnum-1])
+
+        # return row < [] > or rows < [[]] >
+        return results if len(results)>1 else results[0]
+
+    def rcols(self, *cols):
+        """
+            get all rows by specified column numbers @cols from table
+        :param cols: column numbers
+        :return: all rows got from table
+        """
+        if len(cols)==0:
+            return self._rows
+
+        results = []
+        for row in self._rows:
+            rvals = []
+            for c in cols:
+                rvals.append(row[c-1])
+            results.append(rvals)
+
+        return results
+
+    def crows(self, *rows):
+        """
+            get all columns by specified row numbers @rows from table
+        :param rows: row numbers
+        :return: all columns got from table
+        """
+        if len(rows)==0:
+            rows = range(1, len(self._rows)+1)
+
+        results = []
+        for cnum in range(1, len(self._rows[0])+1):
+            cvals = []
+            for rnum in rows:
+                cvals.append(self._rows[rnum-1][cnum-1])
+            results.append(cvals)
+
+        return results
+
+    def ccols(self, *cols):
+        """
+            get one or multi columns from row storage table
+        :param cols: column numbers(start from 1) want to get
+        :return:
+        """
+        # default get all columns
+        if len(cols)==0:
+            cols = range(1, len(self._rows[0])+1)
+
+        # get all specified @columns
+        results = []
+        for cnum in cols:
+            cvals = []
+            for row in self._rows:
+                cvals.append(row[cnum-1])
+            results.append(cvals)
+
+        # return column < [] > or columns < [[]] >
+        return results if len(results)>1 else results[0]
+
+
+class CTable(Table):
+    """
+        table with columns storage, format:
+        [
+            [C11    C12  ...   C1N],
+            [C21    C22  ...   C2N],
+            [.      .    .      .],
+            [.      .    .      .],
+            [.      .    .      .],
+            [CM1    CM2  ...   CMN]
+        ]
+    """
+    def __init__(self, cols=[[]]):
+        """
+            init table with columns storage structure
+        :param cols:
+        """
+        self._cols = cols
+
+    def __str__(self):
+        # row strings to print and item width in character
+        srows, SEP, WIDTH = [], ',', 12
+
+        # format every row values
+        for rnum in range(0, len(self._cols[0])):
+            rvals = []
+            for col in self._cols:
+                rvals.append(str(col[rnum]).center(WIDTH, ' '))
+            srows.append(SEP.join(rvals))
+
+        # format all row values
+        return '\n'.join(srows)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def rrows(self, *rows):
+        """
+            get one or multi rows from row storage table
+        :param rows: row numbers(start from 1) want to get
+        :return: rows got from table
+        """
+        # default get all rows
+        if len(rows)==0:
+            rows = range(1, len(self._cols[0])+1)
+
+        # get the specified @rows
+        results = []
+        for rnum in rows:
+            rvals = []
+            for col in self._cols:
+                rvals.append(col[rnum-1])
+            results.append(rvals)
+
+        # return row < [] > or rows < [[]] >
+        return results if len(results)>1 else results[0]
+
+    def rcols(self, *cols):
+        """
+            get all rows by specified column numbers @cols from table
+        :param cols: column numbers
+        :return: all rows got from table
+        """
+        if len(cols) == 0:
+            cols = range(1, len(self._cols)+1)
+
+        results = []
+        for rnum in range(1, len(self._cols[0])+1):
+            rvals = []
+            for c in cols:
+                rvals.append(self._cols[c-1][rnum-1])
+            results.append(rvals)
+
+        return results
+
+    def crows(self, *rows):
+        """
+            get all columns by specified row numbers @rows from table
+        :param rows: row numbers
+        :return: all columns got from table
+        """
+        if len(rows) == 0:
+            return self._cols
+
+        results = []
+        for col in self._cols:
+            cvals = []
+            for rnum in rows:
+                cvals.append(col[rnum])
+            results.append(cvals)
+
+        return results
+
+    def ccols(self, *cols):
+        """
+            get one or multi columns from row storage table
+        :param cols: column numbers(start from 1) want to get
+        :return:
+        """
+        # default get all columns
+        if len(cols)==0:
+            return self._cols
+
+        # get all specified @columns
+        results = []
+        for cnum in cols:
+            results.append(self._cols[cnum-1])
+
+        # return column < [] > or columns < [[]] >
+        return results if len(results)>1 else results[0]
 
 
 class Row:
@@ -76,7 +342,7 @@ class Column:
         return self
 
 
-class Table:
+class NTable(Table):
     def __init__(self):
         self._rows = {}
         self._cols = {}
@@ -131,7 +397,7 @@ class Table:
             self._cols[name] = Column(name, self)
         return self._cols.get(name)
 
-    def rows(self, *names):
+    def rrows(self, *names):
         """
             extract row values from table, or extract specified rows if @names given, results:
             [
@@ -151,7 +417,7 @@ class Table:
 
         return values
 
-    def cols(self, *names):
+    def ccols(self, *names):
         """
             extract column values from table, or extract specified columns if @names given, results:
             [
@@ -178,7 +444,7 @@ class Table:
         return self._cols.keys()
 
 if __name__ == "__main__":
-    table = Table()
+    table = NTable()
 
     table.col("abc").rows({'1': 2.07, '2': 2.08, '3': 2.09})
     table.col("price").rows({'1':1.01, '2':1.02, '3':1.03})

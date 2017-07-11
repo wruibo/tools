@@ -2,22 +2,19 @@
     interpolation algorithms
 """
 
-def linear(xys, step):
+
+def linear(table, base_column, step, *columns):
     """
-        linear interpolation for input values @xys:
-        [
-            [x11, y11, y12, ..., y1N]
-            [x21, y22, y22, ..., y2N]
-            [...]
-        ]
-    :param xys: matrix base on row records
-    :param step: step for interpolation of column x
-    :param ys: columns want to be interplated
-    :return: matrix with x & ys
+        linear interpolation for table @columns on @base_column with @step
+    :param table: row table
+    :param base_column: base column for interpolation
+    :param step: step of base column for interpolation
+    :param columns: columns to interpolate
+    :return: table with interpolated results
     """
-    # input must be list of list
-    if not isinstance(xys, list):
-        return
+
+    # extract columns want to be interplated
+    xys = table.rcols(base_column, *columns)
 
     # interpolation result
     result = []
@@ -53,7 +50,8 @@ def linear(xys, step):
     return result
 
 if __name__ == "__main__":
+    from dtl import table
     from util import xtype
-    xys = [[xtype.XDay("2012-01-01", "%Y-%m-%d"),1],[xtype.XDay("2012-01-03", "%Y-%m-%d"),3],[xtype.XDay("2012-01-08", "%Y-%m-%d"),8]]
-    result = linear(xys, 1)
+    table = table.RTable([[xtype.XDay("2012-01-01", "%Y-%m-%d"),1],[xtype.XDay("2012-01-03", "%Y-%m-%d"),3],[xtype.XDay("2012-01-08", "%Y-%m-%d"),8]])
+    result = linear(table, 1, 1, 2)
     print(result)

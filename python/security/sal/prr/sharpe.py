@@ -10,41 +10,36 @@
     :param rf: float, interval risk free return rate, same interval with @revenues
     :return: float, sharpe ratio fo the assets
 """
-from dtl import matrix
-from sal.prr import xreturn
-from util import xmatrix, interp, xmath
+from atl import interp, xmath
+from sal.prr import ret
 
 
 class Sharpe:
-    def __init__(self, m, date_column, nav_column, risk_free_rate):
-        self._matrix = m # table or matrix object for holding input data
+    def __init__(self, table, date_column=1, nav_column=2):
+        self._table = table # table object for holding input data
         self._date_column = date_column # date column name in table
         self._nav_column = nav_column # net asset value column name in table
-        self._risk_free_rate = risk_free_rate # risk free asset return rate
 
-    def run(self, interpolate=False):
+    def run(self, risk_free_rate, interpolate=False):
         """
             compute sharpe ratio for each portfolios
         :return:
         """
         if interpolate:
-            return self.sharpe_with_interpolation()
+            return self.sharpe_with_interpolation(risk_free_rate)
 
-        return self.sharpe_without_interpolation()
+        return self.sharpe_without_interpolation(risk_free_rate)
 
-    def sharpe_without_interpolation(self):
+    def sharpe_without_interpolation(self, risk_free_rate):
         """
             compute sharpe ratio for each portfolios
         :return:
         """
-        # interpolate nav based on the date column
-        m = matrix.Matrix().init(cols=self._matrix.cols(self._date_column, self._nav_column))
-
         # compute year return rate based on the nav
-        rates = xreturn.rate(m, 1, 2)
+        rates = ret.rate(self.table, self._date_column, self._nav_column)
 
         # compute the asset excess expect return over the risk free asset return
-        er = xmath.avg(rates) - self._risk_free_rate
+        er = xmath.avg(rates) - risk_free_rate
 
         # calculate the asset revenue standard deviation
         sd = xmath.stddev(rates)
@@ -52,20 +47,19 @@ class Sharpe:
         # sharpe ratio
         return er/sd
 
-    def sharpe_with_interpolation(self):
+    def sharpe_with_interpolation(self, risk_free_rate):
         """
             compute sharpe ratio for each portfolios
         :return:
         """
         # interpolate nav based on the date column
-        m = interp.linear(xmatrix.rotate(self._matrix.cols(self._date_column, self._nav_column)), 1)
-        m = matrix.Matrix().init(rows=m)
+        table = interp.linear(self._table, self._date_column, self._nav_column, 1)
 
         # compute year return rate based on the nav
-        rates = xreturn.rate(m, 1, 2)
+        rates = ret.rate(table, 1, 2)
 
         # compute the asset excess expect return over the risk free asset return
-        er = xmath.avg(rates) - self._risk_free_rate
+        er = xmath.avg(rates) - risk_free_rate
 
         # calculate the asset revenue standard deviation
         sd = xmath.stddev(rates)

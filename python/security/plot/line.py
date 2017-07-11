@@ -1,6 +1,3 @@
-'''
-    plot kinds of graphics using matpoltlib
-'''
 import matplotlib.pyplot as plot
 
 def PlotLine(xArray, yArrays, xLable = None, yLable = None):
@@ -19,7 +16,3 @@ def PlotLine(xArray, yArrays, xLable = None, yLable = None):
     plot.ylabel(yLable)
 
     plot.show()
-
-def PlotBar():
-    pass
-

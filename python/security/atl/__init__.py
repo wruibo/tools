@@ -1,0 +1,3 @@
+"""
+    arithmetic & algorithm template library
+"""

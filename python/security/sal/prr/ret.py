@@ -4,17 +4,17 @@
 from util import xmatrix, xdate
 
 
-def rate(matrix, date_column, nav_column, period=365):
+def rate(table, date_column, nav_column, period=365):
     """
-        compute period return rates based on the input matrix or table data
-    :param matrix:
+        compute period return rates based on the input table data
+    :param table:
     :param date_column:
     :param nav_column:
     :param period:
     :return:
     """
     period_rates, last_date, last_nav = [], None, None
-    date_navs = xmatrix.rotate(matrix.cols(date_column, nav_column))
+    date_navs = table.rows(date_column, nav_column)
 
     for curr_date, curr_nav in date_navs:
         if last_date is None:
