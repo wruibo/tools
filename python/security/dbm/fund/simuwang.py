@@ -2,10 +2,12 @@
     fund data from simuwang, site:
         http://www.simuwang.com/
 """
-import json, requests
-
+import dtl
+import json
+import requests
 from dbm.fund import loader
-from util import xtype, xmatrix
+from dtl.core import xtype
+from util import xmatrix
 
 
 class Context(loader.Context):
@@ -60,8 +62,7 @@ class Loader(loader.Loader):
         name = json_data.get('title')[0]
 
         # extract fund data from json content
-        navs = [['date', 'nav', 'aav']]
-        navs.extend(xmatrix.rotate([xtype.xdays(json_data.get('categories'), '%Y-%m-%d'), xtype.floats(json_data.get('nav_list')), xtype.floats(json_data.get('nav_list'))]))
+        navtbl = dtl.table([['date', 'nav', 'aav']]).extend(dtl.table(cols=([json_data.get('categories'), dtl.floats(json_data.get('nav_list')), dtl.floats(json_data.get('nav_list'))])))
 
-        return navs
+        return navtbl
 

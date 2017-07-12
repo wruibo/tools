@@ -2,11 +2,13 @@
     index from zhong zheng index, site:
         http://www.csindex.com.cn/
 """
-import requests
-import xml.dom, xml.dom.minidom
+import xml.dom
+import xml.dom.minidom
 
-from util import xtype
+import dtl
+import requests
 from dbm.index import loader
+from dtl.core import xtype
 
 
 class Context(loader.Context):
@@ -54,11 +56,11 @@ class Loader(loader.Loader):
         dom = xml.dom.minidom.parseString(content)
 
         # parse index daily records
-        prices = [['date', 'open', 'close', 'high', 'low', 'volume', 'amount']]
+        pricetbl = dtl.table([['date', 'open', 'close', 'high', 'low', 'volume', 'amount']])
         elmts = dom.getElementsByTagName("smbol")
         for elmt in elmts:
             # parse each record
-            date = xtype.xdays(elmt.getAttribute("tdd"), '%Y%m%d') if elmt.hasAttribute("tdd") else None
+            date = elmt.getAttribute("tdd") if elmt.hasAttribute("tdd") else None
             open = float(elmt.getAttribute("op")) if elmt.hasAttribute("op") else None
             close = float(elmt.getAttribute("ep")) if elmt.hasAttribute("ep") else None
             high = float(elmt.getAttribute("hp")) if elmt.hasAttribute("hp") else None
@@ -67,6 +69,6 @@ class Loader(loader.Loader):
             amount = float(elmt.getAttribute("tot")) if elmt.hasAttribute("tot") else None
 
             # add to prices list
-            prices.append([date, open, close, high, low, volume, amount])
+            pricetbl.addrow([date, open, close, high, low, volume, amount])
 
-        return prices
+        return pricetbl

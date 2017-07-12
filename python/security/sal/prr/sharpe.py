@@ -15,8 +15,8 @@ from sal.prr import ret
 
 
 class Sharpe:
-    def __init__(self, table, date_column=1, nav_column=2):
-        self._table = table # table object for holding input data
+    def __init__(self, tbl, date_column=1, nav_column=2):
+        self._table = tbl # table object for holding input data
         self._date_column = date_column # date column name in table
         self._nav_column = nav_column # net asset value column name in table
 
@@ -36,7 +36,7 @@ class Sharpe:
         :return:
         """
         # compute year return rate based on the nav
-        rates = ret.rate(self.table, self._date_column, self._nav_column)
+        rates = ret.rate(self._table, self._date_column, self._nav_column)
 
         # compute the asset excess expect return over the risk free asset return
         er = xmath.avg(rates) - risk_free_rate
@@ -53,10 +53,10 @@ class Sharpe:
         :return:
         """
         # interpolate nav based on the date column
-        table = interp.linear(self._table, self._date_column, self._nav_column, 1)
+        tbl = interp.linear(self._table, self._date_column, self._nav_column, 1)
 
         # compute year return rate based on the nav
-        rates = ret.rate(table, 1, 2)
+        rates = ret.rate(tbl, 1, 2)
 
         # compute the asset excess expect return over the risk free asset return
         er = xmath.avg(rates) - risk_free_rate

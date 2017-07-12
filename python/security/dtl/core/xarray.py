@@ -5,6 +5,10 @@
     useful array data process functions
 '''
 
+class xarray(object):
+    def __init__(self):
+        pass
+
 def Create(size, value):
     '''
     create array with @size, use @value initialize every item in the array
