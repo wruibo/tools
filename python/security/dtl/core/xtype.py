@@ -3,6 +3,7 @@
 """
 import datetime
 
+__all__ = ["xday"]
 
 class xday(object):
     def __init__(self, date, format):

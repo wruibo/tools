@@ -19,7 +19,7 @@ class xitertbl:
 
 class xtable(object):
     """
-        table base class for holding table data, like:
+        table class for holding table data, like:
              col1   col2  ...  colN
         row1  X11    X12  ...   X1N
         row2  X21    X22  ...   X2N

@@ -4,220 +4,123 @@
 '''
     useful array data process functions
 '''
+import math
+
+
+class xiterarr:
+    def __init__(self, data):
+        self._data = data
+        self._pos = 0
+
+    def __next__(self):
+        if self._pos == len(self._data):
+            raise StopIteration()
+
+        nextitem = self._data[self._pos]
+        self._pos += 1
+        return nextitem
+
 
 class xarray(object):
-    def __init__(self):
+    """
+        array class for holding array data, like:
+        [item1, item2, item3, ...]
+    """
+    def __init__(self, data=[]):
+        self._data = data
+
+    def __str__(self):
         pass
 
-def Create(size, value):
-    '''
-    create array with @size, use @value initialize every item in the array
-    :param size: int, size of the array
-    :param value: object, value to initialize the array items
-    :return: list, array created
-    '''
-    array = []
-    for i in range(0, size):
-        array.append(value)
+    def __repr__(self):
+        return self.__str__()
 
-    return array
+    def __iter__(self):
+        return xiterarr(self._data)
 
-def Reverse(array):
-    '''
-    reverse array elements
-    :param array: list, array to be reverse
-    :return: list, reverse result
-    '''
-    result = []
-    for i in range(0, len(array)):
-        result.append(array[-i-1])
+    def __len__(self):
+        return len(self._data)
 
-    return result
+    @property
+    def data(self):
+        return self._data
 
-def Average(array):
-    '''
-    compute the average of values in the array
-    :param array: list, 1 dimension array
-    :return: float, average of values in the array
-    '''
-    sum = 0.0
-    for val in array:
-        sum = sum + val
+    def avg(self):
+        """
+        compute average of sample values
+        :param values: list, list of sample values
+        :return: float, average of sample values
+        """
+        if len(self._data) == 0:
+            return
 
-    return sum / len(array)
+        return float(sum(self._data)) / len(self._data)
 
-def Sub(array, subValue, subFunc = None, arg = None):
-    '''
-    subtract all item in @array with @subValue
-    :param array: list, whose item will be subtracted
-    :param subValue: object, subtract value
-    :param subFunc: function, subtract operator
-    :param arg: object, argument pass to the @subFunc
-    :return: list, array subtracted by the @subValue
-    '''
-    result = []
-    if subFunc is None:
-        for value in array:
-            result.append(value - subValue)
-    else:
-        for value in array:
-            result.append(subFunc(value, subValue, arg))
+    def var(self):
+        """
+        compute variance of sample values
+        :param values: list, list of sample values
+        :return: float, variance of sample values
+        """
+        if len(self._data) == 0:
+            return
 
-    return result
+        # use average value of values as the expect value
+        expect_value = self.avg()
 
-def Multi(array, multiValue, multiFunc = None, arg = None):
-    '''
-    multiply all item in @array with @multiValue
-    :param array: list, whose item will be multiplied
-    :param multiValue: object, multi value
-    :param multiFunc: function, multi operator
-    :param arg: object, argument pass to the @multiFunc
-    :return: list, array multiplied by the @multiValue
-    '''
-    result = []
-    if multiFunc is None:
-        for value in array:
-            result.append(float(value) * float(multiValue))
-    else:
-        for value in array:
-            result.append(multiFunc(value, multiValue, arg))
+        sum = 0.0
+        for value in self._data:
+            sum += (value - expect_value) ** 2
 
-    return result
+        return sum / (len(self._data) - 1)
 
-def Div(array, divValue, divFunc = None, arg = None):
-    '''
-    divide all item in @array with @divValue
-    :param array: list, whose item will be divided
-    :param divValue: object, division value
-    :param divFunc: function, division operator
-    :param arg: object, argument pass to the @divFunc
-    :return: list, array divided by the @divValue
-    '''
-    result = []
+    def stddev(self):
+        '''
+        compute standard deviation of sample values
+        :param values: list, list of sample values
+        :return: float, standard deviation of sample values
+        '''
+        if len(self._data) == 0:
+            return
 
-    if divFunc is None:
-        for value in array:
-            result.append(float(value) / float(divValue))
-    else:
-        for value in array:
-            result.append(divFunc(value, divValue, arg))
+        return math.sqrt(self.var())
 
-    return result
+    def cov(self, other):
+        """
+        compute the covariance of sample a1 and a2
+        :param a1: list, list of input data values
+        :param a2: list, list of input data values
+        :return: float, covariance of sample a1 and a2
+        """
+        if len(self) != len(other):
+            return None
 
-def DivArray(array, divisionArray, divFunc = None, arg = None):
-    '''
-    divide item in @array by @divisionArray one-correspond-one with sampe index
-    :param array: list, array to be divided
-    :param divisionArray: list, division array
-    :param divFunc: function, division operator
-    :param arg: object, argument pass to the @divFunc
-    :return:
-    '''
+        expect_value1 = self.avg()
+        expect_value2 = other.avg()
 
-    result = []
+        sum = 0.0
+        idx = num = len(self)
+        while idx > 0:
+            idx -= 1
+            sum += (self._data[idx] - expect_value1) * (other.data[idx] - expect_value2)
 
-    if divFunc is None:
-        for i in range(0, len(array)):
-            result.append(float(array[i]) / float(divisionArray[i]))
-    else:
-        for i in range(0, len(array)):
-            result.append(divFunc(array[i], divisionArray[i], arg))
+        return sum / (num - 1)
 
-    return result
+    def cor(self, other):
+        """
+         compute the correlation of sample a1 and a2, using pearson correlation algorithm
+         :param a1: list, list of input data values
+         :param a2: list, list of input data values
+         :return:
+        """
+        if len(self) != len(other):
+            return None
 
-def CycleGrowthRate(array, baseValue = None):
-    '''
-    compute the cycle growth rate of @array
-    :param array: list, number value in list
-    :param baseValue: number, growth compare base for the first value in @array
-    :return: list, float in array
-    '''
-    if baseValue is None:
-        baseValue = array[0]
+        # compute covariance of a1 and a2
+        cov12 = self.cov(other)
 
-    result = []
-    result.append((float(array[0]) - float(baseValue))/float(baseValue))
+        # compute the standard deviation of a1, a2
+        stddev1 = self.stddev()
+        stddev2 = other.stddev()
 
-    for i in range(1, len(array)):
-        result.append((float(array[i]) - float(array[i-1]))/ float(array[i-1]))
-
-    return result
-
-def CompareGrowthRate(array, compareArray):
-    '''
-    compare the growth with array and compareArray
-    :param array: list, number value in list
-    :param compareArray: list, number in list
-    :return: list, compare growth to @compareArray
-    '''
-    result = []
-
-    for i in range(0, len(array)):
-        result.append((float(array[i]) - float(compareArray[i]))/float(compareArray[i]))
-
-    return result
-
-def LeftShiftSub(array, leftValue = None, subFunc = None, arg = None):
-    '''
-    left shift subtract of the array from @start to @end, algorithm:
-        result[i] = array[i] - array[i-1]
-    :param array: list, array to be left shift sub
-    :param leftValue: object, type is same as item in the @array, the first item's subtractor
-    :param subFunc: function, self definition for subtract operation, subFunc(a, b, arg)
-    :param arg: object, argument passed to subFunc(a, b, arg)
-    :return:list, sub result
-    '''
-    result = []
-
-    if subFunc is None:
-        if leftValue is None:
-            result.append(type(array[0])(0))
-        else:
-            result.append(array[0] - leftValue)
-
-        for i in range(1, len(array)):
-            result.append(array[i] - array[i - 1])
-    else:
-        if leftValue is None:
-            result.append(type(array[0])(0))
-        else:
-            result.append(subFunc(array[0], leftValue, arg))
-
-        for i in range(1, len(array)):
-            result.append(subFunc(array[i], array[i - 1], arg))
-
-    return result
-
-
-def RightShiftSub(array, rightValue = None, subFunc = None, arg = None):
-    '''
-    right shift subtract of the array from @start to @end, algorithm:
-        result[i] = array[i] - array[i-1]
-    constraint:
-        i > 1 and end <len(array)
-    :param array: list, array to be right shift sub
-    :param rightValue: object, type is same as item in the @array, the last item's subtractor
-    :param subFunc: funciton, self definition for subtract operation, subFunc(a, b, arg)
-    :param arg: object, argument passed to subFunc(a, b, arg)
-    :return:list, sub result
-    '''
-    result = []
-
-    if subFunc is None:
-        if rightValue is None:
-            result.append(type(array[0])(0))
-        else:
-            result.append(array[-1] - rightValue)
-
-        for i in Reverse(range(1, len(array))):
-            result.append(array[i-1] - array[i])
-    else:
-        if rightValue is None:
-            result.append(type(array[0])(0))
-        else:
-            result.append(subFunc(array[-1], rightValue, arg))
-
-        for i in Reverse(range(1, len(array))):
-            result.append(subFunc(array[i-1], array[i], arg))
-
-    return result
+        return cov12 / (stddev1 * stddev2)

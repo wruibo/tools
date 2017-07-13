@@ -5,26 +5,26 @@
 import math
 
 
-def avg(a=[]):
+def avg(arr):
     """
-    compute average of sample values
-    :param values: list, list of sample values
-    :return: float, average of sample values
+        compute average of array values
+    :param values: list, list of array values
+    :return: float, average of array values
     """
-    if len(a) == 0:
-        return
+    if len(arr) == 0:
+        raise "empty input array has no average value."
 
-    return float(sum(a)) / len(a)
+    return float(sum(arr)) / len(arr)
 
 
 def var(a=[]):
     """
-    compute variance of sample values
-    :param values: list, list of sample values
-    :return: float, variance of sample values
+        compute variance of array values
+    :param values: list, list of array values
+    :return: float, variance of array values
     """
     if len(a) == 0:
-        return
+        raise "empty input array has no variance value."
 
     # use average value of values as the expect value
     expect_value = avg(a)
@@ -38,25 +38,25 @@ def var(a=[]):
 
 def stddev(a=[]):
     '''
-    compute standard deviation of sample values
-    :param values: list, list of sample values
-    :return: float, standard deviation of sample values
+        compute standard deviation of array values
+    :param values: list, list of array values
+    :return: float, standard deviation of array values
     '''
     if len(a) == 0:
-        return
+        raise "empty input array has no standard deviation value."
 
     return math.sqrt(var(a))
 
 
 def cov(a1, a2):
     """
-    compute the covariance of sample a1 and a2
+        compute the covariance of array a1 and a2
     :param a1: list, list of input data values
     :param a2: list, list of input data values
-    :return: float, covariance of sample a1 and a2
+    :return: float, covariance of array a1 and a2
     """
     if len(a1) != len(a2):
-        return None
+        raise "covariance needs 2 length equal arrays, input array is %d and %d." % (len(a1), len(a2))
 
     expect_value1 = avg(a1)
     expect_value2 = avg(a1)
@@ -72,13 +72,13 @@ def cov(a1, a2):
 
 def cor(a1, a2):
     """
-     compute the correlation of sample a1 and a2, using pearson correlation algorithm
+        compute the correlation of array a1 and a2, using pearson correlation algorithm
      :param a1: list, list of input data values
      :param a2: list, list of input data values
      :return:
     """
     if len(a1) != len(a2):
-     return None
+        raise "correlation needs 2 length equal arrays, input array is %d and %d." % (len(a1), len(a2))
 
     # compute covariance of a1 and a2
     cov12 = cov(a1, a2)
@@ -89,38 +89,10 @@ def cor(a1, a2):
 
     return cov12/(stddev1*stddev2)
 
-
-def rotate(m=[[]]):
+def multi(a):
     """
-        rotate matrix with its ranks, rows to columns and columns to rows, example:
-    before transform, there are N column list like:
-
-         column1 column2 ... columnN
-           v11    v21          vN1
-           v12    v22          vN2
-            .      .            .
-            .      .            .
-            .      .            .
-           v1M     v2M          VNM
-
-    after transform, the result is:
-
-      row1 v11    v21          vN1
-      row2 v12    v22          vN2
-            .      .            .
-            .      .            .
-            .      .            .
-      rowM v1M     v2M          VNM
-    :param m: matrix
-    :return: rotated matrix
+        multiple for
+    :param a:
+    :return:
     """
-
-    rotated_matrix = []
-
-    for i in range(0, len(m[0])):
-        values = []
-        for j in range(0, len(m)):
-            values.append(m[j][i])
-        rotated_matrix.append(values)
-
-    return rotated_matrix
+    pass

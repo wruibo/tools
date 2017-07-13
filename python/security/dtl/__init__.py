@@ -1,8 +1,11 @@
 """
     data template library
 """
-__all__ = ["table", "matrix", "price", "xmath"]
+__all__ = ["fund", "stock", "xday"]
 
+import dtl.core
+
+xday = dtl.core.xday
 
 def table(rows=None, cols=None):
     """
@@ -10,8 +13,6 @@ def table(rows=None, cols=None):
     :param data:
     :return:
     """
-    from dtl.core import xtable
-
     # construct table with rows data
     if rows is not None:
         return xtable.xtable(rows)

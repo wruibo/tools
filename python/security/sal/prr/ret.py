@@ -1,7 +1,7 @@
 """
     return for asset
 """
-from util import xmatrix, xdate
+from utl import xmatrix, xdate
 
 
 def rate(table, date_column, nav_column, period=365):

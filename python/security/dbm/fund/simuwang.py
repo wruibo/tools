@@ -7,7 +7,7 @@ import json
 import requests
 from dbm.fund import loader
 from dtl.core import xtype
-from util import xmatrix
+from utl import xmatrix
 
 
 class Context(loader.Context):

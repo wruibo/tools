@@ -1,4 +1,7 @@
 """
     security analyse library
 """
-__all__ = ["prr", "ppa"]
+__all__ = ["ppa", "prr"]
+
+from sal import ppa
+from sal import prr
