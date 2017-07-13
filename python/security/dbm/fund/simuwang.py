@@ -2,13 +2,10 @@
     fund data from simuwang, site:
         http://www.simuwang.com/
 """
-import dtl
-import json
-import requests
-from dbm.fund import loader
-from dtl.core import xtype
-from utl import xmatrix
+import atl, dtl
+import json, requests
 
+from . import loader
 
 class Context(loader.Context):
     """
@@ -51,8 +48,13 @@ class Loader(loader.Loader):
     def navs(self, code):
         """
             load fund nav from simuwang by its code in simuwang.
-        :param code:
-        :return:
+        data format:
+            [
+                [date, nav, aav],
+                [...]
+            ]
+        :param code: str, fund code in simuwang
+        :return: matrix, nav records
         """
         # fetch & parse the url data for fund @code
         url =  self.url("navs") % (code)
@@ -62,7 +64,6 @@ class Loader(loader.Loader):
         name = json_data.get('title')[0]
 
         # extract fund data from json content
-        navtbl = dtl.table([['date', 'nav', 'aav']]).extend(dtl.table(cols=([json_data.get('categories'), dtl.floats(json_data.get('nav_list')), dtl.floats(json_data.get('nav_list'))])))
+        return atl.matrix.transpose([dtl.xdays(json_data.get('categories'),"%Y-%m-%d"), dtl.floats(json_data.get('nav_list')), dtl.floats(json_data.get('nav_list'))])
 
-        return navtbl
 

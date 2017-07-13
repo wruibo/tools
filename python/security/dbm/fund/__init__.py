@@ -1,6 +1,10 @@
 """
     fund data management
 """
+__all__ = ["loader", "simuwang"]
+
+import dbm.fund.loader
+import dbm.fund.simuwang
 
 
 class site:

@@ -3,5 +3,5 @@
 """
 __all__ = ["ppa", "prr"]
 
-from sal import ppa
-from sal import prr
+import sal.prr
+import sal.ppa

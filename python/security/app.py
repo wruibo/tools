@@ -1,12 +1,11 @@
 """
     application for security
 """
-from utl import xtime
+import dbm, sal
+
+import utl
 
 if __name__ == "__main__":
-    pass
-
-
-
-
+    navs = dbm.fund.navs("HF00000G86")
+    print(utl.xtime.timerun(sal.prr.sharpe, navs, 1, 2, 0.03))
 

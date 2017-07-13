@@ -1,11 +1,13 @@
 """
     portfolio risk & return analyse
 """
-__all__ = ["ret", "mdd", "beta", "jensen", "sharpe", "treynor"]
+__all__ = ["profit", "mdd", "beta", "jensen", "sharpe", "treynor"]
 
-from sal.prr import ret
-from sal.prr import mdd
-from sal.prr import beta
-from sal.prr import jensen
-from sal.prr import sharpe
-from sal.prr import treynor
+import sal.prr.profit
+import sal.prr.mdd
+import sal.prr.beta
+import sal.prr.jensen
+import sal.prr.sharpe
+import sal.prr.treynor
+
+sharpe = sharpe.sharpe

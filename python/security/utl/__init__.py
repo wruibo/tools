@@ -3,5 +3,5 @@
 """
 __all__ = ["xdate", "xtime"]
 
-from utl import xdate
-from utl import xtime
+import utl.xdate
+import utl.xtime
