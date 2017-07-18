@@ -3,9 +3,12 @@
 """
 __all__ = ["fund", "stock", "xday"]
 
-import dtl.core
+from dtl.core import xtype
+from dtl.core import xtable
+from dtl.core import xarray
 
-xday = dtl.core.xday
+
+xday = xtype.xday
 
 def table(rows=None, cols=None):
     """

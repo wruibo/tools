@@ -15,4 +15,4 @@ def timerun(func, *args, **kwargs):
     ret = func(*args, **kwargs)
     etime = time.time()
 
-    return etime-stime, ret
+    return func.__name__, etime-stime, ret

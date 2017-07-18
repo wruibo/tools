@@ -28,24 +28,6 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, interp=False):
     return _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate)
 
 
-def _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate):
-    """
-        compute sharpe ratio without interpolation
-    :return:
-    """
-    # compute year return rate based on the nav
-    rates = sal.prr.profit.year(mtx, datecol, navcol)
-
-    # compute the asset excess expect return over the risk free asset return
-    er = atl.array.avg(rates) - risk_free_rate
-
-    # calculate the asset revenue standard deviation
-    sd = atl.array.stddev(rates)
-
-    # sharpe ratio
-    return er/sd
-
-
 def _sharpe_with_interpolation(mtx, datecol, navcol, risk_free_rate):
     """
         compute sharpe ratio with interpolation
@@ -54,8 +36,18 @@ def _sharpe_with_interpolation(mtx, datecol, navcol, risk_free_rate):
     # interpolate nav based on the date column
     mtx = atl.interp.linear(mtx, datecol, 1, datecol, navcol)
 
+    # shape ratio
+    return _sharpe_without_interpolation(mtx, 1, 2, risk_free_rate)
+
+
+
+def _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate):
+    """
+        compute sharpe ratio without interpolation
+    :return:
+    """
     # compute year return rate based on the nav
-    rates = sal.prr.profit.year(mtx, 1, 2)
+    rates = sal.prr.profit.year(mtx, datecol, navcol)
 
     # compute the asset excess expect return over the risk free asset return
     er = atl.array.avg(rates) - risk_free_rate

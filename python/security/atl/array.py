@@ -5,6 +5,7 @@
 """
 import math
 
+
 def avg(arr):
     """
         compute average of array values
@@ -17,7 +18,7 @@ def avg(arr):
     return float(sum(arr)) / len(arr)
 
 
-def var(arr=[]):
+def var(arr):
     """
         compute variance of array values
     :param values: list, list of array values
@@ -36,7 +37,7 @@ def var(arr=[]):
     return sum / (len(arr)-1)
 
 
-def stddev(arr=[]):
+def stddev(arr):
     '''
         compute standard deviation of array values
     :param values: list, list of array values
@@ -88,6 +89,28 @@ def cor(arr1, arr2):
     stddev2 = stddev(arr2)
 
     return cov12/(stddev1*stddev2)
+
+
+def sub(arr, withval):
+    """
+        sub array data with specified value or another aray
+    :param arr: list, which will subtract @withval
+    :param withval: list or value, which will be subtract with
+    :return: array
+    """
+    result = []
+
+    if isinstance(withval, list) or isinstance(withval, tuple):
+        if len(withval) != len(arr):
+            raise "array subtract array need the same length."
+
+        for i in range(0, len(arr)):
+            result.append(arr[i] - withval[i])
+    else:
+        for i in range(0, len(arr)):
+            result.append(arr[i] - withval)
+
+    return result
 
 
 def multi(arr, withval=None):

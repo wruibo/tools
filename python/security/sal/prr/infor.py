@@ -1,13 +1,13 @@
 """
-    beta factor in CAMP model, formula:
-       AssetsBetaFactor = Cov(AssetsRevenues, MarketRevenues)/Variance(MarketRevenues)
+    information ratio, formula:
+
 """
-import atl, sal
+import sal, atl
 
 
-def beta(mtx, datecol, astcol, bmkcol, interp=False):
+def inforatio(mtx, datecol, astcol, bmkcol, interp=False):
     """
-        compute beta factor for asset
+        compute information ratio for asset
     :param mtx: matrix
     :param datecol: int, date column number
     :param astcol: int, asset value column number
@@ -16,13 +16,13 @@ def beta(mtx, datecol, astcol, bmkcol, interp=False):
     :return: float, beta factor of asset
     """
     if interp:
-        return _beta_with_interpolation(mtx, datecol, astcol, bmkcol)
-    return _beta_without_interpolation(mtx, datecol, astcol, bmkcol)
+        return _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol)
+    return _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol)
 
 
-def _beta_with_interpolation(mtx, datecol, astcol, bmkcol):
+def _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol):
     """
-        compute beta factor for asset with interpolation on date
+        compute information ratio for asset with interpolation on date
     :param mtx: matrix
     :param datecol: int, date column number
     :param astcol: int, asset value column number
@@ -33,13 +33,13 @@ def _beta_with_interpolation(mtx, datecol, astcol, bmkcol):
     mtx = atl.interp.linear(mtx, datecol, 1, datecol, astcol, bmkcol)
 
     # compute beta factor
-    return _beta_without_interpolation(mtx, 1, 2, 3)
+    return _inforatio_without_interpolation(mtx, 1, 2, 3)
 
 
 
-def _beta_without_interpolation(mtx, datecol, astcol, bmkcol):
+def _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol):
     """
-        compute beta factor for asset without interpolation on date
+        compute information ratio for asset without interpolation on date
     :param mtx: matrix
     :param datecol: int, date column number
     :param astcol: int, asset value column number
@@ -52,5 +52,8 @@ def _beta_without_interpolation(mtx, datecol, astcol, bmkcol):
     astprofits = sal.prr.profit.year(mtx, datecol, astcol)
     bmkprofits = sal.prr.profit.year(mtx, datecol, bmkcol)
 
-    # compute beta factor
-    return atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)
+    # excess return compare with benchmark
+    erprofits = atl.array.sub(astprofits, bmkprofits)
+
+    # compute information ratio
+    return atl.array.avg(erprofits) / atl.array.stddev(erprofits)

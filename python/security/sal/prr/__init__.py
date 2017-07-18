@@ -9,5 +9,12 @@ import sal.prr.beta
 import sal.prr.jensen
 import sal.prr.sharpe
 import sal.prr.treynor
+import sal.prr.infor
+import sal.prr.calmar
 
 sharpe = sharpe.sharpe
+calmar = calmar.calmar
+beta = beta.beta
+jensen = jensen.jensen
+treynor = treynor.treynor
+inforatio = infor.inforatio

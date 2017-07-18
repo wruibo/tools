@@ -1,68 +1,70 @@
 """
-    max drawdown for continuous values
+    max drawdown for specified column data in matrix
 """
+import atl
 
 
-def slow_max_drawdown(values):
+def slow_max_drawdown(mtx, ncol=None):
     """
     compute the max drawdown of the given value list, using normal algorithm:
         max drawdown = max{vi-vj/vi}, 0=<i<j<=n
-    :param values: list, sequence value in list
+    :param mtx: matrix
+    :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
-
-    if not (isinstance(values, list) or isinstance(values, tuple)):
-        return None
+    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     pmax, vmax, pmin, vmin, drawdown = None, None, None, None, None
 
     i = j = 0
-    while i < len(values):
+    while i < len(arr):
         j = i + 1
-        while j < len(values):
-            ijdrawdown = (values[j] - values[i]) / values[i]
+        while j < len(arr):
+            ijdrawdown = (arr[j] - arr[i]) / arr[i]
             if (drawdown is None and ijdrawdown<0.0) or ijdrawdown<drawdown:
-                pmax, vmax, pmin, vmin, drawdown = i, values[i], j, values[j], ijdrawdown
+                pmax, vmax, pmin, vmin, drawdown = i, arr[i], j, arr[j], ijdrawdown
             j += 1
         i += 1
 
     return drawdown, pmax, vmax, pmin, vmin
 
 
-def fast_max_drawdown(values):
+def fast_max_drawdown(mtx, ncol=None):
     """
     compute the max drawdown of the given value list, using normal algorithm:
         max drawdown = max{vi-vj/vi}, 0=<i<j<=n
-    :param values: list, sequence value in list
+    :param mtx: matrix
+    :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
+    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     pmax, vmax, pmin, vmin, drawdown = None, None, None, None, None
     ipos, ivalue, jpos, jvalue, ijdrawdown = None, None, None, None, None
 
     i = j = 0
-    while i + 1 < len(values) and j + 1 < len(values):
-        if values[i] < values[i+1]:
+    while i + 1 < len(arr) and j + 1 < len(arr):
+        if arr[i] < arr[i+1]:
             i += 1
             continue
         j = i + 1
-        while j + 1 < len(values):
-            if values[j] < values[j-1] and values[j] <= values[j+1]:
-                if ijdrawdown is None or values[j] < jvalue:
-                    ipos, ivalue, jpos, jvalue, ijdrawdown = i, values[i], j, values[j], (values[j] - values[i]) / values[i]
+        while j + 1 < len(arr):
+            if arr[j] < arr[j-1] and arr[j] <= arr[j+1]:
+                if ijdrawdown is None or arr[j] < jvalue:
+                    ipos, ivalue, jpos, jvalue, ijdrawdown = i, arr[i], j, arr[j], (arr[j] - arr[i]) / arr[i]
 
                 if drawdown is None or ijdrawdown < drawdown:
                     pmax, vmax, pmin, vmin, drawdown = ipos, ivalue, jpos, jvalue, ijdrawdown
             else:
-                if values[j] > values[i]:
+                if arr[j] > arr[i]:
                     i = j
                     ipos, ivalue, jpos, jvalue, ijdrawdown = None, None, None, None, None
                     break
             j += 1
 
-    if i < j < len(values):
-        if ijdrawdown is None or values[j] < jvalue:
-            ipos, ivalue, jpos, jvalue, ijdrawdown = i, values[i], j, values[j], (values[j] - values[i]) / values[i]
+    if i < j < len(arr):
+        if ijdrawdown is None or arr[j] < jvalue:
+            ipos, ivalue, jpos, jvalue, ijdrawdown = i, arr[i], j, arr[j], (arr[j] - arr[i]) / arr[i]
 
         if drawdown is None or ijdrawdown < drawdown:
             pmax, vmax, pmin, vmin, drawdown = ipos, ivalue, jpos, jvalue, ijdrawdown
@@ -70,58 +72,63 @@ def fast_max_drawdown(values):
     return drawdown, pmax, vmax, pmin, vmin
 
 
-def slow_max_drawdown_trends(values):
+def slow_max_drawdown_trends(mtx, ncol=None):
     """
     compute max drawdown sequence by treat every point as sellout point
-    :param values: list, sequence value in list
+    :param mtx: matrix
+    :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
+    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     dd, j = [], 0
-    while j<len(values):
-        i, maxv = 0, values[0]
+    while j<len(arr):
+        i, maxv = 0, arr[0]
         while i<=j:
-            if values[i]>maxv:
-                maxv = values[i]
+            if arr[i]>maxv:
+                maxv = arr[i]
             i += 1
-        dd.append((maxv-values[j])/maxv)
+        dd.append((maxv-arr[j])/maxv)
         j += 1
     return dd
 
 
-def fast_max_drawdown_trends(values):
+def fast_max_drawdown_trends(mtx, ncol=None):
     """
     compute max drawdown sequence by treat every point as sellout point
-    :param values: list, sequence value in list
+    :param mtx: matrix
+    :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
+    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
-    dd, j, maxi, maxv = [], 0, 0, values[0]
-    while j<len(values):
-        if values[j]>maxv:
+    dd, j, maxi, maxv = [], 0, 0, arr[0]
+    while j<len(arr):
+        if arr[j]>maxv:
             maxi = j
-            maxv = values[j]
-        dd.append((maxv-values[j])/maxv)
+            maxv = arr[j]
+        dd.append((maxv-arr[j])/maxv)
         j += 1
     return dd
 
 
-def max_drawdown(values):
+def max_drawdown(mtx, ncol=None):
     """
     compute the max drawdown of the given value list, using normal algorithm:
         max drawdown = max{vi-vj/vi}, 0=<i<j<=n
-    :param values: list, sequence value in list
+    :param mtx: matrix
+    :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
 
-    return fast_max_drawdown(values)
+    return fast_max_drawdown(mtx, ncol)
 
 
-def max_drawdown_trends(values):
+def max_drawdown_trends(mtx, ncol=None):
     """
     compute max drawdown sequence by treat every point as sellout point
-    :param values: list, sequence value in list
+    :param mtx: matrix
+    :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
-
-    return fast_max_drawdown_trends(values)
+    return fast_max_drawdown_trends(mtx, ncol)

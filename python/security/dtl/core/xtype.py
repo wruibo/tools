@@ -23,6 +23,21 @@ class xday(object):
     def __repr__(self):
         return self.__str__()
 
+    def __gt__(self, other):
+        if not isinstance(other, self.__class__):
+            raise "xday can't compare with %s" % other.__class___
+        return self._date > other.date
+
+    def __lt__(self, other):
+        if not isinstance(other, self.__class__):
+            raise "xday can't compare with %s" % other.__class___
+        return self._date < other.date
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise "xday can't compare with %s" % other.__class___
+        return self._date == other.date
+
     def __add__(self, days):
         return xday(self._date + datetime.timedelta(days), self._format)
 

@@ -16,41 +16,42 @@ class china:
     zz700 = "000907"
 
 
-class site:
+class source:
     """
         site choice for loading index's data
     """
     csindex = "csindex"
 
 
-#default source site
-_default_source_site = site.csindex
-
-
-def source(where = _default_source_site):
+def use(where = source.csindex):
     """
         choose a source for loading index's data
     :param where: specified site
     :return:
     """
-    if where==site.csindex:
-        from dbm.index import csindex
-        return csindex.Loader()
+    if where==source.csindex:
+        import dbm.index.csindex
+        return dbm.index.csindex.loader
 
 
-class prices:
+def all(code):
     """
-        load the index's prices data
+        get all data for index by specified index code at source site
+    :param code: str, code of index at source site
+    :return: loader
     """
-    def daily(code):
-        """
-            get index daily prices of @code
-        :param code: index's code in source site
-        :return: list of price list, list of price list, [['date', 'open', 'close', 'high', 'low', 'volume', 'amount'], ...]
-        """
-        return source().daily(code)
+    return use()(code)
+
+
+def price(code):
+    """
+        get price data for index with code
+    :param code: str, code of index
+    :return: list, price data
+    """
+    return use()(code).price
 
 
 if __name__ == "__main__":
-    prices = prices.daily(china.shzz)
+    prices = price(china.shzz).daily()
     print(prices)

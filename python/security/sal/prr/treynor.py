@@ -1,26 +1,66 @@
 """
-    treynor ratio from CAMP model
+    treynor ratio from CAMP model, formula;
+    AssetsTreynorRatio = (ExpectAssetsRevenue - RiskFreeReturnRate) / AssetsBetaFactor
 """
 
-def TreynorRatio(assetsRevenues, marketRevenues, rf):
-    '''
-     compute the Treynor ratio of the given assets, formula:
-        AssetsTreynorRatio = (ExpectAssetsRevenue - RiskFreeReturnRate) / AssetsBetaFactor
-    constraint:
-        intput @assetRevenues and @marketRevenues must be one-to-one correspondence
+import atl, sal
 
-    :param assetsRevenues: list, float in list, assets sample revenue list
-    :param marketRevenues: list, float in list, market sample revenue list, correspond with @assetsRevenues
-    :param rf:float, interval risk free return rate, same interval with @assetsRevenues and @assetsRevenues
-    :return: float, beta factor of assets
-    '''
-    if len(assetsRevenues) != len(marketRevenues):
-        raise "assets revenue sequence must be one-to-one correspondence with the market revenue sequence!"
 
-    #use average of revenues as expect assets revenue
-    expect = carray.Average(assetsRevenues)
+def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False):
+    """
+        compute treynor ratio for asset
+    :param mtx: matrix
+    :param datecol: int, date column number
+    :param astcol: int, asset value column number
+    :param bmkcol: int, benchmark value column number
+    :param interp: bool, interpolation on date
+    :param risk_free_rate: float, risk free rate of year
+    :return: float, beta factor of asset
+    """
+    if interp:
+        return _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate)
+    return _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate)
 
-    #beta factor of assets
-    beta = BetaFactor(assetsRevenues, marketRevenues)
 
-    return (expect - rf) / beta
+def _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate):
+    """
+        compute treynor ratio for asset with interpolation on date
+    :param mtx: matrix
+    :param datecol: int, date column number
+    :param astcol: int, asset value column number
+    :param bmkcol: int, benchmark value column number
+    :param risk_free_rate: float, risk free rate of year
+    :return: float, beta factor of asset
+    """
+    # interpolate the asset&benchmark values
+    mtx = atl.interp.linear(mtx, datecol, 1, datecol, astcol, bmkcol)
+
+    # treynor ratio
+    return _treynor_without_interpolation(mtx, 1, 2, 3)
+
+
+
+def _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate):
+    """
+        compute treynor ratio for asset without interpolation on date
+    :param mtx: matrix
+    :param datecol: int, date column number
+    :param astcol: int, asset value column number
+    :param bmkcol: int, benchmark value column number
+    :param interp: bool, interpolation on date
+    :param risk_free_rate: float, risk free rate of year
+    :return: float, beta factor of asset
+    """
+
+    # compute year profit for time revenue
+    astprofits = sal.prr.profit.year(mtx, datecol, astcol)
+    bmkprofits = sal.prr.profit.year(mtx, datecol, bmkcol)
+
+    # compute asset&benchmark expect profit
+    astexp = atl.array.avg(astprofits)
+
+    # compute asset beta factor
+    astbeta = atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)
+
+    # treynor ratio
+    return (astexp - risk_free_rate) / astbeta

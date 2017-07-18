@@ -131,6 +131,69 @@ def reshape(mtx, *dims):
     return tomatrix(toarray(mtx), *dims)
 
 
+def reverser(mtx):
+    """
+        reverse matrix on rows, example:
+    input:
+        [
+            [v11, v12, ..., v1m]
+            [v21, v22, ..., v2m]
+            [ ...              ]
+            [vn1, vn2, ..., vnm]
+        ]
+    output:
+        [
+            [vn1, vn2, ..., vnm]
+            [ ...              ]
+            [v21, v22, ..., v2m]
+            [v11, v12, ..., v1m]
+        ]
+    :param mtx: matrix
+    :return: matrix, matrix reversed on rows
+    """
+    if not ismatrix(mtx):
+        raise "reversec object must be a matrix"
+
+    newmtx = []
+
+    for i in range(1, len(mtx)+1):
+        newmtx.append(mtx[-i].copy())
+
+    return newmtx
+
+
+def reversec(mtx):
+    """
+        reverse matrix on columns, example:
+    input:
+        [
+            [v11, v12, ..., v1m]
+            [v21, v22, ..., v2m]
+            [ ...              ]
+            [vn1, vn2, ..., vnm]
+        ]
+    output:
+        [
+            [v1m, ..., v12, v11]
+            [v2m, ..., v22, v21]
+
+            [vnm, ..., vn2, vn1]
+        ]
+    :param mtx: matrix
+    :return: matrix, matrix reversed on columns
+    """
+    if not ismatrix(mtx):
+        raise "reversec object must be a matrix"
+
+    newmtx = []
+
+    for i in range(0, len(mtx)):
+        row = mtx[i].copy()
+        row.reverse()
+        newmtx.append(row)
+
+    return newmtx
+
 def transpose(mtx):
     """
         transpose matrix
@@ -179,6 +242,16 @@ def subrows(mtx, *nums):
     return rows
 
 
+def subrow(mtx, num):
+    """
+        get specified sub row by number from matrix
+    :param mtx: matrix
+    :param num: int, row number
+    :return: array
+    """
+    return subrows(mtx, num)[0]
+
+
 def subcols(mtx, *nums):
     """
         get specified sub columns by number from matrix
@@ -195,6 +268,16 @@ def subcols(mtx, *nums):
         cols.append(col)
 
     return cols
+
+
+def subcol(mtx, num):
+    """
+        get specified sub column by number from atrix
+    :param mtx: matrix
+    :param num: int, column number
+    :return: array
+    """
+    return subcols(mtx, num)[0]
 
 
 def submtx(mtx, rows=None, cols=None):
@@ -225,6 +308,55 @@ def submtx(mtx, rows=None, cols=None):
     return newmtx
 
 
+def sort(mtx, oncol, asc=True):
+    """
+        sort matrix on specified column with ascend flag
+    :param mtx: matrix
+    :param oncol: int, column number sort on
+    :param asc: bool, true - sort ascend, false-sort descend
+    :return: matrix, sorted matrix
+    """
+    pass
+
+
+def join(mtx1, mtx2, col1, col2):
+    """
+        join matrix1 and matrix2 on matrix1'column1, matrix2'column2
+    :param mtx1: matrix, join, default order ascend on col1
+    :param mtx2: matrix, to be join, default order acsend on col2
+    :param col1: int, column number of mtx1
+    :param col2: int, column number of mtx2
+    :return: matrix
+    """
+    # join result
+    mtx = []
+
+    # pointer for mtx1 and mtx2
+    pos1, pos2 = 0, 0
+
+    while pos1 < len(mtx1) and pos2 < len(mtx2) :
+            # current row in mtx1 & mtx2
+            joinvalmtx1, rowmtx1 = mtx1[pos1][col1-1], mtx1[pos1]
+            joinvalmtx2, rowmtx2 = mtx2[pos2][col2-1], mtx2[pos2]
+
+            if joinvalmtx2 == joinvalmtx1:
+                # add both row to result
+                mtx.append(rowmtx1 + rowmtx2)
+                # increase both pointer
+                pos1 += 1
+                pos2 += 1
+
+            elif joinvalmtx1 > joinvalmtx2:
+                pos2 += 1
+            else:
+                pos1 += 1
+
+    return mtx
+
+
 if __name__ == "__main__":
-    arr = [1,2,3,4,5,6,7,8,9,10]
-    print(tomatrix(arr, 2, 5, 1))
+    mtx1 = [[1, 2, 3], [2, 3, 4], [3, 4, 5]]
+    mtx2 = [[1, 9, 4], [3, 7, 8]]
+
+    print(reverser(mtx1))
+    print(mtx1)

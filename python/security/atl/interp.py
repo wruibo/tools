@@ -70,4 +70,4 @@ if __name__ == "__main__":
     print(mtx)
 
     print("after linear interpolation: ")
-    print(linear(mtx, 1, 1, 2, 3))
+    print(linear(mtx, 1, 1, 1, 2, 3))

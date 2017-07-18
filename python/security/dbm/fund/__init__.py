@@ -1,51 +1,42 @@
 """
     fund data management
 """
-__all__ = ["loader", "simuwang"]
-
-import dbm.fund.loader
-import dbm.fund.simuwang
+__all__ = ["simuwang"]
 
 
-class site:
+class source:
     """
         site choice for loading fund's data
     """
     simuwang = "simuwang"
 
-#default source site
-_default_source_site = site.simuwang
 
-
-def source(where = _default_source_site):
+def use(where = source.simuwang):
     """
         choose a source for loading fund's data
     :param where: specified site
     :return:
     """
-    if where==site.simuwang:
-        from dbm.fund import simuwang
-        return simuwang.Loader()
+    if where==source.simuwang:
+        import dbm.fund.simuwang
+        return dbm.fund.simuwang.loader
 
 
 def all(code):
     """
-        get all data of fund @code
-    :param code: fund's code in source site
-    :return:
+        get all fund data for specified fund by its code
+    :param code: str, fund code in source
+    :return: loader
     """
-    return source().all(code)
+    return use()(code)
 
 
-def navs(code):
-    """
-        get navs of fund @code
-    :param code: fund's code in source site
-    :return: list of nav, [[date, nav, aav], [date, nav, aav], ...]
-    """
-    return source().navs(code)
+def nav(code):
+    return all(code).nav()
 
 
 if __name__ == "__main__":
-    navs = navs("HF00000G86")
-    print(navs)
+    nav1= all("HF00000G86").nav()
+    print(nav1)
+
+    print(nav("HF00000G86"))
