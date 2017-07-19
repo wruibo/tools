@@ -2,7 +2,7 @@
     cache for data
 """
 
-from dbm.cache import cache
+from dbm.core.cache import cache
 
 setdir = cache.setdir
 save = cache.save

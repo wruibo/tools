@@ -2,8 +2,8 @@
     fund data from simuwang, site:
         http://www.simuwang.com/
 """
-import atl, utl, dtl, dbm
-import json, requests
+import requests
+import atl, dtl, utl, dbm
 
 
 class context:
@@ -54,17 +54,9 @@ class loader:
         """
         # fetch & parse the url data for fund @code
         url =  context.url("nav") % (self._code)
-        content, needcache = dbm.cache.take(utl.hash.sha1(url.encode())), False
-        if content is None:
-            content = requests.get(url, headers=context.headers()).text
-            needcache = True
 
-        # parse content
-        json_data = json.loads(content)
-
-        # cache data
-        if needcache:
-            dbm.cache.save(utl.hash.sha1(url.encode()), content)
+        # get json data from url
+        json_data = dbm.rqst.getjson(url, headers=context.headers())
 
         # extract fund name
         name = json_data.get('title')[0]

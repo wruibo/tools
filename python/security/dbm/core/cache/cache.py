@@ -1,11 +1,11 @@
 """
     cache
 """
-import os
+import os, utl
 
 
 # default cache directory
-_cachedir = "."
+_cachedir = utl.fd.tempdir()+"/dbmcache"
 
 
 def setdir(cachedir):
@@ -14,7 +14,19 @@ def setdir(cachedir):
     :param cachedir: str, new cache directory path
     :return:
     """
+    global _cachedir
     _cachedir = cachedir
+
+
+def getdir():
+    """
+        get current cache directory path
+    :return: str
+    """
+    global _cachedir
+    if not os.path.exists(_cachedir):
+        os.makedirs(_cachedir)
+    return _cachedir
 
 
 def save(key, content):
@@ -26,7 +38,7 @@ def save(key, content):
     """
     oldcontent = None
 
-    cachefile = _cachedir+"/"+key
+    cachefile = getdir()+"/"+key
 
     if os.path.exists(cachefile) and os.path.isfile(cachefile):
         with open(cachefile, "r") as f:
@@ -46,7 +58,7 @@ def take(key):
     """
     content = None
 
-    cachefile = _cachedir + "/" + key
+    cachefile = getdir() + "/" + key
 
     if os.path.exists(cachefile) and os.path.isfile(cachefile):
         with open(cachefile, "r") as f:

@@ -3,6 +3,22 @@
 """
 
 
+def total(mtx, datecol, navcol):
+    """
+        compute total profit
+    :param mtx:
+    :param datecol:
+    :param navcol:
+    :return:
+    """
+    pass
+
+
+def roll(mtx, datecol, navcol):
+    pass
+
+
+
 def year(mtx, datecol, navcol):
     """
         compute year return rates based on the matrix data

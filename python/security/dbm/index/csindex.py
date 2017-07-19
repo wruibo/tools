@@ -2,11 +2,8 @@
     index from zhong zheng index, site:
         http://www.csindex.com.cn/
 """
-import xml.dom
-import xml.dom.minidom
-
-import dtl, utl, dbm
 import requests
+import dtl, utl, dbm
 
 
 class context:
@@ -62,17 +59,8 @@ class loader:
             # fetch data from daily index data url
             url = context.url("price-daily") % (self._code)
 
-            content, needcache = dbm.cache.take(utl.hash.sha1(url.encode())), False
-            if content is None:
-                content = requests.get(url, headers=context.headers()).text
-                needcache = True
-
-            # parse content
-            dom = xml.dom.minidom.parseString(content)
-
-            # cache data
-            if needcache:
-                dbm.cache.save(utl.hash.sha1(url.encode()), content)
+            # get xml content from url
+            dom = dbm.rqst.getxml(url, headers=context.headers())
 
             # parse index daily records
             prices = []

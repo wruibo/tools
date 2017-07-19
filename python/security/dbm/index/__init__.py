@@ -2,36 +2,38 @@
     index data management
 """
 
-
-class china:
+class vendor:
     """
-        china securities index code
+        site vendor for loading index's data
     """
-    shzz = "000001"
-    sz50 = "000016"
-    hs300 = "000300"
-    zz100 = "000903"
-    zz200 = "000904"
-    zz500 = "000905"
-    zz700 = "000907"
+    class zzzs:
+        @staticmethod
+        def name():
+            return "zzzs"
+
+        @staticmethod
+        def loader():
+            import dbm.index.csindex
+            return dbm.index.csindex.loader
 
 
-class source:
-    """
-        site choice for loading index's data
-    """
-    csindex = "csindex"
+# current source vendor for index data
+_vendor = vendor.zzzs
 
 
-def use(where = source.csindex):
+def source(vdr=None):
     """
         choose a source for loading index's data
-    :param where: specified site
-    :return:
+    :param vdr: str, specified vendor source
+    :return: str, for current source vendor or None
     """
-    if where==source.csindex:
-        import dbm.index.csindex
-        return dbm.index.csindex.loader
+    global _vendor
+    if vdr is None:
+        return _vendor.loader()
+
+    # change current vendor
+    _vendor = vdr
+
 
 
 def all(code):
@@ -40,7 +42,7 @@ def all(code):
     :param code: str, code of index at source site
     :return: loader
     """
-    return use()(code)
+    return source()(code)
 
 
 def price(code):
@@ -49,9 +51,21 @@ def price(code):
     :param code: str, code of index
     :return: list, price data
     """
-    return use()(code).price
+    return source()(code).price
 
 
 if __name__ == "__main__":
+    class china:
+        """
+            china securities index code
+        """
+        shzz = "000001"
+        sz50 = "000016"
+        hs300 = "000300"
+        zz100 = "000903"
+        zz200 = "000904"
+        zz500 = "000905"
+        zz700 = "000907"
+
     prices = price(china.shzz).daily()
     print(prices)

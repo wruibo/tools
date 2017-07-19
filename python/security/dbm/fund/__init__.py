@@ -1,25 +1,49 @@
 """
     fund data management
 """
-__all__ = ["simuwang"]
 
 
-class source:
+class vendor:
     """
-        site choice for loading fund's data
+        site vendor for loading fund's data
     """
-    simuwang = "simuwang"
+    class smpp:
+        @staticmethod
+        def name():
+            return "smpp"
+
+        @staticmethod
+        def loader():
+            import dbm.fund.simuwang
+            return dbm.fund.simuwang.loader
+
+    class ttjj:
+        @staticmethod
+        def name():
+            return "ttjj"
+
+        @staticmethod
+        def loader():
+            pass
 
 
-def use(where = source.simuwang):
+
+# current source vendor for fund data
+_vendor = vendor.smpp
+
+
+def source(vdr=None):
     """
         choose a source for loading fund's data
-    :param where: specified site
-    :return:
+    :param vdr: str, specified vendor source
+    :return: str, for current source vendor or None
     """
-    if where==source.simuwang:
-        import dbm.fund.simuwang
-        return dbm.fund.simuwang.loader
+    global _vendor
+    if vdr is None:
+        return _vendor.loader()
+
+    # change current vendor
+    _vendor = vdr
 
 
 def all(code):
@@ -28,10 +52,20 @@ def all(code):
     :param code: str, fund code in source
     :return: loader
     """
-    return use()(code)
+    return source()(code)
 
 
 def nav(code):
+    """
+        get net-asset-value list from data source, return data format:
+          [
+                [date, nav, aav],
+                [date, nav, aav],
+                [...]
+          ]
+    :param code: str, fund's code at data source
+    :return: list
+    """
     return all(code).nav()
 
 
