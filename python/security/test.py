@@ -4,5 +4,5 @@
 import app
 
 if __name__ == "__main__":
-    result = app.fund.analyse("HF00001FGP", 0.02)
+    result = app.fund.analyse("HF00000G86", 0.02)
     print(result)

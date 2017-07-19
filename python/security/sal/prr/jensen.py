@@ -48,8 +48,8 @@ def _jensen_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate):
     :return: float, beta factor of asset
     """
     # compute year profit for time revenue
-    astprofits = sal.prr.profit.year(mtx, datecol, astcol)
-    bmkprofits = sal.prr.profit.year(mtx, datecol, bmkcol)
+    astprofits = sal.prr.profit.step(mtx, datecol, astcol, sal.ANNUAL_DAYS)
+    bmkprofits = sal.prr.profit.step(mtx, datecol, bmkcol, sal.ANNUAL_DAYS)
 
     # compute asset&benchmark expect profit
     astexp = atl.array.avg(astprofits)

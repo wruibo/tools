@@ -31,7 +31,7 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
 
     result = AnalysisResult(code)
 
-    result.profit = sal.prr.profit.year(fundnavs, 1, 2)
+    result.profit = sal.prr.profit.total(fundnavs, 2)
 
     result.mdd = sal.prr.mdd.max_drawdown(fundnavs, 2)
     result.mdds = sal.prr.mdd.max_drawdown_trends(fundnavs, 2)
@@ -69,7 +69,7 @@ class AnalysisResult:
             "code":self.code,
             "profit":self.profit,
             "mdd":self.mdd[0],
-            "mdds":self.mdds,
+            #"mdds":self.mdds,
             "beta":self.beta,
             "sharpe":self.sharpe,
             "calmar":self.calmar,

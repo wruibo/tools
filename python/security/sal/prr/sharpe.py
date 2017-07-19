@@ -47,7 +47,7 @@ def _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     # compute year return rate based on the nav
-    rates = sal.prr.profit.year(mtx, datecol, navcol)
+    rates = sal.prr.profit.step(mtx, datecol, navcol, sal.ANNUAL_DAYS)
 
     # compute the asset excess expect return over the risk free asset return
     er = atl.array.avg(rates) - risk_free_rate

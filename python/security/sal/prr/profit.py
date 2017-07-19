@@ -3,41 +3,28 @@
 """
 
 
-def total(mtx, datecol, navcol):
+def total(mtx, navcol):
     """
         compute total profit
-    :param mtx:
-    :param datecol:
-    :param navcol:
-    :return:
+    :param mtx: matrix
+    :param datecol: int, date column in matrix
+    :param navcol: int, nav column in matrix
+    :return: float, total profix
     """
-    pass
+    return (mtx[-1][navcol-1]-mtx[0][navcol-1]) / mtx[0][navcol-1]
 
 
 def roll(mtx, datecol, navcol):
     pass
 
 
-
-def year(mtx, datecol, navcol):
+def step(mtx, datecol, navcol, base=None):
     """
-        compute year return rates based on the matrix data
+        compute step return rates based on the matrix data
     :param mtx: matrix
     :param datecol: int, date column in matrix
     :param navcol: int, nav column in matrix
-    :param period: int, period for date
-    :return: array, rate array
-    """
-    return period(mtx, datecol, navcol, 365)
-
-
-def period(mtx, datecol, navcol, period):
-    """
-        compute period return rates based on the matrix data
-    :param mtx: matrix
-    :param datecol: int, date column in matrix
-    :param navcol: int, nav column in matrix
-    :param period: int, period for date
+    :param base: int, base period for profit, default yearly
     :return: array, rate array
     """
     period_rates, last_date, last_nav = [], None, None
@@ -52,7 +39,7 @@ def period(mtx, datecol, navcol, period):
         days = curr_date-last_date
         rate = (curr_nav-last_nav)/last_nav
 
-        period_rate = rate*period/days
+        period_rate = rate*base/days if base is not None else rate/days
         period_rates.append(period_rate)
 
     return period_rates

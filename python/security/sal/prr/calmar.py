@@ -19,7 +19,7 @@ def calmar(mtx, datecol, navcol):
     mdd = sal.prr.mdd.max_drawdown(mtx, navcol)
 
     # compute year return rate based on the nav
-    rates = sal.prr.profit.year(mtx, datecol, navcol)
+    rates = sal.prr.profit.step(mtx, datecol, navcol, sal.ANNUAL_DAYS)
 
     # compute the asset excess expect return
     er = atl.array.avg(rates)
