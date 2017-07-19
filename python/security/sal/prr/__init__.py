@@ -11,10 +11,12 @@ import sal.prr.sharpe
 import sal.prr.treynor
 import sal.prr.infor
 import sal.prr.calmar
+import sal.prr.sortino
 
 sharpe = sharpe.sharpe
 calmar = calmar.calmar
 beta = beta.beta
 jensen = jensen.jensen
 treynor = treynor.treynor
+sortino = sortino.sortino
 inforatio = infor.inforatio

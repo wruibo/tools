@@ -40,6 +40,7 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
     result.calmar = sal.prr.calmar(fundnavs, 1, 2)
     result.jensen = sal.prr.jensen(fundbmkbvals, 1, 2, 3, rfr)
     result.treynor = sal.prr.treynor(fundbmkbvals, 1, 2, 3, rfr)
+    result.sortino = sal.prr.sortino(fundnavs, 1, 2, 3, rfr)
     result.information_ratio = sal.prr.inforatio(fundbmkbvals, 1, 2, 3)
 
     return result
