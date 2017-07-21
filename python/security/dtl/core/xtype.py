@@ -3,46 +3,40 @@
 """
 import datetime
 
-__all__ = ["xday"]
 
-class xday(object):
-    def __init__(self, date, format):
+class xdate(datetime.date):
+    """
+        extends the datetime.date class
+    """
+    def __new__(cls, strdate, format="%Y%m%d"):
+        # initialize the date
+        dt = datetime.datetime.strptime(strdate, format)
+        self = datetime.date.__new__(cls, dt.year, dt.month, dt.day)
+
+        # record format for output
         self._format = format
-        if isinstance(date, str):
-            self._date = datetime.datetime.strptime(date, format)
-        else:
-            self._date = date
 
-    @property
-    def date(self):
-        return self._date
+        # return object
+        return self
 
     def __str__(self):
-        return self._date.strftime(self._format)
+        return self.strftime(self._format)
 
-    def __repr__(self):
-        return self.__str__()
+    def __add__(self, other):
+        return datetime.date.__add__(self, datetime.timedelta(other))
 
-    def __gt__(self, other):
-        if not isinstance(other, self.__class__):
-            raise "xday can't compare with %s" % other.__class___
-        return self._date > other.date
+    def __sub__(self, other):
+        if isinstance(other, int):
+            other = datetime.timedelta(other)
+            return datetime.date.__sub__(self, other)
 
-    def __lt__(self, other):
-        if not isinstance(other, self.__class__):
-            raise "xday can't compare with %s" % other.__class___
-        return self._date < other.date
+        return datetime.date.__sub__(self, other).days
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise "xday can't compare with %s" % other.__class___
-        return self._date == other.date
 
-    def __add__(self, days):
-        return xday(self._date + datetime.timedelta(days), self._format)
+if __name__ == "__main__":
+    d1 = xdate("20170102")
+    d2 = xdate("20170202")
 
-    def __sub__(self, day):
-        if isinstance(day, int):
-            return self._date - datetime.timedelta(day)
-
-        return abs((self._date - day.date).days)
+    print(d1-d2)
+    print(d1+2)
+    print(d2-1)

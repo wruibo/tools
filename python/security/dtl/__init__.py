@@ -8,7 +8,7 @@ from dtl.core import xtable
 from dtl.core import xarray
 
 
-xday = xtype.xday
+xdate= xtype.xdate
 
 def table(rows=None, cols=None):
     """
@@ -80,12 +80,11 @@ def strs(objs):
     return convert(objs, str)
 
 
-def xdays(objs, format):
+def xdates(objs, format):
     """
         convert @objs's values to @xday values
     :param objs: string or tuple, list, dict with string values
     :param format: date format
     :return:
     """
-    from dtl.core import xtype
-    return convert(objs, xtype.xday, format)
+    return convert(objs, xtype.xdate, format)

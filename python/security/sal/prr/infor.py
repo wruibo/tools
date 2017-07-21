@@ -1,6 +1,10 @@
 """
     information ratio, formula:
-
+        IR = (E(PR) - E(BR)) / STDDEV(PR-BR)
+    which:
+        IR - information ratio of asset or portfolio
+        PR - set of portfolio returns, E(PR) means expect PR returns
+        BR - set of benchmark returns, E(BR) means expect BR returns
 """
 import sal, atl
 
@@ -49,8 +53,8 @@ def _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol):
     """
 
     # compute year profit for time revenue
-    astprofits = sal.prr.profit.step(mtx, datecol, astcol, sal.ANNUAL_DAYS)
-    bmkprofits = sal.prr.profit.step(mtx, datecol, bmkcol, sal.ANNUAL_DAYS)
+    astprofits = sal.prr.profit.step(mtx, datecol, astcol)
+    bmkprofits = sal.prr.profit.step(mtx, datecol, bmkcol)
 
     # excess return compare with benchmark
     erprofits = atl.array.sub(astprofits, bmkprofits)

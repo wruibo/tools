@@ -67,7 +67,7 @@ class loader:
             elmts = dom.getElementsByTagName("smbol")
             for elmt in elmts:
                 # parse each record
-                date = dtl.xday(elmt.getAttribute("tdd"), "%Y%m%d") if elmt.hasAttribute("tdd") else None
+                date = dtl.xdate(elmt.getAttribute("tdd"), "%Y%m%d") if elmt.hasAttribute("tdd") else None
                 open = float(elmt.getAttribute("op")) if elmt.hasAttribute("op") else None
                 close = float(elmt.getAttribute("ep")) if elmt.hasAttribute("ep") else None
                 high = float(elmt.getAttribute("hp")) if elmt.hasAttribute("hp") else None

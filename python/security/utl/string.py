@@ -2,7 +2,7 @@
     string methods
 """
 
-def prettystr(objs, level=0):
+def pretty(objs, level=0):
     """
         pretty format an object to string
     :param obj: object, any object
@@ -15,19 +15,19 @@ def prettystr(objs, level=0):
     if isinstance(objs, list):
         pstr += lfill("[\n", FILLCH, level)
         for obj in objs:
-            pstr += prettystr(obj, level+1)
+            pstr += pretty(obj, level+1)
         pstr += lfill("]\n", FILLCH, level)
     elif isinstance(objs, tuple):
         pstr += lfill("(\n", FILLCH, level)
         for obj in objs:
-            pstr += prettystr(obj, level+1)
+            pstr += pretty(obj, level+1)
         pstr += lfill(")\n", FILLCH, level)
     elif isinstance(objs, dict):
         pstr += lfill("{\n", FILLCH, level)
         for key, obj in objs.items():
             pstr += lfill(str(key), FILLCH, level+1)
             pstr += ":\n"
-            pstr += prettystr(obj, level+2)
+            pstr += pretty(obj, level+2)
         pstr += lfill("}\n", FILLCH, level)
     else:
         return "%s\n" % lfill(str(objs), FILLCH, level)

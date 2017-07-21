@@ -31,16 +31,18 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
 
     result = AnalysisResult(code)
 
-    result.profit = sal.prr.profit.total(fundnavs, 2)
+    result.total_return = sal.prr.profit.total(fundnavs, 2)
+    result.average_return = sal.prr.profit.average(fundnavs, 1, 2, sal.YEARLY)
+    result.compound_return = sal.prr.profit.compound(fundnavs, 1, 2, sal.YEARLY)
 
     result.mdd = sal.prr.mdd.max_drawdown(fundnavs, 2)
     result.mdds = sal.prr.mdd.max_drawdown_trends(fundnavs, 2)
     result.beta = sal.prr.beta(fundbmkbvals, 1, 2, 3)
-    result.sharpe = sal.prr.sharpe(fundnavs, 1, 2, 3, rfr)
+    result.sharpe = sal.prr.sharpe(fundnavs, 1, 2, rfr)
     result.calmar = sal.prr.calmar(fundnavs, 1, 2)
     result.jensen = sal.prr.jensen(fundbmkbvals, 1, 2, 3, rfr)
     result.treynor = sal.prr.treynor(fundbmkbvals, 1, 2, 3, rfr)
-    result.sortino = sal.prr.sortino(fundnavs, 1, 2, 3, rfr)
+    result.sortino = sal.prr.sortino(fundnavs, 1, 2, rfr)
     result.information_ratio = sal.prr.inforatio(fundbmkbvals, 1, 2, 3)
 
     return result
@@ -53,7 +55,9 @@ class AnalysisResult:
     def __init__(self, code):
         self.code = code
 
-        self.profit = None
+        self.total_return = None
+        self.average_return = None
+        self.compound_return = None
 
         self.mdd = None
         self.mdds = None
@@ -68,8 +72,10 @@ class AnalysisResult:
     def __str__(self):
         res = {
             "code":self.code,
-            "profit":self.profit,
-            "mdd":self.mdd[0],
+            "total-return":self.total_return,
+            "average-return":self.average_return,
+            "compound-return":self.compound_return,
+            "mdd":self.mdd,
             #"mdds":self.mdds,
             "beta":self.beta,
             "sharpe":self.sharpe,
@@ -80,7 +86,7 @@ class AnalysisResult:
             "information ratio":self.information_ratio
         }
 
-        return utl.string.prettystr(res, 0)
+        return utl.string.pretty(res, 0)
 
     def __repr__(self):
         return self.__str__()

@@ -49,8 +49,8 @@ def _beta_without_interpolation(mtx, datecol, astcol, bmkcol):
     """
 
     # compute year profit for time revenue
-    astprofits = sal.prr.profit.step(mtx, datecol, astcol, sal.ANNUAL_DAYS)
-    bmkprofits = sal.prr.profit.step(mtx, datecol, bmkcol, sal.ANNUAL_DAYS)
+    astprofits = sal.prr.profit.step(mtx, datecol, astcol)
+    bmkprofits = sal.prr.profit.step(mtx, datecol, bmkcol)
 
     # compute beta factor
     return atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)

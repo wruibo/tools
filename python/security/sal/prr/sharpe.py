@@ -10,8 +10,7 @@
     :param rf: float, interval risk free return rate, same interval with @revenues
     :return: float, sharpe ratio fo the assets
 """
-import atl
-import sal
+import atl, sal
 
 
 def sharpe(mtx, datecol, navcol, risk_free_rate, interp=False):
@@ -40,14 +39,13 @@ def _sharpe_with_interpolation(mtx, datecol, navcol, risk_free_rate):
     return _sharpe_without_interpolation(mtx, 1, 2, risk_free_rate)
 
 
-
 def _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate):
     """
         compute sharpe ratio without interpolation
     :return:
     """
     # compute year return rate based on the nav
-    rates = sal.prr.profit.step(mtx, datecol, navcol, sal.ANNUAL_DAYS)
+    rates = sal.prr.profit.step(mtx, datecol, navcol)
 
     # compute the asset excess expect return over the risk free asset return
     er = atl.array.avg(rates) - risk_free_rate

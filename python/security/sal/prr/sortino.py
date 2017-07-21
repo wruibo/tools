@@ -41,7 +41,7 @@ def _sortino_without_interpolation(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     # compute year return rate based on the nav
-    rates = sal.prr.profit.step(mtx, datecol, navcol, sal.ANNUAL_DAYS)
+    rates = sal.prr.profit.step(mtx, datecol, navcol)
 
     # return rates which is less than risk free return
     drates = []
