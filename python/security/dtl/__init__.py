@@ -8,7 +8,11 @@ from dtl.core import xtable
 from dtl.core import xarray
 
 
-xdate= xtype.xdate
+xdate = xtype.xdate
+xweek = xtype.xweek
+xmonth = xtype.xmonth
+xquarter = xtype.xquarter
+xyear = xtype.xyear
 
 def table(rows=None, cols=None):
     """

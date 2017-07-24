@@ -5,4 +5,4 @@
 from .xarray import xarray
 from .xtable import xtable
 
-from .xtype import xdate
+from .xtype import *

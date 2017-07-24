@@ -354,6 +354,9 @@ def join(mtx1, mtx2, col1, col2):
     return mtx
 
 
+def split(mtx, bygroups, oncol):
+    pass
+
 if __name__ == "__main__":
     mtx1 = [[1, 2, 3], [2, 3, 4], [3, 4, 5]]
     mtx2 = [[1, 9, 4], [3, 7, 8]]
