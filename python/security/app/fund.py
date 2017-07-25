@@ -31,9 +31,7 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
 
     result = AnalysisResult(code)
 
-    result.total_return = sal.prr.profit.total(fundnavs, 2)
-    result.average_return = sal.prr.profit.average(fundnavs, 1, 2, sal.YEARLY)
-    result.compound_return = sal.prr.profit.compound(fundnavs, 1, 2, sal.YEARLY)
+    result.ret = sal.prr.profit.all(fundnavs, 1, 2)
 
     result.mdd = sal.prr.mdd.max_drawdown(fundnavs, 2)
     result.mdds = sal.prr.mdd.max_drawdown_trends(fundnavs, 2)
@@ -55,9 +53,7 @@ class AnalysisResult:
     def __init__(self, code):
         self.code = code
 
-        self.total_return = None
-        self.average_return = None
-        self.compound_return = None
+        self.ret = None
 
         self.mdd = None
         self.mdds = None
@@ -72,11 +68,9 @@ class AnalysisResult:
     def __str__(self):
         res = {
             "code":self.code,
-            "total-return":self.total_return,
-            "average-return":self.average_return,
-            "compound-return":self.compound_return,
+            "return":self.ret,
             "mdd":self.mdd,
-            #"mdds":self.mdds,
+            "mdds":self.mdds,
             "beta":self.beta,
             "sharpe":self.sharpe,
             "calmar":self.calmar,

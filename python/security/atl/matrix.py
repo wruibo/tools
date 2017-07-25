@@ -354,8 +354,32 @@ def join(mtx1, mtx2, col1, col2):
     return mtx
 
 
-def split(mtx, bygroups, oncol):
-    pass
+def split(mtx, bycls, oncol):
+    """
+        split matrix by class on specified column
+    :param mtx: matrix
+    :param bycls: class, class for split the matrix on column
+    :param oncol: int, column number
+    :return: dict, class object->sub matrix
+    """
+    # split result
+    result = {}
+
+    # split the matrix
+    lastkey = None
+    for row in mtx:
+        currkey = bycls(row[oncol-1])
+        if lastkey is None:
+            lastkey = currkey
+            result[lastkey] = [row]
+        else:
+            if currkey == lastkey:
+                result[lastkey].append(row)
+            else:
+                lastkey = currkey
+                result[lastkey] = [row]
+
+    return result
 
 if __name__ == "__main__":
     mtx1 = [[1, 2, 3], [2, 3, 4], [3, 4, 5]]

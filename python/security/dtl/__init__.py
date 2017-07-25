@@ -13,6 +13,7 @@ xweek = xtype.xweek
 xmonth = xtype.xmonth
 xquarter = xtype.xquarter
 xyear = xtype.xyear
+xrangeday = xtype.xrangeday
 
 def table(rows=None, cols=None):
     """

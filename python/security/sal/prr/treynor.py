@@ -6,23 +6,25 @@
 import atl, sal
 
 
-def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False):
+def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute treynor ratio for asset
     :param mtx: matrix
     :param datecol: int, date column number
     :param astcol: int, asset value column number
     :param bmkcol: int, benchmark value column number
-    :param interp: bool, interpolation on date
     :param risk_free_rate: float, risk free rate of year
+    :param interp: bool, interpolation on date
+    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
+    :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
     if interp:
-        return _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate)
-    return _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate)
+        return _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
+    return _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
 
 
-def _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate):
+def _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval=None, annualdays=None):
     """
         compute treynor ratio for asset with interpolation on date
     :param mtx: matrix
@@ -30,17 +32,19 @@ def _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate):
     :param astcol: int, asset value column number
     :param bmkcol: int, benchmark value column number
     :param risk_free_rate: float, risk free rate of year
+    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
+    :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
     # interpolate the asset&benchmark values
     mtx = atl.interp.linear(mtx, datecol, 1, datecol, astcol, bmkcol)
 
     # treynor ratio
-    return _treynor_without_interpolation(mtx, 1, 2, 3)
+    return _treynor_without_interpolation(mtx, 1, 2, 3, risk_free_rate, interval, annualdays)
 
 
 
-def _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate):
+def _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval=None, annualdays=None):
     """
         compute treynor ratio for asset without interpolation on date
     :param mtx: matrix
@@ -49,12 +53,14 @@ def _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate)
     :param bmkcol: int, benchmark value column number
     :param interp: bool, interpolation on date
     :param risk_free_rate: float, risk free rate of year
+    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
+    :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
 
     # compute year profit for time revenue
-    astprofits = sal.prr.profit.step(mtx, datecol, astcol)
-    bmkprofits = sal.prr.profit.step(mtx, datecol, bmkcol)
+    astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, interval, annualdays).values())
+    bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, interval, annualdays).values())
 
     # compute asset&benchmark expect profit
     astexp = atl.array.avg(astprofits)
