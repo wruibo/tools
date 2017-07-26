@@ -8,6 +8,34 @@
 import sal, atl
 
 
+def all(mtx, datecol, navcol, risk_free_rate):
+    """
+        compute all sortino values for portfolio
+    :param mtx:
+    :param datecol:
+    :param navcol:
+    :param risk_free_rate:
+    :return:
+    """
+    results = {
+        "interpolate":{
+            'daily':sortino(mtx, datecol, navcol, risk_free_rate, True, sal.DAILY),
+            'weekly': sortino(mtx, datecol, navcol, risk_free_rate, True, sal.WEEKLY),
+            'monthly':sortino(mtx, datecol, navcol, risk_free_rate, True, sal.MONTHLY),
+            'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, True, sal.QUARTERLY),
+            'yearly': sortino(mtx, datecol, navcol, risk_free_rate, True, sal.YEARLY),
+        },
+        "original":{
+            'daily': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.DAILY),
+            'weekly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.WEEKLY),
+            'monthly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.MONTHLY),
+            'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.QUARTERLY),
+            'yearly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.YEARLY),
+        }
+    }
+
+    return results
+
 def sortino(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute sortino ratio, default without interpolation
@@ -19,11 +47,13 @@ def sortino(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, a
     :param annualdays: int, days of 1 year
     :return: sortino raito
     """
-    if interp:
-        return _sortino_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
+    try:
+        if interp:
+            return _sortino_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
 
-    return _sortino_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
-
+        return _sortino_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
+    except:
+        return None
 
 def _sortino_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
     """

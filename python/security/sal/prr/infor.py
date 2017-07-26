@@ -9,6 +9,35 @@
 import sal, atl
 
 
+def all(mtx, datecol, astcol, bmkcol):
+    """
+        compute all information ratio values for portfolio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :return:
+    """
+    results = {
+        "interpolate":{
+            'daily':inforatio(mtx, datecol, astcol, bmkcol, True, sal.DAILY),
+            'weekly': inforatio(mtx, datecol, astcol, bmkcol, True, sal.WEEKLY),
+            'monthly':inforatio(mtx, datecol, astcol, bmkcol, True, sal.MONTHLY),
+            'quarterly': inforatio(mtx, datecol, astcol, bmkcol, True, sal.QUARTERLY),
+            'yearly': inforatio(mtx, datecol, astcol, bmkcol, True, sal.YEARLY),
+        },
+        "original":{
+            'daily': inforatio(mtx, datecol, astcol, bmkcol, False, sal.DAILY),
+            'weekly': inforatio(mtx, datecol, astcol, bmkcol, False, sal.WEEKLY),
+            'monthly': inforatio(mtx, datecol, astcol, bmkcol, False, sal.MONTHLY),
+            'quarterly': inforatio(mtx, datecol, astcol, bmkcol, False, sal.QUARTERLY),
+            'yearly': inforatio(mtx, datecol, astcol, bmkcol, False, sal.YEARLY),
+        }
+    }
+
+    return results
+
+
 def inforatio(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute information ratio for asset
@@ -22,10 +51,12 @@ def inforatio(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annuald
 
     :return: float, beta factor of asset
     """
-    if interp:
-        return _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
-    return _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
-
+    try:
+        if interp:
+            return _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
+        return _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
+    except:
+        return None
 
 def _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol, interval=None, annualdays=None):
     """

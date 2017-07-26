@@ -5,6 +5,35 @@
 import atl, sal
 
 
+def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
+    """
+        compute all jensen values for portfolio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :return:
+    """
+    results = {
+        "interpolate":{
+            'daily':jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.DAILY),
+            'weekly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.WEEKLY),
+            'monthly':jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.MONTHLY),
+            'quarterly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.QUARTERLY),
+            'yearly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.YEARLY),
+        },
+        "original":{
+            'daily': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.DAILY),
+            'weekly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.WEEKLY),
+            'monthly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.MONTHLY),
+            'quarterly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.QUARTERLY),
+            'yearly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.YEARLY),
+        }
+    }
+
+    return results
+
+
 def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute jensen ratio of asset
@@ -18,10 +47,12 @@ def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False, interval=
     :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
-    if interp:
-        return _jensen_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
-    return _jensen_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
-
+    try:
+        if interp:
+            return _jensen_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
+        return _jensen_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
+    except:
+        return None
 
 def _jensen_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval=None, annualdays=None):
     """

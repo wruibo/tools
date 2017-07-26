@@ -6,6 +6,35 @@
 import atl, sal
 
 
+def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
+    """
+        compute all treynor values for portfolio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :return:
+    """
+    results = {
+        "interpolate":{
+            'daily':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.DAILY),
+            'weekly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.WEEKLY),
+            'monthly':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.MONTHLY),
+            'quarterly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.QUARTERLY),
+            'yearly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, True, sal.YEARLY),
+        },
+        "original":{
+            'daily': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.DAILY),
+            'weekly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.WEEKLY),
+            'monthly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.MONTHLY),
+            'quarterly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.QUARTERLY),
+            'yearly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, False, sal.YEARLY),
+        }
+    }
+
+    return results
+
+
 def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute treynor ratio for asset
@@ -19,10 +48,12 @@ def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False, interval
     :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
-    if interp:
-        return _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
-    return _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
-
+    try:
+        if interp:
+            return _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
+        return _treynor_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval, annualdays)
+    except:
+        return None
 
 def _treynor_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval=None, annualdays=None):
     """

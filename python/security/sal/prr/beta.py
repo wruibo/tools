@@ -5,6 +5,35 @@
 import atl, sal
 
 
+def all(mtx, datecol, astcol, bmkcol):
+    """
+        compute all beta values for portfolio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :return:
+    """
+    results = {
+        "interpolate":{
+            'daily':beta(mtx, datecol, astcol, bmkcol, True, sal.DAILY),
+            'weekly': beta(mtx, datecol, astcol, bmkcol, True, sal.WEEKLY),
+            'monthly':beta(mtx, datecol, astcol, bmkcol, True, sal.MONTHLY),
+            'quarterly': beta(mtx, datecol, astcol, bmkcol, True, sal.QUARTERLY),
+            'yearly': beta(mtx, datecol, astcol, bmkcol, True, sal.YEARLY),
+        },
+        "original":{
+            'daily': beta(mtx, datecol, astcol, bmkcol, False, sal.DAILY),
+            'weekly': beta(mtx, datecol, astcol, bmkcol, False, sal.WEEKLY),
+            'monthly': beta(mtx, datecol, astcol, bmkcol, False, sal.MONTHLY),
+            'quarterly': beta(mtx, datecol, astcol, bmkcol, False, sal.QUARTERLY),
+            'yearly': beta(mtx, datecol, astcol, bmkcol, False, sal.YEARLY),
+        }
+    }
+
+    return results
+
+
 def beta(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute beta factor for asset
@@ -17,10 +46,12 @@ def beta(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annualdays=s
     :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
-    if interp:
-        return _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
-    return _beta_without_interpolation(mtx, datecol, astcol, bmkcol)
-
+    try:
+        if interp:
+            return _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
+        return _beta_without_interpolation(mtx, datecol, astcol, bmkcol)
+    except:
+        None
 
 def _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval=None, annualdays=None):
     """

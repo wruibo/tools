@@ -35,13 +35,13 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
 
     result.mdd = sal.prr.mdd.max_drawdown(fundnavs, 2)
     result.mdds = sal.prr.mdd.max_drawdown_trends(fundnavs, 2)
-    result.beta = sal.prr.beta(fundbmkbvals, 1, 2, 3)
-    result.sharpe = sal.prr.sharpe(fundnavs, 1, 2, rfr, False, sal.QUARTERLY)
-    result.calmar = sal.prr.calmar(fundnavs, 1, 2)
-    result.jensen = sal.prr.jensen(fundbmkbvals, 1, 2, 3, rfr)
-    result.treynor = sal.prr.treynor(fundbmkbvals, 1, 2, 3, rfr)
-    result.sortino = sal.prr.sortino(fundnavs, 1, 2, rfr)
-    result.information_ratio = sal.prr.inforatio(fundbmkbvals, 1, 2, 3)
+    result.beta = sal.prr.betaall(fundbmkbvals, 1, 2, 3)
+    result.sharpe = sal.prr.sharpeall(fundnavs, 1, 2, rfr)
+    result.calmar = sal.prr.calmarall(fundnavs, 1, 2)
+    result.jensen = sal.prr.jensenall(fundbmkbvals, 1, 2, 3, rfr)
+    result.treynor = sal.prr.treynorall(fundbmkbvals, 1, 2, 3, rfr)
+    result.sortino = sal.prr.sortinoall(fundnavs, 1, 2, rfr)
+    result.information_ratio = sal.prr.inforatioall(fundbmkbvals, 1, 2, 3)
 
     return result
 
