@@ -6,7 +6,7 @@ import math, datetime, calendar
 __all__ = ["xdate", "xweek", "xmonth", "xquarter", "xyear", "xrangeday"]
 
 # default date string format
-_default_date_format = "%Y%m%d"
+_default_date_format = "%Y-%m-%d"
 
 
 class xdate(datetime.date):
@@ -27,6 +27,10 @@ class xdate(datetime.date):
         # return object
         return self
 
+    @property
+    def days(self):
+        return 1
+
     def __str__(self):
         return self.strftime(self._format)
 
@@ -34,15 +38,19 @@ class xdate(datetime.date):
         return self.__str__()
 
     def __add__(self, other):
-        return datetime.date.__add__(self, datetime.timedelta(other))
+        if isinstance(other, int) or isinstance(other, float):
+            other = datetime.timedelta(int(other))
+        return xdate(datetime.date.__add__(self, other))
 
     def __sub__(self, other):
-        if isinstance(other, int):
-            other = datetime.timedelta(other)
-            return datetime.date.__sub__(self, other)
+        if isinstance(other, int) or isinstance(other, float):
+            other = datetime.timedelta(int(other))
 
-        return datetime.date.__sub__(self, other).days
+        result = datetime.date.__sub__(self, other)
 
+        if isinstance(result, datetime.timedelta):
+            return result.days
+        return result
 
 class xrangeday(object):
     """

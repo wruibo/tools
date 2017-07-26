@@ -26,6 +26,15 @@ class vendor:
         def loader():
             pass
 
+    class cfq:
+        @staticmethod
+        def name():
+            return "cfq"
+
+        @staticmethod
+        def loader():
+            import dbm.fund.caifuqiao
+            return dbm.fund.caifuqiao.loader
 
 
 # current source vendor for fund data
@@ -70,7 +79,5 @@ def nav(code):
 
 
 if __name__ == "__main__":
-    nav1= all("HF00000G86").nav()
+    nav1= nav("1000502")
     print(nav1)
-
-    print(nav("HF00000G86"))

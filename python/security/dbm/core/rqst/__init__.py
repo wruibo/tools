@@ -8,3 +8,4 @@ cache = rqst.cache
 gettxt = rqst.gettxt
 getxml = rqst.getxml
 getjson = rqst.getjson
+pgetjson = rqst.pgetjson

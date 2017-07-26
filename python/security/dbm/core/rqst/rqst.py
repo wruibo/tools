@@ -20,8 +20,6 @@ def cache(usecache=None):
     else:
         _use_cache = usecache
 
-
-
 def gettxt(url, params=None, **kwargs):
     """
         get text content from url
@@ -100,3 +98,30 @@ def getjson(url, params=None, **kwargs):
     # return json data object
     return json_data
 
+
+def pgetjson(url, **kwargs):
+    """
+        get json content using post method from url
+    :param url:
+    :param params:
+    :param kwargs:
+    :return:
+    """
+    # use cache content if exists
+    if cache():
+        content = dbm.core.cache.take(utl.hash.sha1(url.encode()))
+        if content is not None:
+            return json.loads(content)
+
+    # request content from remote url
+    content = requests.post(url, None, None, **kwargs).text
+
+    # parse content use json
+    json_data = json.loads(content)
+
+    # cache response content to cache
+    if cache():
+        dbm.core.cache.save(utl.hash.sha1(url.encode()), content)
+
+    # return json data object
+    return json_data
