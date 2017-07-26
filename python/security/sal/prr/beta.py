@@ -49,7 +49,7 @@ def beta(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annualdays=s
     try:
         if interp:
             return _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
-        return _beta_without_interpolation(mtx, datecol, astcol, bmkcol)
+        return _beta_without_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
     except:
         None
 
