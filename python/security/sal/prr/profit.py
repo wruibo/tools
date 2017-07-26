@@ -72,6 +72,8 @@ def all(mtx, datecol, navcol):
         'month': rolling(mtx, datecol, navcol, MONTHLY, ANNUAL_DAYS)
     }
 
+    results['recent'] = recent(mtx, datecol, navcol, 30, 90, 180, 360, 720, 1080, 1440, 1800)
+
     return results
 
 
@@ -132,7 +134,7 @@ def compound(mtx, datecol, navcol, interval=None):
 
 def rolling(mtx, datecol, navcol, interval=None, annualdays=None):
     """
-        compute step(interval) return rates based on the matrix data
+        compute rolling return rates based on the matrix data, transform the return rates to annual if annual days specified
     :param mtx: matrix
     :param datecol: int, date column in matrix
     :param navcol: int, nav column in matrix
@@ -189,6 +191,36 @@ def rolling(mtx, datecol, navcol, interval=None, annualdays=None):
     return results
 
 
-def recent(mtx, datecol, navcol, interval=None, annualdays=None):
-    pass
+def recent(mtx, datecol, navcol, *dayslst):
+    """
+        compute recent return rates based on the matrix data
+    :param mtx: matrix
+    :param datecol: int, date column in matrix
+    :param navcol: int, nav column in matrix
+    :param dayslst: tupple, recent days list want to compute return rate
+    :return: array, rate array
+    """
+    results, today = {}, dtl.xdate()
 
+    # compute return rate for each input days
+    for days in dayslst:
+        # recent begin and end date
+        recent_begin_date, recent_end_date = today-days, today
+        # begin & end date/nav for recent days
+        begin_date, begin_nav, end_date, end_nav = None, None, None, None
+
+        # get the begin & end date/nav from input data
+        for row in mtx:
+            if row[datecol-1] < recent_begin_date:
+                begin_date, begin_nav = row[datecol-1], row[navcol-1]
+
+            if row[datecol-1] >= recent_begin_date:
+                end_date, end_nav = row[datecol-1], row[navcol-1]
+
+        # compute return rate for current days
+        if end_nav is not None and begin_nav is not None:
+            results[days] = (end_nav-begin_nav)/begin_nav
+        else:
+            results[days] = None
+
+    return results
