@@ -162,7 +162,7 @@ def rolling(mtx, datecol, navcol, interval=None, annualdays=None):
             absrate = (curr_nav-last_nav)/last_nav
 
             dayrange = dtl.xrangeday(last_date, curr_date)
-            annualrate = absrate*annualdays/days if annualdays is not None else absrate
+            annualrate = pow(1+absrate, annualdays/days)-1 if annualdays is not None else absrate
 
             results[dayrange] = annualrate
 
@@ -181,7 +181,7 @@ def rolling(mtx, datecol, navcol, interval=None, annualdays=None):
 
             days = itv.days
             absrate = (end_nav-begin_nav)/begin_nav
-            annualrate = absrate*annualdays/days if annualdays is not None else absrate
+            annualrate = pow(1+absrate, annualdays/days)-1 if annualdays is not None else absrate
 
             results[itv] = annualrate
 

@@ -41,6 +41,7 @@ def all(mtx, datecol, navcol, risk_free_rate):
 
     return results
 
+
 def sharpe(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute sharpe ratio, default without interpolation
@@ -59,6 +60,7 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, an
         return _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
     except:
         return None
+
 
 def _sharpe_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
     """
@@ -95,8 +97,6 @@ def _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval
 
     # calculate the asset revenue standard deviation
     sd = atl.array.stddev(rates)
-
-    print("%f, %f", (er, sd))
 
     # sharpe ratio
     return er/sd
