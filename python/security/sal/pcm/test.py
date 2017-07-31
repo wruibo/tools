@@ -1,94 +1,4 @@
-"""
-    array process methods, array like:
-        [v1, v2, ..., vn]
-    is an length with n elements array
-"""
 import math
-
-
-def avg(arr):
-    """
-        compute average of array values
-    :param values: list, list of array values
-    :return: float, average of array values
-    """
-    if len(arr) == 0:
-        raise "empty input array has no average value."
-
-    return float(sum(arr)) / len(arr)
-
-
-def var(arr):
-    """
-        compute variance of array values
-    :param values: list, list of array values
-    :return: float, variance of array values
-    """
-    if len(arr) == 0:
-        raise "empty input array has no variance value."
-
-    # use average value of values as the expect value
-    expect_value = avg(arr)
-
-    sum = 0.0
-    for value in arr:
-        sum += (value-expect_value)**2
-
-    return sum / (len(arr)-1)
-
-
-def stddev(arr):
-    '''
-        compute standard deviation of array values
-    :param values: list, list of array values
-    :return: float, standard deviation of array values
-    '''
-    if len(arr) == 0:
-        raise "empty input array has no standard deviation value."
-
-    return math.sqrt(var(arr))
-
-
-def cov(arr1, arr2):
-    """
-        compute the covariance of array arr1 and arr2
-    :param arr1: list, list of input data values
-    :param arr2: list, list of input data values
-    :return: float, covariance of array arr1 and arr2
-    """
-    if len(arr1) != len(arr2):
-        raise "covariance needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2))
-
-    expect_value1 = avg(arr1)
-    expect_value2 = avg(arr1)
-
-    sum = 0.0
-    idx = num = len(arr1)
-    while idx > 0:
-        idx -= 1
-        sum += (arr1[idx]-expect_value1)*(arr1[idx]-expect_value2)
-
-    return sum / (num-1)
-
-
-def cor(arr1, arr2):
-    """
-        compute the correlation of array arr1 and arr2, using pearson correlation algorithm
-     :param arr1: list, list of input data values
-     :param arr2: list, list of input data values
-     :return:
-    """
-    if len(arr1) != len(arr2):
-        raise "correlation needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2))
-
-    # compute covariance of arr1 and arr2
-    cov12 = cov(arr1, arr2)
-
-    # compute the standard deviation of arr1, arr2
-    stddev1 = stddev(arr1)
-    stddev2 = stddev(arr2)
-
-    return cov12/(stddev1*stddev2)
 
 
 def add(arr, withval):
@@ -329,25 +239,70 @@ def permute(arr, num):
 
     return results
 
+def simulate(navs, times, stepval=0.2, maxsteps=500):
+    # navs after invested times
+    navs_after_invest_times = pmrcombine(*[navs for i in range(0, times)])
+
+    # steps for statistic
+    total = len(navs_after_invest_times)
+    steps = math.ceil(max(navs_after_invest_times)/stepval)+1
+
+    # statistic for distribution of returns
+    dists = [0 for i in range(0, steps)]
+    for nav in navs_after_invest_times:
+        pos = math.floor(nav/stepval)
+        dists[pos] = dists[pos] + 1
+
+
+    # probability distribution for returns
+    results, curstep = [], 0
+    for cnt in dists:
+        if curstep < maxsteps:
+            results.append(cnt/total)
+        else:
+            break
+
+        curstep += 1
+
+    return results
+
+
 
 if __name__ == "__main__":
-    arr = [i for i in range(1, 4)]
-    num = 3
+    # test return sequence
+    navsA = [0.05, 0.2, 1, 3, 3, 3]
+    navsB = [0.8, 0.9, 1.1, 1.1, 1.2, 1.4]
+    navsC = [0.95, 1, 1, 1, 1, 1.1]
 
-    results = combine(arr, num)
-    print(results)
-    print(len(results))
+    navsAB = divide(add(navsA, navsB), 2)
+    navsAC = divide(add(navsA, navsC), 2)
+    navsBC = divide(add(navsB, navsC), 2)
 
-    results = permute(arr, num)
-    print(results)
-    print(len(results))
 
-    navs = [1, 2, 3, 4]
+    # you can change times for invest, and or value for figure-x-axis
+    times, stepval, maxsteps = 6, 0.2, 500
 
-    results = rcombine(*[navs for i in range(0, 2)])
-    print(results)
-    print("%d, %d, %d" % (len(results), len(results[0]), len(results[0][0])))
+    # get the simulate results by specified invest times and step value for return distribution statistic
+    resA = simulate(navsA, times, stepval, maxsteps)
+    resB = simulate(navsB, times, stepval, maxsteps)
+    resC = simulate(navsC, times, stepval, maxsteps)
 
-    results = pmrcombine(*[navs for i in range(0, 2)])
-    print(results)
-    print(len(results))
+    resAB = simulate(navsAB, times, stepval, maxsteps)
+    resAC = simulate(navsAC, times, stepval, maxsteps)
+    resBC = simulate(navsBC, times, stepval, maxsteps)
+
+    # plot results
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(16, 8))
+    plt.xlabel("invest times(%d), step by(%s)" % (times, str(stepval)))
+    plt.ylabel("return rates")
+    plt.plot(resA, label="$A%s$"%str(navsA))
+    plt.plot(resB, label="$B%s$"%str(navsB))
+    plt.plot(resC, label="$C%s$"%str(navsC))
+    plt.plot(resAB, label="$AB%s$" % str(navsAB))
+    plt.plot(resAC, label="$AC%s$" % str(navsAC))
+    plt.plot(resBC, label="$BC%s$" % str(navsBC))
+
+    plt.legend()
+    plt.show()
