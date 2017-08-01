@@ -2,7 +2,7 @@
     beta factor in CAMP model, formula:
        AssetsBetaFactor = Cov(AssetsRevenues, MarketRevenues)/Variance(MarketRevenues)
 """
-import atl, sal
+import atl, dtl, sal
 
 
 def all(mtx, datecol, astcol, bmkcol):
@@ -16,25 +16,25 @@ def all(mtx, datecol, astcol, bmkcol):
     """
     results = {
         "interpolate":{
-            'daily':beta(mtx, datecol, astcol, bmkcol, True, sal.DAILY),
-            'weekly': beta(mtx, datecol, astcol, bmkcol, True, sal.WEEKLY),
-            'monthly':beta(mtx, datecol, astcol, bmkcol, True, sal.MONTHLY),
-            'quarterly': beta(mtx, datecol, astcol, bmkcol, True, sal.QUARTERLY),
-            'yearly': beta(mtx, datecol, astcol, bmkcol, True, sal.YEARLY),
+            'day':beta(mtx, datecol, astcol, bmkcol, True, dtl.xday),
+            'week': beta(mtx, datecol, astcol, bmkcol, True, dtl.xweek),
+            'month':beta(mtx, datecol, astcol, bmkcol, True, dtl.xmonth),
+            'quarter': beta(mtx, datecol, astcol, bmkcol, True, dtl.xquarter),
+            'year': beta(mtx, datecol, astcol, bmkcol, True, dtl.xyear),
         },
         "original":{
-            'daily': beta(mtx, datecol, astcol, bmkcol, False, sal.DAILY),
-            'weekly': beta(mtx, datecol, astcol, bmkcol, False, sal.WEEKLY),
-            'monthly': beta(mtx, datecol, astcol, bmkcol, False, sal.MONTHLY),
-            'quarterly': beta(mtx, datecol, astcol, bmkcol, False, sal.QUARTERLY),
-            'yearly': beta(mtx, datecol, astcol, bmkcol, False, sal.YEARLY),
+            'day': beta(mtx, datecol, astcol, bmkcol, False, dtl.xday),
+            'week': beta(mtx, datecol, astcol, bmkcol, False, dtl.xweek),
+            'month': beta(mtx, datecol, astcol, bmkcol, False, dtl.xmonth),
+            'quarter': beta(mtx, datecol, astcol, bmkcol, False, dtl.xquarter),
+            'year': beta(mtx, datecol, astcol, bmkcol, False, dtl.xyear),
         }
     }
 
     return results
 
 
-def beta(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
+def beta(mtx, datecol, astcol, bmkcol, interp=False, periodcls=None, annualdays=None):
     """
         compute beta factor for asset
     :param mtx: matrix
@@ -42,25 +42,25 @@ def beta(mtx, datecol, astcol, bmkcol, interp=False, interval=None, annualdays=s
     :param astcol: int, asset value column number
     :param bmkcol: int, benchmark value column number
     :param interp: bool, interpolation on date
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
+    :param periodcls: class, period want to compute beta factor
     :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
     try:
         if interp:
-            return _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
-        return _beta_without_interpolation(mtx, datecol, astcol, bmkcol, interval, annualdays)
+            return _beta_with_interpolation(mtx, datecol, astcol, bmkcol, periodcls, annualdays)
+        return _beta_without_interpolation(mtx, datecol, astcol, bmkcol, periodcls, annualdays)
     except:
         None
 
-def _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval=None, annualdays=None):
+def _beta_with_interpolation(mtx, datecol, astcol, bmkcol, periodcls, annualdays):
     """
         compute beta factor for asset with interpolation on date
     :param mtx: matrix
     :param datecol: int, date column number
     :param astcol: int, asset value column number
     :param bmkcol: int, benchmark value column number
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
+    :param periodcls: class, period want to compute beta factor
     :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
@@ -68,11 +68,11 @@ def _beta_with_interpolation(mtx, datecol, astcol, bmkcol, interval=None, annual
     mtx = atl.interp.linear(mtx, datecol, 1, datecol, astcol, bmkcol)
 
     # compute beta factor
-    return _beta_without_interpolation(mtx, 1, 2, 3, interval, annualdays)
+    return _beta_without_interpolation(mtx, 1, 2, 3, periodcls, annualdays)
 
 
 
-def _beta_without_interpolation(mtx, datecol, astcol, bmkcol, interval=None, annualdays=None):
+def _beta_without_interpolation(mtx, datecol, astcol, bmkcol, periodcls, annualdays):
     """
         compute beta factor for asset without interpolation on date
     :param mtx: matrix
@@ -80,14 +80,14 @@ def _beta_without_interpolation(mtx, datecol, astcol, bmkcol, interval=None, ann
     :param astcol: int, asset value column number
     :param bmkcol: int, benchmark value column number
     :param interp: bool, interpolation on date
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
+    :param periodcls: class, period want to compute beta factor
     :param annualdays: int, days of 1 year
     :return: float, beta factor of asset
     """
 
     # compute year profit for time revenue
-    astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, interval, annualdays).values())
-    bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, interval, annualdays).values())
+    astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls, annualdays).values())
+    bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls, annualdays).values())
 
     # compute beta factor
     return atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)

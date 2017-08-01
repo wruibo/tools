@@ -36,6 +36,7 @@ def all(mtx, datecol, navcol, risk_free_rate):
 
     return results
 
+
 def sortino(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
     """
         compute sortino ratio, default without interpolation
@@ -54,6 +55,7 @@ def sortino(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, a
         return _sortino_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
     except:
         return None
+
 
 def _sortino_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
     """

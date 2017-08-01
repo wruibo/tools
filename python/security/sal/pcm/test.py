@@ -280,7 +280,7 @@ if __name__ == "__main__":
 
 
     # you can change times for invest, and or value for figure-x-axis
-    times, stepval, maxsteps = 6, 0.2, 500
+    times, stepval, maxsteps = 9, 0.2, 300
 
     # get the simulate results by specified invest times and step value for return distribution statistic
     resA = simulate(navsA, times, stepval, maxsteps)
@@ -295,8 +295,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     plt.figure(figsize=(16, 8))
-    plt.xlabel("invest times(%d), step by(%s)" % (times, str(stepval)))
-    plt.ylabel("return rates")
+    plt.xlabel("return rates(x*0.2), invest times(%d), step by(%s)" % (times, str(stepval)))
+    plt.ylabel("probability rates")
     plt.plot(resA, label="$A%s$"%str(navsA))
     plt.plot(resB, label="$B%s$"%str(navsB))
     plt.plot(resC, label="$C%s$"%str(navsC))

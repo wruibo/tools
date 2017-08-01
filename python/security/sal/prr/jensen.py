@@ -54,6 +54,7 @@ def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interp=False, interval=
     except:
         return None
 
+
 def _jensen_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval=None, annualdays=None):
     """
         compute jensen ratio of asset, with interpolation on date
@@ -71,6 +72,7 @@ def _jensen_with_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, int
 
     # jensen ratio
     return _jensen_without_interpolation(mtx, 1, 2, 3, risk_free_rate, interval, annualdays)
+
 
 def _jensen_without_interpolation(mtx, datecol, astcol, bmkcol, risk_free_rate, interval=None, annualdays=None):
     """

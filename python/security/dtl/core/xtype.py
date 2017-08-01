@@ -31,6 +31,45 @@ class xdate(datetime.date):
     def days(self):
         return 1
 
+    @staticmethod
+    def unitdays():
+        return 7
+
+    def date(self):
+        return self
+
+    def back(self, periodcls, periods):
+        if periodcls==xdate or periodcls==xday:
+            return xdate(self-datetime.timedelta(periods))
+        elif periodcls==xweek:
+            return xdate(self - datetime.timedelta(weeks=periods))
+        elif periodcls==xmonth:
+            month = xmonth(self)-periods
+            return xdate(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xquarter:
+            month = xmonth(self) - 3*periods
+            return xdate(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xyear:
+            return xdate(datetime.date(self.year-periods, self.month, self.day))
+        else:
+            raise "unsupport period class: %s" % periodcls.__name__
+
+    def forward(self, periodcls, periods):
+        if periodcls==xdate or periodcls==xday:
+            return xdate(self+datetime.timedelta(periods))
+        elif periodcls==xweek:
+            return xdate(self + datetime.timedelta(weeks=periods))
+        elif periodcls==xmonth:
+            month = xmonth(self)+periods
+            return xdate(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xquarter:
+            month = xmonth(self) + 3*periods
+            return xdate(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xyear:
+            return xdate(datetime.date(self.year+periods, self.month, self.day))
+        else:
+            raise "unsupport period class: %s" % periodcls.__name__
+
     def __str__(self):
         return self.strftime(self._format)
 
@@ -51,6 +90,7 @@ class xdate(datetime.date):
         if isinstance(result, datetime.timedelta):
             return result.days
         return result
+
 
 class xrangeday(object):
     """
@@ -111,9 +151,167 @@ class xrangeday(object):
         return self.__cmp__(other) > 0
 
 
-class xweek(object):
+class xperiod(object):
     """
-        week class for data
+        time period base class
+    """
+    pass
+
+
+class xday(xperiod):
+    """
+        day class of period
+    """
+    def __init__(self, date = datetime.date.today(), format=_default_date_format):
+        # format string date to datetime object if input date is string object
+        if isinstance(date, str):
+            date = datetime.datetime.strptime(date, format)
+
+        if hasattr(date, 'date'):
+            date = date.date()
+
+        # initialize the date
+        self._date = date
+
+        # record format for output
+        self._format = format if format is not None else _default_date_format
+
+    @property
+    def year(self):
+        return self._date.year
+
+    @property
+    def quarter(self):
+        return xquarter.detect(self._date)
+
+    @property
+    def month(self):
+        return self._date.month
+
+    @property
+    def week(self):
+        return self._date.isoweekday()
+
+    @property
+    def day(self):
+        return self._date.day
+
+    @property
+    def days(self):
+        return 1
+
+    @staticmethod
+    def unitdays():
+        return 1
+
+    def date(self):
+        return self._date
+
+    def back(self, periodcls, periods):
+        if periodcls==xdate or periodcls==xday:
+            return xday(self-datetime.timedelta(periods))
+        elif periodcls==xweek:
+            return xday(self - datetime.timedelta(weeks=periods))
+        elif periodcls==xmonth:
+            month = xmonth(self)-periods
+            return xday(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xquarter:
+            month = xday(self) - 3*periods
+            return xdate(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xyear:
+            return xday(datetime.date(self.year-periods, self.month, self.day))
+        else:
+            raise "unsupport period class: %s" % periodcls.__name__
+
+    def forward(self, periodcls, periods):
+        if periodcls==xdate or periodcls==xday:
+            return xday(self+datetime.timedelta(periods))
+        elif periodcls==xweek:
+            return xday(self + datetime.timedelta(weeks=periods))
+        elif periodcls==xmonth:
+            month = xmonth(self)+periods
+            return xday(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xquarter:
+            month = xmonth(self) + 3*periods
+            return xday(datetime.date(month.year, month.month, self.day))
+        elif periodcls==xyear:
+            return xday(datetime.date(self.year+periods, self.month, self.day))
+        else:
+            raise "unsupport period class: %s" % periodcls.__name__
+
+    def __str__(self):
+        return self._date.strftime(self._format)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return self.year<<16 + self.month<<8 + self.day
+
+    def __add__(self, other):
+        if isinstance(other, int) or isinstance(other, float):
+            other = datetime.timedelta(int(other))
+        else:
+            raise "xday can not add with: %s" % other.__class__.__name__
+
+        return xday(self._date + other, self._format)
+
+    def __sub__(self, other):
+        if isinstance(other, int) or isinstance(other, float):
+            other = datetime.timedelta(int(other))
+
+        if hasattr(other, "date"):
+            other = other.date()
+
+        if not (isinstance(other, datetime.date) or isinstance(other, datetime.timedelta)):
+            raise "xday can not sub with: %s" % other.__class__.__name__
+
+        result = self._date - other
+
+        if isinstance(result, datetime.timedelta):
+            return result.days
+
+        return xday(result, self._format)
+
+    __radd__ = __add__
+    __rsub__ = __sub__
+
+    def __cmp__(self, other):
+        if isinstance(other, xdate) or isinstance(xday) or isinstance(other, datetime.date) or isinstance(other, datetime.datetime):
+            return 0 if (self.year, self.month, self.day) == (other.year, other.month, other.day) else 1 if (self.year, self.month, self.day) > (other.year, other.month, other.day) else -1
+        elif isinstance(other, xweek):
+            return 0 if (self.year, self.week) == (other.year, other.week) else 1 if (self.year, self.week) > (other.year, other.week) else -1
+        elif isinstance(other, xmonth):
+            return 0 if (self.year, self.month) == (other.year, other.month) else 1 if (self.year, self.month) > (other.year, other.month) else -1
+        elif isinstance(other, xquarter):
+            return 0 if (self.year, self.quarter) == (other.year, other.quarter) else 1 if (self.year, self.quarter) > (other.year, other.quarter) else -1
+        elif isinstance(other, xyear):
+            return 0 if self.year == other.year else 1 if self.year > other.year else -1
+        else:
+            raise "xday can not compare with: %s" % other.__class__.__name__
+
+    def __eq__(self, other):
+        return self.__cmp__(other) == 0
+
+    def __ne__(self, other):
+        return self.__cmp__(other) != 0
+
+    def __le__(self, other):
+        return self.__cmp__(other) <= 0
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __ge__(self, other):
+        return self.__cmp__(other) >= 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+
+class xweek(xperiod):
+    """
+        week class of period
     """
     def __init__(self, date = datetime.date.today(), format=_default_date_format):
         # format string date to datetime object if input date is string object
@@ -136,6 +334,10 @@ class xweek(object):
 
     @property
     def days(self):
+        return 7
+
+    @staticmethod
+    def unitdays():
         return 7
 
     def __str__(self):
@@ -201,9 +403,9 @@ class xweek(object):
         return self.__cmp__(other) > 0
 
 
-class xmonth():
+class xmonth(xperiod):
     """
-        month class for data
+        month class of period
     """
     def __init__(self, date = datetime.date.today(), format=_default_date_format):
         # format string date to datetime object if input date is string object
@@ -224,6 +426,10 @@ class xmonth():
     @property
     def days(self):
         return calendar.monthrange(self.year, self.month)[1]
+
+    @staticmethod
+    def unitdays():
+        return 30
 
     def __str__(self):
         return "%sM%s" % (str(self._year).zfill(4), str(self._month).zfill(2))
@@ -281,7 +487,10 @@ class xmonth():
         return self.__cmp__(other) > 0
 
 
-class xquarter():
+class xquarter(xperiod):
+    """
+            quarter class of period
+    """
     # month correspond quarter number of year
     _month_quarter = {
         1:1, 2:1, 3:1,
@@ -298,9 +507,6 @@ class xquarter():
         4:[10, 11, 12]
     }
 
-    """
-        quarter class for data
-    """
     def __init__(self, date = datetime.date.today(), format=_default_date_format):
         # format string date to datetime object if input date is string object
         if isinstance(date, str):
@@ -320,6 +526,17 @@ class xquarter():
     @property
     def days(self):
         return sum([calendar.monthrange(self.year, m)[1] for m in xquarter._quarter_month[self._quarter]])
+
+    @staticmethod
+    def unitdays():
+        return 90
+
+    @staticmethod
+    def detect(obj):
+        if not hasattr(obj, 'month'):
+            raise "xquarter can not detect for: %s" % obj.__class__.__name__
+
+        return xquarter._month_quarter[obj.month]
 
 
     def __str__(self):
@@ -377,9 +594,9 @@ class xquarter():
         return self.__cmp__(other) > 0
 
 
-class xyear():
+class xyear(xperiod):
     """
-        year class for data
+        year class of period
     """
     def __init__(self, date = datetime.date.today(), format=_default_date_format):
         # format string date to datetime object if input date is string object
@@ -395,6 +612,10 @@ class xyear():
 
     @property
     def days(self):
+        return 365
+
+    @staticmethod
+    def unitdays():
         return 365
 
     def __str__(self):
@@ -450,7 +671,7 @@ class xyear():
 
 
 if __name__ == "__main__":
-    week1 = xweek("20150101")
+    week1 = xweek("2015-01-01")
     print("+++++++")
     for i in range(0, 120):
         week1 += 3
@@ -461,7 +682,7 @@ if __name__ == "__main__":
         week1 -= 3
 
     print("+++++++")
-    month1 = xmonth("20150101")
+    month1 = xmonth("2015-01-01")
     for i in range(0, 30):
         month1 += 11
         print(month1)
@@ -471,7 +692,7 @@ if __name__ == "__main__":
         month1 -= 11
 
     print("+++++++")
-    quarter1 = xquarter("20150101")
+    quarter1 = xquarter("2015-01-01")
     for i in range(0, 30):
         quarter1 += 4
         print(quarter1)
@@ -480,6 +701,20 @@ if __name__ == "__main__":
         print(quarter1)
         quarter1 -= 4
 
-    print(xquarter("20150801").days)
+    print("+++++++")
+    day1 = xday()
+    for i in range(0, 33):
+        day1 += 1
+        print(day1)
+    print("--------")
+    for i in range(0, 33):
+        day1 -= 1
+        print(day1)
 
-    print(xrangeday("20150201", "20150301").days())
+    print(xquarter("2015-08-01").days)
+
+    print(xrangeday("2015-02-01", "2015-03-01").days)
+
+    print(xdate().back(xweek, 2))
+    print(xdate().forward(xweek, 2))
+
