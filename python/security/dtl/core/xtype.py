@@ -277,7 +277,7 @@ class xday(xperiod):
     __rsub__ = __sub__
 
     def __cmp__(self, other):
-        if isinstance(other, xdate) or isinstance(xday) or isinstance(other, datetime.date) or isinstance(other, datetime.datetime):
+        if isinstance(other, xdate) or isinstance(other, xday) or isinstance(other, datetime.date) or isinstance(other, datetime.datetime):
             return 0 if (self.year, self.month, self.day) == (other.year, other.month, other.day) else 1 if (self.year, self.month, self.day) > (other.year, other.month, other.day) else -1
         elif isinstance(other, xweek):
             return 0 if (self.year, self.week) == (other.year, other.week) else 1 if (self.year, self.week) > (other.year, other.week) else -1

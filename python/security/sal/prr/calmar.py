@@ -1,6 +1,6 @@
 """
     calmar raito, formula:
-    calmar(asset) = expect-asset-return / max-drawdown-asset-return
+    calmar(asset) = compound-year-expect-asset-return / max-drawdown-asset-return
 """
 
 import sal, atl, dtl

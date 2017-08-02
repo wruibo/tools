@@ -20,25 +20,25 @@ def all(mtx, datecol, astcol, bmkcol):
     """
     results = {
         "interpolate":{
-            'day':inforatio(mtx, datecol, astcol, bmkcol, True, dtl.xday),
-            'week': inforatio(mtx, datecol, astcol, bmkcol, True, dtl.xweek),
-            'month':inforatio(mtx, datecol, astcol, bmkcol, True, dtl.xmonth),
-            'quarter': inforatio(mtx, datecol, astcol, bmkcol, True, dtl.xquarter),
-            'year': inforatio(mtx, datecol, astcol, bmkcol, True, dtl.xyear),
+            'day':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xday),
+            'week': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xweek),
+            'month':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xmonth),
+            'quarter': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xquarter),
+            'year': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xyear),
         },
         "original":{
-            'day':inforatio(mtx, datecol, astcol, bmkcol, False, dtl.xday),
-            'week': inforatio(mtx, datecol, astcol, bmkcol, False, dtl.xweek),
-            'month':inforatio(mtx, datecol, astcol, bmkcol, False, dtl.xmonth),
-            'quarter': inforatio(mtx, datecol, astcol, bmkcol, False, dtl.xquarter),
-            'year': inforatio(mtx, datecol, astcol, bmkcol, False, dtl.xyear),
+            'day':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xday),
+            'week': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xweek),
+            'month':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xmonth),
+            'quarter': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xquarter),
+            'year': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xyear),
         }
     }
 
     return results
 
 
-def inforatio(mtx, datecol, astcol, bmkcol, interp=False, periodcls=None):
+def inforatio(mtx, datecol, astcol, bmkcol, interpfunc=None, periodcls=None):
     """
         compute information ratio for asset
     :param mtx: matrix
@@ -52,48 +52,18 @@ def inforatio(mtx, datecol, astcol, bmkcol, interp=False, periodcls=None):
     :return: float, beta factor of asset
     """
     try:
-        if interp:
-            return _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol, periodcls)
-        return _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol, periodcls)
+        # interpolate the asset&benchmark values
+        if interpfunc is not None:
+            mtx = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol)
+
+        # compute year profit for time revenue
+        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls).values())
+        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
+
+        # excess return compare with benchmark
+        erprofits = atl.array.sub(astprofits, bmkprofits)
+
+        # compute information ratio
+        return atl.array.avg(erprofits) / atl.array.stddev(erprofits)
     except:
         return None
-
-
-def _inforatio_with_interpolation(mtx, datecol, astcol, bmkcol, periodcls):
-    """
-        compute information ratio for asset with interpolation on date
-    :param mtx: matrix
-    :param datecol: int, date column number
-    :param astcol: int, asset value column number
-    :param bmkcol: int, benchmark value column number
-    :param periodcls: class, period want to compute information ratio
-    :return: float, beta factor of asset
-    """
-    # interpolate the asset&benchmark values
-    mtx = atl.interp.linear(mtx, datecol, 1, datecol, astcol, bmkcol)
-
-    # compute beta factor
-    return _inforatio_without_interpolation(mtx, 1, 2, 3, periodcls)
-
-
-def _inforatio_without_interpolation(mtx, datecol, astcol, bmkcol, periodcls):
-    """
-        compute information ratio for asset without interpolation on date
-    :param mtx: matrix
-    :param datecol: int, date column number
-    :param astcol: int, asset value column number
-    :param bmkcol: int, benchmark value column number
-    :param interp: bool, interpolation on date
-    :param periodcls: class, period want to compute information ratio
-    :return: float, beta factor of asset
-    """
-
-    # compute year profit for time revenue
-    astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls).values())
-    bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
-
-    # excess return compare with benchmark
-    erprofits = atl.array.sub(astprofits, bmkprofits)
-
-    # compute information ratio
-    return atl.array.avg(erprofits) / atl.array.stddev(erprofits)

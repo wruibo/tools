@@ -66,7 +66,7 @@ def average(mtx, datecol, navcol, periodcls):
     :param periodcls: class, period want to compute average return rate
     :return: float, average return rate measure by specified period
     """
-    if issubclass(periodcls, dtl.xperiod):
+    if not issubclass(periodcls, dtl.xperiod):
         raise "invalid period for compute average return rate."
 
     # first compute the total return rate and days used for the return
@@ -88,7 +88,7 @@ def compound(mtx, datecol, navcol, periodcls):
     :param periodcls: class, period want to compute compound return rate
     :return: float, compound return rate measure by specified period
     """
-    if issubclass(periodcls, dtl.xperiod):
+    if not issubclass(periodcls, dtl.xperiod):
         raise "invalid period for compute compound return rate."
 
     # first compute the total return rate and days used for the return
@@ -111,7 +111,7 @@ def rolling(mtx, datecol, navcol, periodcls=None, annualdays=None):
     :param annualdays: int, annual days assume for return, normally use 365 days/year
     :return: array, rate array
     """
-    if issubclass(periodcls, dtl.xperiod):
+    if not issubclass(periodcls, dtl.xperiod):
         raise "invalid period for compute rolling return rates."
 
     # rolling return result, [[period, return rate], ...]
@@ -171,6 +171,9 @@ def recent(mtx, datecol, navcol, periodcls, periods=1, annualdays=None):
     :param annualdays: int, annual days assume for return, normally use 365 days/year
     :return: dict, rate array
     """
+    if not issubclass(periodcls, dtl.xperiod):
+        raise "invalid period for compute recent return rates."
+
     # today
     today = dtl.xdate()
 

@@ -10,7 +10,7 @@
     :param rf: float, interval risk free return rate, same interval with @revenues
     :return: float, sharpe ratio fo the assets
 """
-import atl, sal
+import atl, sal, dtl
 
 
 def all(mtx, datecol, navcol, risk_free_rate):
@@ -23,26 +23,17 @@ def all(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        "interpolate":{
-            'daily':sharpe(mtx, datecol, navcol, risk_free_rate, True, sal.DAILY),
-            'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, True, sal.WEEKLY),
-            'monthly':sharpe(mtx, datecol, navcol, risk_free_rate, True, sal.MONTHLY),
-            'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, True, sal.QUARTERLY),
-            'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, True, sal.YEARLY),
-        },
-        "original":{
-            'daily': sharpe(mtx, datecol, navcol, risk_free_rate, False, sal.DAILY),
-            'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, False, sal.WEEKLY),
-            'monthly': sharpe(mtx, datecol, navcol, risk_free_rate, False, sal.MONTHLY),
-            'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, False, sal.QUARTERLY),
-            'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, False, sal.YEARLY),
-        }
+        'daily':sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xday),
+        'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xweek),
+        'monthly':sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xmonth),
+        'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xquarter),
+        'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xyear)
     }
 
     return results
 
 
-def sharpe(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
+def sharpe(mtx, datecol, navcol, risk_free_rate, interpfunc=None, periodcls=None):
     """
         compute sharpe ratio, default without interpolation
     :param mtx: matrix, nav data
@@ -54,49 +45,24 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, an
     :return: sharpe raito
     """
     try:
-        if interp:
-            return _sharpe_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
+        # interpolate nav based on the date column
+        if interpfunc is not None:
+            mtx = atl.interp.linear(mtx, datecol, 1, datecol, navcol)
 
-        return _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
+        # return rates for specified period
+        rates = list(sal.prr.profit.rolling(mtx, datecol, navcol, periodcls).values())
+
+        # period compound return rate for specified period
+        astexp = sal.prr.profit.compound(mtx, datecol, navcol, periodcls)
+        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.xyear.unitdays()) - 1.0
+
+        # compute the asset excess expect return over the risk free asset return
+        er = astexp - rfrexp
+
+        # calculate the asset revenue standard deviation
+        sd = atl.array.stddev(rates)
+
+        # sharpe ratio
+        return er / sd
     except:
         return None
-
-
-def _sharpe_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
-    """
-        compute sharpe ratio with interpolation
-    :param mtx: matrix, nav data
-    :param datecol: int, date column
-    :param navcol: int, nav column
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
-    :param annualdays: int, days of 1 year
-    :return:
-    """
-    # interpolate nav based on the date column
-    mtx = atl.interp.linear(mtx, datecol, 1, datecol, navcol)
-
-    # shape ratio
-    return _sharpe_without_interpolation(mtx, 1, 2, risk_free_rate, interval, annualdays)
-
-
-def _sharpe_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
-    """
-        compute sharpe ratio without interpolation
-    :param mtx: matrix, nav data
-    :param datecol: int, date column
-    :param navcol: int, nav column
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
-    :param annualdays: int, days of 1 year
-    :return:
-    """
-    # compute year return rate based on the nav
-    rates = list(sal.prr.profit.rolling(mtx, datecol, navcol, interval, annualdays).values())
-
-    # compute the asset excess expect return over the risk free asset return
-    er = atl.array.avg(rates) - risk_free_rate
-
-    # calculate the asset revenue standard deviation
-    sd = atl.array.stddev(rates)
-
-    # sharpe ratio
-    return er/sd

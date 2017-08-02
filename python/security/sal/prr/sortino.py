@@ -5,7 +5,7 @@
         { rp | rp in Rp and rp<rfr}
 
 """
-import sal, atl
+import sal, atl, dtl
 
 
 def all(mtx, datecol, navcol, risk_free_rate):
@@ -18,26 +18,17 @@ def all(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        "interpolate":{
-            'daily':sortino(mtx, datecol, navcol, risk_free_rate, True, sal.DAILY),
-            'weekly': sortino(mtx, datecol, navcol, risk_free_rate, True, sal.WEEKLY),
-            'monthly':sortino(mtx, datecol, navcol, risk_free_rate, True, sal.MONTHLY),
-            'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, True, sal.QUARTERLY),
-            'yearly': sortino(mtx, datecol, navcol, risk_free_rate, True, sal.YEARLY),
-        },
-        "original":{
-            'daily': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.DAILY),
-            'weekly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.WEEKLY),
-            'monthly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.MONTHLY),
-            'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.QUARTERLY),
-            'yearly': sortino(mtx, datecol, navcol, risk_free_rate, False, sal.YEARLY),
-        }
+        'daily':sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xday),
+        'weekly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xweek),
+        'monthly':sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xmonth),
+        'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xquarter),
+        'yearly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xyear)
     }
 
     return results
 
 
-def sortino(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, annualdays=sal.ANNUAL_DAYS):
+def sortino(mtx, datecol, navcol, risk_free_rate, interpfunc=None, periodcls=None):
     """
         compute sortino ratio, default without interpolation
     :param mtx: matrix, nav data
@@ -49,57 +40,30 @@ def sortino(mtx, datecol, navcol, risk_free_rate, interp=False, interval=None, a
     :return: sortino raito
     """
     try:
-        if interp:
-            return _sortino_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
+        # interpolate nav based on the date column
+        if interpfunc is not None:
+            mtx = atl.interp.linear(mtx, datecol, 1, datecol, navcol)
 
-        return _sortino_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval, annualdays)
+        # compute year return rate based on the nav
+        rates = list(sal.prr.profit.rolling(mtx, datecol, navcol, periodcls).values())
+
+        # period compound return rate for specified period
+        astexp = sal.prr.profit.compound(mtx, datecol, navcol, periodcls)
+        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.xyear.unitdays()) - 1.0
+
+        # compute the asset excess expect return over the risk free asset return
+        er = astexp- rfrexp
+
+
+        # return rates which is less than risk free return
+        drates = []
+        for rate in rates:
+            if rate < rfrexp: drates.append(rate)
+
+        # calculate the asset revenue standard deviation
+        sd = atl.array.stddev(drates)
+
+        # sharpe ratio
+        return er / sd
     except:
         return None
-
-
-def _sortino_with_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
-    """
-        compute sortino ratio with interpolation
-    :param mtx: matrix, nav data
-    :param datecol: int, date column
-    :param navcol: int, nav column
-    :param risk_free_rate: float, risk free rate
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
-    :param annualdays: int, days of 1 year
-    :return:
-    """
-    # interpolate nav based on the date column
-    mtx = atl.interp.linear(mtx, datecol, 1, datecol, navcol)
-
-    # shape ratio
-    return _sortino_without_interpolation(mtx, 1, 2, risk_free_rate, interval, annualdays)
-
-
-
-def _sortino_without_interpolation(mtx, datecol, navcol, risk_free_rate, interval=None, annualdays=None):
-    """
-        compute sortino ratio without interpolation
-    :param mtx: matrix, nav data
-    :param datecol: int, date column
-    :param navcol: int, nav column
-    :param risk_free_rate: float, risk free rate
-    :param interval: int, sal.YEARLY, sal.QUARTERLY, sal.MONTHLY, sal.WEEKLY, sal.DAILY
-    :param annualdays: int, days of 1 year
-    :return:
-    """
-    # compute year return rate based on the nav
-    rates = list(sal.prr.profit.rolling(mtx, datecol, navcol, interval, annualdays).values())
-
-    # return rates which is less than risk free return
-    drates = []
-    for rate in rates:
-        if rate < risk_free_rate: drates.append(rate)
-
-    # compute the asset excess expect return over the risk free asset return
-    er = atl.array.avg(rates) - risk_free_rate
-
-    # calculate the asset revenue standard deviation
-    sd = atl.array.stddev(drates)
-
-    # sharpe ratio
-    return er/sd
