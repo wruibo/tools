@@ -1,14 +1,43 @@
 """
-    max drawdown for specified column data in matrix
+    max drawdown for specified column data in matrix(or array)
+input:
+    matrix:
+    [
+        [x01, x02, ..., x0m],
+        [x11, x12, ..., x1m],
+        [x21, x22, ..., x2m],
+        [       ...        ],
+        [xn1, xn2, ..., xnm]
+    ]
+
+or
+    array:
+    [x0, x1, x2, ..., xn]
 """
 import atl
+
+
+def all(mtx, ncol=None):
+    """
+        compute all max drawdown indicators
+    :param mtx: matrix or array
+    :param ncol: int or None, which column in matrix want to compute drawdown indicator
+    :return: dict
+    """
+
+    results = {
+        "max-drawdown": max_drawdown(mtx, ncol),
+        "trends-drawdown": max_drawdown_trends(mtx, ncol)
+    }
+
+    return results
 
 
 def slow_max_drawdown(mtx, ncol=None):
     """
     compute the max drawdown of the given value list, using normal algorithm:
         max drawdown = max{vi-vj/vi}, 0=<i<j<=n
-    :param mtx: matrix
+    :param mtx: matrix, or array
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
@@ -26,14 +55,14 @@ def slow_max_drawdown(mtx, ncol=None):
             j += 1
         i += 1
 
-    return drawdown, pmax, vmax, pmin, vmin
+    return drawdown #, pmax, vmax, pmin, vmin
 
 
 def fast_max_drawdown(mtx, ncol=None):
     """
     compute the max drawdown of the given value list, using normal algorithm:
         max drawdown = max{vi-vj/vi}, 0=<i<j<=n
-    :param mtx: matrix
+    :param mtx: matrix, or array
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
@@ -69,13 +98,13 @@ def fast_max_drawdown(mtx, ncol=None):
         if drawdown is None or ijdrawdown < drawdown:
             pmax, vmax, pmin, vmin, drawdown = ipos, ivalue, jpos, jvalue, ijdrawdown
 
-    return drawdown, pmax, vmax, pmin, vmin
+    return drawdown #, pmax, vmax, pmin, vmin
 
 
 def slow_max_drawdown_trends(mtx, ncol=None):
     """
     compute max drawdown sequence by treat every point as sellout point
-    :param mtx: matrix
+    :param mtx: matrix, or array
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
@@ -96,7 +125,7 @@ def slow_max_drawdown_trends(mtx, ncol=None):
 def fast_max_drawdown_trends(mtx, ncol=None):
     """
     compute max drawdown sequence by treat every point as sellout point
-    :param mtx: matrix
+    :param mtx: matrix, or array
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
@@ -116,7 +145,7 @@ def max_drawdown(mtx, ncol=None):
     """
     compute the max drawdown of the given value list, using normal algorithm:
         max drawdown = max{vi-vj/vi}, 0=<i<j<=n
-    :param mtx: matrix
+    :param mtx: matrix, or array
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
@@ -127,7 +156,7 @@ def max_drawdown(mtx, ncol=None):
 def max_drawdown_trends(mtx, ncol=None):
     """
     compute max drawdown sequence by treat every point as sellout point
-    :param mtx: matrix
+    :param mtx: matrix, or array
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """

@@ -25,7 +25,7 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     return results
 
 
-def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, periodcls=None, annualdays=dtl.xyear.unitdays()):
+def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, periodcls=None):
     """
         compute jensen ratio of asset
     :param mtx: matrix
@@ -41,22 +41,22 @@ def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, period
     try:
         # interpolate on date
         if interpfunc is not None:
-            mtx = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol)
+            mtx, datecol, astcol, bmkcol = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
 
         # compute year profit for time revenue
-        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls, annualdays).values())
-        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls, annualdays).values())
+        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls).values())
+        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
 
         # compute asset&benchmark expect profit
         astexp = sal.prr.profit.compound(mtx, datecol, astcol, periodcls)
         bmkexp = sal.prr.profit.compound(mtx, datecol, bmkcol, periodcls)
-        rfrexp = pow((1 + risk_free_rate), periodcls.unitdays() / annualdays) - 1.0
+        rfrexp = pow((1 + risk_free_rate), periodcls.unitdays() / dtl.xdate.unitdays()) - 1.0
 
         # compute asset beta factor
         astbeta = atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)
 
         # jensen ratio
-        return astexp - (risk_free_rate + astbeta * (bmkexp - rfrexp))
+        return astexp - (rfrexp + astbeta * (bmkexp - rfrexp))
     except:
         return None
 

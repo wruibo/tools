@@ -12,6 +12,11 @@ import sal.prr.treynor
 import sal.prr.infor
 import sal.prr.calmar
 import sal.prr.sortino
+import sal.prr.volatility
+
+profitall = profit.all
+
+mddall = mdd.all
 
 sharpeall = sharpe.all
 sharpe = sharpe.sharpe
@@ -33,3 +38,5 @@ sortino = sortino.sortino
 
 inforatioall = infor.all
 inforatio = infor.inforatio
+
+volatility = volatility.volatility

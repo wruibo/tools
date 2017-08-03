@@ -31,10 +31,9 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
 
     result = AnalysisResult(code)
 
-    result.ret = sal.prr.profit.all(fundnavs, 1, 2)
+    result.ret = sal.prr.profitall(fundnavs, 1, 2)
 
-    result.mdd = sal.prr.mdd.max_drawdown(fundnavs, 2)
-    result.mdds = sal.prr.mdd.max_drawdown_trends(fundnavs, 2)
+    result.mdd = sal.prr.mddall(fundnavs, 2)
     result.beta = sal.prr.betaall(fundbmkbvals, 1, 2, 3)
     result.sharpe = sal.prr.sharpeall(fundnavs, 1, 2, rfr)
     result.calmar = sal.prr.calmarall(fundnavs, 1, 2)
@@ -42,6 +41,7 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
     result.treynor = sal.prr.treynorall(fundbmkbvals, 1, 2, 3, rfr)
     result.sortino = sal.prr.sortinoall(fundnavs, 1, 2, rfr)
     result.information_ratio = sal.prr.inforatioall(fundbmkbvals, 1, 2, 3)
+    result.volatility = sal.prr.volatility(fundnavs, 1, 2)
 
     return result
 
@@ -56,7 +56,6 @@ class AnalysisResult:
         self.ret = None
 
         self.mdd = None
-        self.mdds = None
         self.beta = None
         self.sharpe = None
         self.calmar = None
@@ -64,20 +63,21 @@ class AnalysisResult:
         self.treynor = None
         self.sortino = None
         self.information_ratio = None
+        self.volatility = None
 
     def __str__(self):
         res = {
             "code":self.code,
             "return":self.ret,
             "mdd":self.mdd,
-            "mdds":self.mdds,
             "beta":self.beta,
             "sharpe":self.sharpe,
             "calmar":self.calmar,
             "jensen":self.jensen,
             "treynor":self.treynor,
             "sortnio":self.sortino,
-            "information ratio":self.information_ratio
+            "information ratio":self.information_ratio,
+            "volatility": self.volatility
         }
 
         return utl.string.pretty(res, 0)

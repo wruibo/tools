@@ -62,11 +62,10 @@ def cov(arr1, arr2):
     expect_value1 = avg(arr1)
     expect_value2 = avg(arr1)
 
-    sum = 0.0
-    idx = num = len(arr1)
-    while idx > 0:
-        idx -= 1
+    sum, num, idx = 0.0, len(arr1), 0
+    while idx < num:
         sum += (arr1[idx]-expect_value1)*(arr1[idx]-expect_value2)
+        idx += 1
 
     return sum / (num-1)
 

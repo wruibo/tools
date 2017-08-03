@@ -47,7 +47,7 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, interpfunc=None, periodcls=None
     try:
         # interpolate nav based on the date column
         if interpfunc is not None:
-            mtx = atl.interp.linear(mtx, datecol, 1, datecol, navcol)
+            mtx, datecol, navcol = interpfunc(mtx, datecol, 1, datecol, navcol), 1, 2
 
         # return rates for specified period
         rates = list(sal.prr.profit.rolling(mtx, datecol, navcol, periodcls).values())

@@ -49,7 +49,7 @@ def beta(mtx, datecol, astcol, bmkcol, interpfunc=None, periodcls=None):
     try:
         # interpolate the asset&benchmark values
         if interpfunc is not None:
-            mtx = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol)
+            mtx, datecol, astcol, bmkcol = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
 
         # compute year profit for time revenue
         astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls).values())

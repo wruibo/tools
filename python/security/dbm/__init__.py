@@ -1,5 +1,5 @@
 """
-    database for security management
+    data management for security data
 """
 __all__ = []
 
