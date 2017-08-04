@@ -1,7 +1,110 @@
 """
     portfolio construction algorithm
 """
-import atl, math
+import math
+
+
+def combines(*arrs):
+    """
+        equal probability combine items for input arrays, the input array must be same dimension, e.g.:
+    input:
+        [x1, x2, x3, x4], [y1, y2, y3, y4]
+    output
+        [
+            [ [x1, y1], [x1, y2], [x1, y3], [x1, y4] ]
+            [ [x2, y1], [x2, y2], [x2, y3], [x2, y4] ]
+            [ [x3, y1], [x3, y2], [x3, y3], [x3, y4] ]
+            [ [x4, y1], [x4, y2], [x4, y3], [x4, y4] ]
+        ]
+    :param arrs: list, array list
+    :return: list
+    """
+    # check input arrays
+    length = None
+    for arr in arrs:
+        if length is None:
+            length = len(arr)
+            continue
+
+        if length != len(arr):
+            raise "combine2 needs array length must be the same"
+
+    # combine input arrays item by item
+    results = None
+    for arr in arrs:
+        if results is None:
+            results = [ [[elm]] for elm in arr ]
+        else:
+            tmpresults = [[] for i in range(0, length)]
+            for i in range(0, length):
+                for res in results[i]:
+                    for elm in arr:
+                        tmpresults[i].append(res+[elm])
+            results = tmpresults
+
+    return results
+
+
+def multi(arr, withval=None):
+    """
+        multiple data in array with other values
+    :param arr: array
+    :param withval: array, object or None
+    :return: multiple result
+    """
+    if withval is None: # multiple each data in array
+        result = None
+        for elmt in arr:
+            if result is None:
+                result = elmt
+            else:
+                result *= elmt
+        return result
+    else: #multiple array data with other values
+        result = []
+
+        if isinstance(withval, list) or isinstance(withval, tuple):
+            if len(withval) != len(arr):
+                raise "array multiple array need the same length."
+            for i in range(0, len(arr)):
+                result.append(arr[i]*withval[i])
+        else:
+            if isinstance(arr, list) or isinstance(arr, tuple):
+                for elmt in arr:
+                    result.append(elmt*withval)
+            else:
+                result = arr*withval
+
+        return result
+
+
+
+def subcols(mtx, *nums):
+    """
+        get specified sub columns by number from matrix
+    :param mtx: matrix
+    :param nums: tuple with int numbers, start from 1
+    :return:  matrix
+    """
+    cols = []
+
+    for num in nums:
+        col = []
+        for row in mtx:
+            col.append(row[num-1])
+        cols.append(col)
+
+    return cols
+
+
+def subcol(mtx, num):
+    """
+        get specified sub column by number from atrix
+    :param mtx: matrix
+    :param num: int, column number
+    :return: array
+    """
+    return subcols(mtx, num)[0]
 
 
 def simulate(navs, times, stepval=0.2, maxsteps=None):
@@ -45,7 +148,7 @@ def simulate(navs, times, stepval=0.2, maxsteps=None):
         navs = tmpnavs
 
     # combine after invested times
-    combine_result = atl.array.combines(*[navs for i in range(0, times)])
+    combine_result = combines(*[navs for i in range(0, times)])
 
     # generate nav probability distribution set
     prset, maxnav = [], None
@@ -56,7 +159,7 @@ def simulate(navs, times, stepval=0.2, maxsteps=None):
                 if mnavpr is None:
                     mnavpr = navpr
                     continue
-                mnavpr = atl.array.multi(mnavpr, navpr)
+                mnavpr = multi(mnavpr, navpr)
 
             # normalize the probability base on 1
             mnavpr = [mnavpr[0], mnavpr[1]]
@@ -97,7 +200,7 @@ def simulate_to_plot(*funds):
     # prepare the plot
     import matplotlib.pyplot as plt
     plt.figure(figsize=(16, 8))
-    plt.title("portfolio simulate: invest times(%d), step by(%s), max step(%d)" % (times, str(stepval), maxsteps))
+    plt.title("portfolio simulate: invest times(%d), step by(%s), max step(%s)" % (times, str(stepval), str(maxsteps)))
     plt.xlabel("return" )
     plt.ylabel("probability")
 
@@ -105,11 +208,8 @@ def simulate_to_plot(*funds):
     num = 1 # fund number from 1
     for navs in funds:
         result, prset = simulate(navs, times, stepval, maxsteps)
-        x, y = atl.matrix.subcol(result, 1), atl.matrix.subcol(result, 2)
+        x, y = subcol(result, 1), subcol(result, 2)
         plt.plot(x, y, label="$Fund%d-%s$" % (num, str(navs)))
-
-        print(result)
-
         num += 1
 
     # show the plot
@@ -163,14 +263,16 @@ def simulate_to_file(*funds):
 
 
 if __name__ == "__main__":
-    # input founds, A, B, C, D, ...
+    # input founds, A, B, C, ... with equal probability
     fundA = [0.05, 0.2, 1, 3, 3, 3]
     fundB = [0.8, 0.9, 1.1, 1.1, 1.2, 1.4]
     fundC = [0.95, 1, 1, 1, 1, 1.1]
+
+    # input fund D, with specified probability, [nav, probability]
     fundD = [[0.05, 0.2], [1, 0.2], [1, 0.1], [1, 0.2], [1, 0.1], [2.1, 0.2]]
 
     # simulate result to plot
-    #simulate_to_plot(fundA, fundB, fundC, fundD)
+    simulate_to_plot(fundA, fundB, fundC, fundD)
 
     # simulate result to file
-    simulate_to_file(fundA, fundB, fundC, fundD)
+    #simulate_to_file(fundA, fundB, fundC, fundD)

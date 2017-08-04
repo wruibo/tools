@@ -158,8 +158,11 @@ def multi(arr, withval=None):
             for i in range(0, len(arr)):
                 result.append(arr[i]*withval[i])
         else:
-            for elmt in arr:
-                result.append(elmt*withval)
+            if isinstance(arr, list) or isinstance(arr, tuple):
+                for elmt in arr:
+                    result.append(elmt*withval)
+            else:
+                result = arr*withval
 
         return result
 
@@ -184,6 +187,34 @@ def divide(arr, withval):
             result.append(elmt/withval)
 
     return result
+
+
+def to1dim(arr):
+    """
+        change the multi-dimension array @arr to one-dimension, e.g.:
+    input:
+        [
+            [1, 2, 3],
+            [4, 5, 6],
+            [[7], [8], [9, 10]]
+        ]
+    output:
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    :param arr: list, multi dimension array
+    :return: list, one dimension array
+    """
+    if not (isinstance(arr, list) or isinstance(arr, tuple)):
+        return [arr]
+
+    results = []
+
+    for elm in arr:
+        if (isinstance(arr, list) or isinstance(arr, tuple)):
+            results.extend(to1dim(elm))
+        else:
+            results.append(elm)
+
+    return results
 
 
 def combine(arr, num):
@@ -220,85 +251,6 @@ def combine(arr, num):
     return results
 
 
-def rcombine(*arrs):
-    """
-        random combine items in the arrays, example:
-    input arrays:
-            [1, 2, 3, 4], [1, 2, 3, 4]
-    output result:
-            [
-                [ [1, 1], [1, 2], [1, 3], [1, 4] ]
-                [ [2, 1], [2, 2], [2, 3], [2, 4] ]
-                [ [3, 1], [3, 2], [3, 3], [3, 4] ]
-                [ [4, 1], [4, 2], [4, 3], [4, 4] ]
-            ]
-    :param arrs: list, array list
-    :return: list
-    """
-    # check input arrays
-    length = None
-    for arr in arrs:
-        if length is None:
-            length = len(arr)
-        else:
-            if length != len(arr):
-                raise "combine2 needs array length must be the same"
-
-    # combine input arrys item by item
-    results = None
-    for arr in arrs:
-        if results is None:
-            results = [ [[elm]] for elm in arr ]
-        else:
-            tmpresults = [[] for i in range(0, length)]
-            for i in range(0, length):
-                for res in results[i]:
-                    for elm in arr:
-                        tmpresults[i].append(res+[elm])
-            results = tmpresults
-
-    return results
-
-
-def pmrcombine(*arrs):
-    """
-        probability multiplication with random combine items in the arrays, example:
-    input arrays:
-            [1, 2, 3, 4], [1, 2, 3, 4]
-    output result:
-            [
-                1, 2, 3, 4,
-                2, 4, 6, 8,
-                3, 6, 9, 12,
-                4, 8, 12, 16
-            ]
-    :param arrs: list, array list
-    :return: list
-    """
-    # check input arrays
-    length = None
-    for arr in arrs:
-        if length is None:
-            length = len(arr)
-        else:
-            if length != len(arr):
-                raise "combine2 needs array length must be the same"
-
-    # combine input arrays item by item
-    results = None
-    for arr in arrs:
-        if results is None:
-            results = arr
-        else:
-            tmpresults = []
-            for res in results:
-                for elm in arr:
-                    tmpresults.append(res*elm)
-            results = tmpresults
-
-    return results
-
-
 def permute(arr, num):
     """
         generate the permutation of input array with specified permutation number
@@ -329,24 +281,59 @@ def permute(arr, num):
     return results
 
 
+def combines(*arrs):
+    """
+        equal probability combine items for input arrays, the input array must be same dimension, e.g.:
+    input:
+        [x1, x2, x3, x4], [y1, y2, y3, y4]
+    output
+        [
+            [ [x1, y1], [x1, y2], [x1, y3], [x1, y4] ]
+            [ [x2, y1], [x2, y2], [x2, y3], [x2, y4] ]
+            [ [x3, y1], [x3, y2], [x3, y3], [x3, y4] ]
+            [ [x4, y1], [x4, y2], [x4, y3], [x4, y4] ]
+        ]
+    :param arrs: list, array list
+    :return: list
+    """
+    # check input arrays
+    length = None
+    for arr in arrs:
+        if length is None:
+            length = len(arr)
+            continue
+
+        if length != len(arr):
+            raise "combine2 needs array length must be the same"
+
+    # combine input arrays item by item
+    results = None
+    for arr in arrs:
+        if results is None:
+            results = [ [[elm]] for elm in arr ]
+        else:
+            tmpresults = [[] for i in range(0, length)]
+            for i in range(0, length):
+                for res in results[i]:
+                    for elm in arr:
+                        tmpresults[i].append(res+[elm])
+            results = tmpresults
+
+    return results
+
+
+
 if __name__ == "__main__":
-    arr = [i for i in range(1, 4)]
-    num = 3
+    arr = [i for i in range(1, 6)]
+    arrs = [arr for i in range(1, 4)]
 
-    results = combine(arr, num)
+    print(combine(arr, 3))
+    print(permute(arr, 3))
+
+    results = combines(*arrs)
     print(results)
-    print(len(results))
 
-    results = permute(arr, num)
-    print(results)
-    print(len(results))
+    print(len(to1dim(results)))
 
-    navs = [1, 2, 3, 4]
-
-    results = rcombine(*[navs for i in range(0, 2)])
-    print(results)
-    print("%d, %d, %d" % (len(results), len(results[0]), len(results[0][0])))
-
-    results = pmrcombine(*[navs for i in range(0, 2)])
-    print(results)
-    print(len(results))
+    print(multi(1, 2))
+    print(multi((2, 0.5), (2, 0.5)))
