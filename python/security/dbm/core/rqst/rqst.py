@@ -125,3 +125,14 @@ def pgetjson(url, **kwargs):
 
     # return json data object
     return json_data
+
+
+def pgetfile(url, data, **kwargs):
+    """
+        get file from
+    :param url:
+    :param data:
+    :param kwargs:
+    :return:
+    """
+    pass

@@ -170,7 +170,7 @@ if __name__ == "__main__":
     fundD = [[0.05, 0.2], [1, 0.2], [1, 0.1], [1, 0.2], [1, 0.1], [2.1, 0.2]]
 
     # simulate result to plot
-    #simulate_to_plot(fundA, fundB, fundC, fundD)
+    simulate_to_plot(fundA, fundB, fundC, fundD)
 
     # simulate result to file
-    simulate_to_file(fundA, fundB, fundC, fundD)
+    #simulate_to_file(fundA, fundB, fundC, fundD)
