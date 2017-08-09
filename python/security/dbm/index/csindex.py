@@ -2,8 +2,7 @@
     index from zhong zheng index, site:
         http://www.csindex.com.cn/
 """
-import requests
-import dtl, utl, dbm
+import dtl, dbm
 
 
 class context:
@@ -60,7 +59,8 @@ class loader:
             url = context.url("price-daily") % (self._code)
 
             # get xml content from url
-            dom = dbm.rqst.getxml(url, headers=context.headers())
+            dom = dbm.core.rda.http(url, headers=context.headers()).xget().xml().data
+            #dom = dbm.rqst.getxml(url, headers=context.headers())
 
             # parse index daily records
             prices = []

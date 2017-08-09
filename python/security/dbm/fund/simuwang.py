@@ -2,8 +2,7 @@
     fund data from simuwang, site:
         http://www.simuwang.com/
 """
-import requests
-import atl, dtl, utl, dbm
+import atl, dtl, dbm
 
 
 class context:
@@ -56,7 +55,8 @@ class loader:
         url =  context.url("nav") % (self._code)
 
         # get json data from url
-        json_data = dbm.rqst.getjson(url, headers=context.headers())
+        json_data = dbm.core.rda.http(url, headers=context.headers()).xget().json().data
+        #json_data = dbm.rqst.getjson(url, headers=context.headers())
 
         # extract fund name
         name = json_data.get('title')[0]

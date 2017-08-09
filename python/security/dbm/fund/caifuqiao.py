@@ -53,7 +53,8 @@ class loader:
         url =  context.url("nav") % str(self._code)
 
         # get json data from url
-        json_data = dbm.rqst.pgetjson(url, headers=context.headers())
+        json_data = dbm.core.rda.http(url, headers=context.headers()).xpost().json().data
+        #json_data = dbm.rqst.pgetjson(url, headers=context.headers())
 
         # extract results
         results = []

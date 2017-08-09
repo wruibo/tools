@@ -97,7 +97,7 @@ def simulate_to_plot(*funds):
     # prepare the plot
     import matplotlib.pyplot as plt
     plt.figure(figsize=(16, 8))
-    plt.title("portfolio simulate: invest times(%d), step by(%s), max step(%d)" % (times, str(stepval), maxsteps))
+    plt.title("portfolio simulate: invest times(%d), step by(%s), max step(%s)" % (times, str(stepval), str(maxsteps)))
     plt.xlabel("return" )
     plt.ylabel("probability")
 
@@ -107,9 +107,6 @@ def simulate_to_plot(*funds):
         result, prset = simulate(navs, times, stepval, maxsteps)
         x, y = atl.matrix.subcol(result, 1), atl.matrix.subcol(result, 2)
         plt.plot(x, y, label="$Fund%d-%s$" % (num, str(navs)))
-
-        print(result)
-
         num += 1
 
     # show the plot

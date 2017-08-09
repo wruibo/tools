@@ -2,7 +2,7 @@
     stock data from cninfo, web site:
     http://www.cninfo.com.cn/
 """
-import atl, dtl, dbm, requests
+import requests
 
 
 class context:
@@ -63,11 +63,12 @@ class loader:
         # fetch & parse the url data for fund @code
         url =  context.url("finance")
 
-        # get json data from url
-        req = requests.post(url, form_data, headers=context.headers())
+        import dbm.core.rda
+        obj = dbm.core.rda.http(url, data=form_data, headers=context.headers())
 
-        with open("./tt.zip", 'wb') as f:
-            f.write(req.content)
+        # get json data from url
+        #req = requests.post(url, form_data, headers=context.headers())
+        print(obj)
 
 
     def quotation(self, start_year, end_year):
@@ -94,10 +95,11 @@ class loader:
         url =  context.url("finance")
 
         # get json data from url
-        req = requests.post(url, form_data, headers=context.headers())
+        import dbm.core.rda
+        obj = dbm.core.rda.http(url, data=form_data, headers=context.headers())
 
-        with open("./tt.zip", 'wb') as f:
-            f.write(req.content)
+        print(obj)
+        #req = requests.post(url, form_data, headers=context.headers())
 
 
 if __name__ == "__main__":
