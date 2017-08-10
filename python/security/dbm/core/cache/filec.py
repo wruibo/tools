@@ -10,15 +10,20 @@ class FileCache(Cache):
     """
         file cache class
     """
-    # cache dataware house, default cache directory
+    # cache dataware house, default cache directory and cache name
     _default_cache_dir = utl.fd.tempdir() + "/dbmcache"
+    _default_cache_name = "default"
 
-    def __init__(self, name):
+    def __init__(self, name=_default_cache_name, dirpath=_default_cache_dir):
         """
             initialize file cache with cache directory path
-        :param name: str, cache name
+        :param name: str or None, cache name
+        :param dirpath: str or None, cache directory path
         """
-        cachedir = self._default_cache_dir+"/"+name
+        if name is None: name = self._default_cache_name
+        if dirpath is None: dirpath = self._default_cache_dir
+
+        cachedir = dirpath+"/"+name
         if not os.path.exists(cachedir):
             os.makedirs(cachedir)
 
@@ -31,6 +36,17 @@ class FileCache(Cache):
         :return: str, cache file path of key
         """
         return self._cachedir + "/" + key
+
+    def cachedir(self, dirpath=None):
+        """
+            get or set the cache file directory path
+        :param dirpath: str or None, cache file directory path
+        :return: str or None
+        """
+        if dirpath is not None:
+            self._cachedir = dirpath
+        else:
+            return self._cachedir
 
     def save(self, key, content, wantold=False, encoding='utf-8'):
         """
@@ -122,7 +138,7 @@ class FileCache(Cache):
 
 if __name__ == "__main__":
     cache = FileCache("cfq")
- #   cache.save('abc', "abc")
- #   cache.saveb('abcd', b"abcd")
+    cache.save('abc', "abc")
+    cache.saveb('abcd', b"abcd")
     print(cache.take('abc'))
     print(cache.takeb('abcd'))

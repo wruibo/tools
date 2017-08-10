@@ -10,20 +10,46 @@ class GNUDBMCache(Cache):
     """
         gun dbm cache class
     """
-    # cache dataware house, default cache directory
+    # cache dataware house, default cache directory and cache name
     _default_cache_dir = utl.fd.tempdir() + "/dbmcache"
+    _default_cache_name = "default"
 
-    def __init__(self, name):
+
+    def __init__(self, name=_default_cache_name, dirpath = _default_cache_dir):
         """
             initialize file cache with cache file path
         :param name: str, cache name
+        :param dirpath: str, cache directory path
         """
+        if name is None: name = self._default_cache_dir
+        if dirpath is None: dirpath = self._default_cache_dir
+
         cachedir = self._default_cache_dir
         if not os.path.exists(cachedir):
             os.makedirs(cachedir)
 
+        self._name = name
+
         cachefile = self._default_cache_dir+"/"+name
         self._dbm = _gdbm.open(cachefile, 'c')
+
+    def cachedir(self, dirpath=None):
+        """
+            get or set the cache file directory path
+        :param dirpath: str or None, cache file directory path
+        :return: str or None
+        """
+        if dirpath is not None:
+            # make directory if not exist
+            if not os.path.exists(dirpath):
+                os.makedirs(dirpath)
+            self._cachedir = dirpath
+
+            # open new dbm
+            cachefile = self._cachedir + "/" + self._name
+            self._dbm = _gdbm.open(cachefile, 'c')
+        else:
+            return self._cachedir
 
     def save(self, key, content, wantold=False, encoding='utf-8'):
         """
@@ -102,7 +128,7 @@ class GNUDBMCache(Cache):
 
 if __name__ == "__main__":
     cache = GNUDBMCache('smw')
-    #cache.save('abc', "abc")
-    #cache.saveb('abcd', b"abcd")
+    cache.save('abc', "abc")
+    cache.saveb('abcd', b"abcd")
     print(cache.take('abc', 300))
     print(cache.takeb('abcd', 190))

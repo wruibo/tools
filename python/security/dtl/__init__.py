@@ -3,9 +3,11 @@
 """
 __all__ = ["fund", "stock", "xday"]
 
-from dtl.core import xtype
-from dtl.core import xtable
-from dtl.core import xarray
+from .core import xtype
+from .core import xtable
+from .core import xarray
+
+from . import stock
 
 
 xperiod = xtype.xperiod
