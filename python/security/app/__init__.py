@@ -2,4 +2,5 @@
     applications for security
 """
 
-from app import fund
+from . import fund
+from . import stock

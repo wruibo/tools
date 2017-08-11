@@ -21,7 +21,7 @@ class cninfo:
     def __init__(self):
         pass
 
-    def profit(self, market, code, starty=None, endy=None):
+    def profit1(self, market, code, starty=None, endy=None):
         """
             profit of company
         :param market: str, sz or sh
@@ -143,8 +143,7 @@ class cninfo:
         # return parse result for profit
         return profits
 
-
-    def assets(self, market, code, starty=None, endy=None):
+    def profit(self, market, code, starty=None, endy=None):
         """
             assets and liabilities of company
         :param market: str, sz or sh
@@ -153,7 +152,88 @@ class cninfo:
         :param endy: int, end year for profit
         :return: obj
         """
-        pass
+        # configure the time range of profit
+        if starty is None: starty = 0
+        if endy is None: endy = time.gmtime().tm_year
+
+        # url for profit on website
+        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+
+        # post form data
+        form_data = {
+            "market": market,
+            "type": "lrb",
+            "code": code,
+            "orgid": "gs%s%s" % (market, code),
+            "minYear": str(starty),
+            "maxYear": str(endy)
+        }
+
+        # get csv data from url
+        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+
+        # parse csv data
+        profits = None
+        for name, csv in csvs:
+            is_header = True
+            for row in csv:
+                if profits is None:
+                    profits = [row]
+
+                if is_header:
+                    is_header = False
+                    continue
+
+                profits.append(row)
+
+        # return parse result for profit
+        return profits
+
+    def asset(self, market, code, starty=None, endy=None):
+        """
+            assets and liabilities of company
+        :param market: str, sz or sh
+        :param code: str, code of company in stock market
+        :param starty: int, start year for profit
+        :param endy: int, end year for profit
+        :return: obj
+        """
+        # configure the time range of profit
+        if starty is None: starty = 0
+        if endy is None: endy = time.gmtime().tm_year
+
+        # url for profit on website
+        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+
+        # post form data
+        form_data = {
+            "market": market,
+            "type": "fzb",
+            "code": code,
+            "orgid": "gs%s%s" % (market, code),
+            "minYear": str(starty),
+            "maxYear": str(endy)
+        }
+
+        # get csv data from url
+        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+
+        # parse csv data
+        assets = None
+        for name, csv in csvs:
+            is_header = True
+            for row in csv:
+                if assets is None:
+                    assets = [row]
+
+                if is_header:
+                    is_header = False
+                    continue
+
+                assets.append(row)
+
+        # return parse result for profit
+        return assets
 
     def cashflow(self, market, code, starty=None, endy=None):
         """
@@ -164,9 +244,44 @@ class cninfo:
         :param endy: int, end year for profit
         :return: obj
         """
-        pass
+        # configure the time range of profit
+        if starty is None: starty = 0
+        if endy is None: endy = time.gmtime().tm_year
 
-    def quotation(self, market, code, starty=None, endy=None):
+        # url for cash flow on website
+        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+
+        # post form data
+        form_data = {
+            "market": market,
+            "type": "llb",
+            "code": code,
+            "orgid": "gs%s%s" % (market, code),
+            "minYear": str(starty),
+            "maxYear": str(endy)
+        }
+
+        # get csv data from url
+        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+
+        # parse csv data
+        cashflows = None
+        for name, csv in csvs:
+            is_header = True
+            for row in csv:
+                if cashflows is None:
+                    cashflows = [row]
+
+                if is_header:
+                    is_header = False
+                    continue
+
+                cashflows.append(row)
+
+        # return parse result for cash flow
+        return cashflows
+
+    def quotation_daily(self, market, code, starty=None, endy=None):
         """
             daily quotation of company
         :param market: str, sz or sh
@@ -175,19 +290,62 @@ class cninfo:
         :param endy: int, end year for profit
         :return: obj
         """
+        # configure the time range of quotations
+        if starty is None: starty = 0
+        if endy is None: endy = time.gmtime().tm_year
+
+        # url for cash flow on website
+        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+
         # post form data
         form_data = {
-            "market": self._market,
+            "market": market,
             "type": "hq",
-            "code": self._code,
-            "orgid": "gs%s%s" % (self._market, self._code),
+            "code": code,
+            "orgid": "gs%s%s" % (market, code),
             "minYear": str(starty),
             "maxYear": str(endy)
         }
-        pass
+
+        # get csv data from url
+        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+
+        # parse csv data
+        quotations = None
+        for name, csv in csvs:
+            is_header = True
+            for row in csv:
+                if quotations is None:
+                    quotations = [row]
+
+                if is_header:
+                    is_header = False
+                    continue
+
+                quotations.append(row)
+
+        # return parse result for daily quotations
+        return quotations
 
 
 if __name__ == "__main__":
-    profits = cninfo().profit('sz', '000001', 2016, 2017)
-    print(profits)
+    profits = cninfo().profit('sz', '000001', 0, 2017)
+    assets = cninfo().asset('sz', '000001', 0, 2017)
+    cashflows = cninfo().cashflow('sz', '000001', 0, 2017)
+    quotations = cninfo().quotation_daily('sz', '000001', 0, 2017)
 
+    print("profits-")
+    for row in profits:
+        print(row)
+
+    print("assets-")
+    for row in assets:
+        print(row)
+
+    print("cashflows-")
+    for row in cashflows:
+        print(row)
+
+    print("quotations-")
+    for row in quotations:
+        print(row)
