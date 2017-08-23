@@ -18,11 +18,11 @@ def all(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xday),
-        'weekly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xweek),
-        'monthly':sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xmonth),
-        'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xquarter),
-        'yearly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xyear)
+        'daily':sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.day),
+        'weekly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.week),
+        'monthly':sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.month),
+        'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.quarter),
+        'yearly': sortino(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.year)
     }
 
     return results
@@ -49,7 +49,7 @@ def sortino(mtx, datecol, navcol, risk_free_rate, interpfunc=None, periodcls=Non
 
         # period compound return rate for specified period
         astexp = sal.prr.profit.compound(mtx, datecol, navcol, periodcls)
-        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.xyear.unitdays()) - 1.0
+        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.time.year.unitdays()) - 1.0
 
         # compute the asset excess expect return over the risk free asset return
         er = astexp- rfrexp
@@ -61,7 +61,7 @@ def sortino(mtx, datecol, navcol, risk_free_rate, interpfunc=None, periodcls=Non
             if rate < rfrexp: drates.append(rate)
 
         # calculate the asset revenue standard deviation
-        sd = atl.array.stddev(drates)
+        sd = atl.math.stddev(drates)
 
         # sharpe ratio
         return er / sd

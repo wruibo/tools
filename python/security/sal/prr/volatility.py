@@ -2,7 +2,7 @@
     volatility in finance, which is the degree of variation of price, formula:
         volatility(R) = standard-deviation(R)
 """
-import atl
+import atl, dtl
 
 
 def all(mtx, datecol, navcol):
@@ -30,6 +30,6 @@ def volatility(mtx, datecol, navcol, interpfunc=None):
         mtx, datecol, navcol = interpfunc(mtx, datecol, 1, datecol, navcol), 1, 2
 
     # extract navs from mtx
-    arr = atl.matrix.subcol(mtx, navcol)
+    arr = dtl.matrix.subcol(mtx, navcol)
 
-    return atl.array.stddev(arr)
+    return atl.math.stddev(arr)

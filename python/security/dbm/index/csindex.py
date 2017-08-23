@@ -19,7 +19,7 @@ class context:
     # site china securities index data urls
     _csindex_data_urls = {
         # index daily data url
-        "price-daily": "http://www.csindex.com.cn/sseportal/Day-K/%s.xml"
+        "price-daily": "http://www.csindex.cn/sseportal/Day-K/%s.xml"
     }
 
     @staticmethod
@@ -67,7 +67,7 @@ class loader:
             elmts = dom.getElementsByTagName("smbol")
             for elmt in elmts:
                 # parse each record
-                date = dtl.xdate(elmt.getAttribute("tdd"), "%Y%m%d") if elmt.hasAttribute("tdd") else None
+                date = dtl.time.date(elmt.getAttribute("tdd"), "%Y%m%d") if elmt.hasAttribute("tdd") else None
                 open = float(elmt.getAttribute("op")) if elmt.hasAttribute("op") else None
                 close = float(elmt.getAttribute("ep")) if elmt.hasAttribute("ep") else None
                 high = float(elmt.getAttribute("hp")) if elmt.hasAttribute("hp") else None

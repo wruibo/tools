@@ -1,9 +1,8 @@
 """
     arithmetic & algorithm toolkit library
 """
-__all__ = ["interp", "xmath", "array", "matrix"]
+__all__ = ["interp", "math"]
 
 from atl import interp
-from atl import xmath
-from atl import array
-from atl import matrix
+from atl import math
+

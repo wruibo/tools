@@ -16,18 +16,18 @@ def all(mtx, datecol, astcol, bmkcol):
     """
     results = {
         "interpolate":{
-            'day':beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xday),
-            'week': beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xweek),
-            'month':beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xmonth),
-            'quarter': beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xquarter),
-            'year': beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xyear),
+            'day':beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.day),
+            'week': beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.week),
+            'month':beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.month),
+            'quarter': beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.quarter),
+            'year': beta(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.year),
         },
         "original":{
-            'day': beta(mtx, datecol, astcol, bmkcol, None, dtl.xday),
-            'week': beta(mtx, datecol, astcol, bmkcol, None, dtl.xweek),
-            'month': beta(mtx, datecol, astcol, bmkcol, None, dtl.xmonth),
-            'quarter': beta(mtx, datecol, astcol, bmkcol, None, dtl.xquarter),
-            'year': beta(mtx, datecol, astcol, bmkcol, None, dtl.xyear),
+            'day': beta(mtx, datecol, astcol, bmkcol, None, dtl.time.day),
+            'week': beta(mtx, datecol, astcol, bmkcol, None, dtl.time.week),
+            'month': beta(mtx, datecol, astcol, bmkcol, None, dtl.time.month),
+            'quarter': beta(mtx, datecol, astcol, bmkcol, None, dtl.time.quarter),
+            'year': beta(mtx, datecol, astcol, bmkcol, None, dtl.time.year),
         }
     }
 
@@ -56,7 +56,7 @@ def beta(mtx, datecol, astcol, bmkcol, interpfunc=None, periodcls=None):
         bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
 
         # compute beta factor
-        return atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)
+        return atl.math.cov(astprofits, bmkprofits) / atl.math.var(bmkprofits)
     except:
         return None
 

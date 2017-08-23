@@ -15,11 +15,11 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xday),
-        'weekly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xweek),
-        'monthly':jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xmonth),
-        'quarterly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xquarter),
-        'yearly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xyear),
+        'daily':jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.day),
+        'weekly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.week),
+        'monthly':jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.month),
+        'quarterly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.quarter),
+        'yearly': jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.year),
     }
 
     return results
@@ -50,10 +50,10 @@ def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, period
         # compute asset&benchmark expect profit
         astexp = sal.prr.profit.compound(mtx, datecol, astcol, periodcls)
         bmkexp = sal.prr.profit.compound(mtx, datecol, bmkcol, periodcls)
-        rfrexp = pow((1 + risk_free_rate), periodcls.unitdays() / dtl.xdate.unitdays()) - 1.0
+        rfrexp = pow((1 + risk_free_rate), periodcls.unitdays() / dtl.time.date.unitdays()) - 1.0
 
         # compute asset beta factor
-        astbeta = atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)
+        astbeta = atl.math.cov(astprofits, bmkprofits) / atl.math.var(bmkprofits)
 
         # jensen ratio
         return astexp - (rfrexp + astbeta * (bmkexp - rfrexp))

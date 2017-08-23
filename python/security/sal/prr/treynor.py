@@ -16,11 +16,11 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xday),
-        'weekly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xweek),
-        'monthly':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xmonth),
-        'quarterly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xquarter),
-        'yearly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.xyear)
+        'daily':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.day),
+        'weekly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.week),
+        'monthly':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.month),
+        'quarterly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.quarter),
+        'yearly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.year)
     }
 
     return results
@@ -50,10 +50,10 @@ def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, perio
 
         # period compound return rate for specified period
         astexp = sal.prr.profit.compound(mtx, datecol, astcol, periodcls)
-        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.xyear.unitdays()) - 1.0
+        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.time.year.unitdays()) - 1.0
 
         # compute asset beta factor
-        astbeta = atl.array.cov(astprofits, bmkprofits) / atl.array.var(bmkprofits)
+        astbeta = atl.math.cov(astprofits, bmkprofits) / atl.math.var(bmkprofits)
 
         # treynor ratio
         return (astexp - rfrexp) / astbeta

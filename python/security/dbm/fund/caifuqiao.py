@@ -61,6 +61,6 @@ class loader:
 
         # extract fund data from json content
         for record in json_data['data']['list']:
-            results.append([dtl.xdate(record['value_date']), float(record['net_value']), float(record['total_value'])])
-        return atl.matrix.reverser(results)
+            results.append([dtl.time.date(record['value_date'], '%Y-%m-%d'), float(record['net_value']), float(record['total_value'])])
+        return dtl.matrix.hflip(results)
 

@@ -3,7 +3,7 @@
 """
 import time
 
-def timerun(func, *args, **kwargs):
+def run(func, *args, **kwargs):
     """
         run @func with time consume record
     :param func:

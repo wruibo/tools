@@ -18,7 +18,7 @@ def all(mtx, datecol, navcol):
         "entire":calmar(mtx, datecol, navcol)
     }
 
-    pmtxs = atl.matrix.split(mtx, dtl.xyear, datecol)
+    pmtxs = dtl.matrix.split(mtx, dtl.time.year, datecol)
     for prd, pmtx in pmtxs.items():
         results[str(prd)] = calmar(pmtx, datecol, navcol)
 
@@ -38,9 +38,9 @@ def calmar(mtx, datecol, navcol):
         mdd = sal.prr.mdd.max_drawdown(mtx, navcol)
 
         # compund annual return rates
-        compound_annual_return_rates = sal.prr.profit.compound(mtx, datecol, navcol, dtl.xyear)
+        compound_annual_return_rates = sal.prr.profit.compound(mtx, datecol, navcol, dtl.time.year)
 
         # calmar ratio
-        return compound_annual_return_rates/-mdd[0]
+        return compound_annual_return_rates/-mdd
     except:
         return None

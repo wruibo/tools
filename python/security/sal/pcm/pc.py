@@ -45,7 +45,7 @@ def simulate(navs, times, stepval=0.2, maxsteps=None):
         navs = tmpnavs
 
     # combine after invested times
-    combine_result = atl.array.combines(*[navs for i in range(0, times)])
+    combine_result = atl.math.combines(*[navs for i in range(0, times)])
 
     # generate nav probability distribution set
     prset, maxnav = [], None
@@ -56,7 +56,7 @@ def simulate(navs, times, stepval=0.2, maxsteps=None):
                 if mnavpr is None:
                     mnavpr = navpr
                     continue
-                mnavpr = atl.array.multi(mnavpr, navpr)
+                mnavpr = atl.math.multi(mnavpr, navpr)
 
             # normalize the probability base on 1
             mnavpr = [mnavpr[0], mnavpr[1]]
@@ -105,7 +105,7 @@ def simulate_to_plot(*funds):
     num = 1 # fund number from 1
     for navs in funds:
         result, prset = simulate(navs, times, stepval, maxsteps)
-        x, y = atl.matrix.subcol(result, 1), atl.matrix.subcol(result, 2)
+        x, y = dtl.matrix.subcol(result, 1), dtl.matrix.subcol(result, 2)
         plt.plot(x, y, label="$Fund%d-%s$" % (num, str(navs)))
         num += 1
 

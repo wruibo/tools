@@ -27,7 +27,7 @@ def linear(mtx, basecol, step, *cols):
     """
     # default interpolate all columns
     if len(cols)==0:
-        cols = list(range(1, atl.matrix.numcols(mtx)+1))
+        cols = list(range(1, dtl.matrix.numcols(mtx)+1))
 
     # interpolation result
     interpmtx = []
@@ -93,7 +93,7 @@ def forward(mtx, basecol, step, *cols):
     """
     # default interpolate all columns
     if len(cols)==0:
-        cols = list(range(1, atl.matrix.numcols(mtx)+1))
+        cols = list(range(1, dtl.matrix.numcols(mtx)+1))
 
     # get the base column's indexs in output results
     basecolidxs = _indexs(cols, basecol)
@@ -151,7 +151,7 @@ def backward(mtx, basecol, step, *cols):
     """
     # default interpolate all columns
     if len(cols)==0:
-        cols = list(range(1, atl.matrix.numcols(mtx)+1))
+        cols = list(range(1, dtl.matrix.numcols(mtx)+1))
 
     # get the base column's indexs in output results
     basecolidxs = _indexs(cols, basecol)
@@ -202,10 +202,10 @@ def backward(mtx, basecol, step, *cols):
 if __name__ == "__main__":
     import dtl
     mtx = [
-        [dtl.xday("20170125", "%Y%m%d"), 25, 25, 25],
-        [dtl.xday("20170128", "%Y%m%d"), 28, 28, 28],
-        [dtl.xday("20170201", "%Y%m%d"), 1, 1, 1],
-        [dtl.xday("20170205", "%Y%m%d"), 5, 5, 5]
+        [dtl.time.day("20170125", "%Y%m%d"), 25, 25, 25],
+        [dtl.time.day("20170128", "%Y%m%d"), 28, 28, 28],
+        [dtl.time.day("20170201", "%Y%m%d"), 1, 1, 1],
+        [dtl.time.day("20170205", "%Y%m%d"), 5, 5, 5]
     ]
     print("input matrix: ")
     print(mtx)

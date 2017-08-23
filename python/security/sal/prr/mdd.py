@@ -14,7 +14,7 @@ or
     array:
     [x0, x1, x2, ..., xn]
 """
-import atl
+import dtl
 
 
 def all(mtx, ncol=None):
@@ -41,7 +41,7 @@ def slow_max_drawdown(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
-    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     pmax, vmax, pmin, vmin, drawdown = None, None, None, None, None
 
@@ -66,7 +66,7 @@ def fast_max_drawdown(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
-    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     pmax, vmax, pmin, vmin, drawdown = None, None, None, None, None
     ipos, ivalue, jpos, jvalue, ijdrawdown = None, None, None, None, None
@@ -108,7 +108,7 @@ def slow_max_drawdown_trends(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
-    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     dd, j = [], 0
     while j<len(arr):
@@ -129,7 +129,7 @@ def fast_max_drawdown_trends(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
-    arr = atl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     dd, j, maxi, maxv = [], 0, 0, arr[0]
     while j<len(arr):

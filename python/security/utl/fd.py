@@ -4,7 +4,6 @@
 import os
 
 
-
 def candidate_tempdirs():
     """
         get the candidate temporary directories

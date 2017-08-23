@@ -1,4 +1,4 @@
-import dbm
+import dbm, atl, dtl
 
 
 def source(vdr=None):
@@ -49,31 +49,26 @@ def display(market, code, starty=None, endy=None):
     :param endy: int, end year for data
     :return:
     """
-    profits = dbm.stock.finance.profit(market, code , starty, endy)
-
-    import atl, dtl
-
-    cols = atl.matrix.subcols(profits[1:], 6, 9, 11, 30, 33)
-    cols = dtl.replace(cols, '0.0', '')
-    cols = [dtl.dates(cols[0], '%Y-%m-%d'), dtl.floats(cols[1]), dtl.floats(cols[2]), dtl.floats(cols[3]), dtl.floats(cols[4])]
-    rows = atl.matrix.transpose(cols)
-
-    for row in rows:
-        print(row)
-
     import matplotlib.pyplot as plt
 
-    fig = plt.figure(figsize=(16, 8))
+    # get profits
+    profits = dbm.stock.finance.profit(market, code , starty, endy)
+
+    plt.figure(figsize=(16, 8))
     plt.title("profit")
     plt.xlabel("date" )
     plt.ylabel("income")
 
-    widths = [30 for i in range(0, len(cols[0]))]
+    plt.plot(profits.revenue.dates(), profits.revenue.totals())
+    plt.plot(profits.expense.dates(), profits.expense.totals())
+    plt.plot(profits.profit.dates(), profits.profit.operatings())
+    plt.plot(profits.profit.dates(), profits.profit.totals())
+
     #plt.bar(cols[0], cols[1], widths)
     #plt.bar(cols[0], cols[2], widths)
     #plt.bar(cols[0], dtl.negatives(cols[2]), widths)
     #plt.bar(cols[0], cols[3], widths)
-    plt.bar(cols[0], cols[4], widths)
+    #plt.bar(cols[0], cols[4], widths)
 
     # show the plot
     plt.legend()

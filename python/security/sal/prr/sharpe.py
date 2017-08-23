@@ -23,11 +23,11 @@ def all(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xday),
-        'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xweek),
-        'monthly':sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xmonth),
-        'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xquarter),
-        'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.xyear)
+        'daily':sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.day),
+        'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.week),
+        'monthly':sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.month),
+        'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.quarter),
+        'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, atl.interp.linear, dtl.time.year)
     }
 
     return results
@@ -54,13 +54,13 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, interpfunc=None, periodcls=None
 
         # period compound return rate for specified period
         astexp = sal.prr.profit.compound(mtx, datecol, navcol, periodcls)
-        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.xyear.unitdays()) - 1.0
+        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.time.year.unitdays()) - 1.0
 
         # compute the asset excess expect return over the risk free asset return
         er = astexp - rfrexp
 
         # calculate the asset revenue standard deviation
-        sd = atl.array.stddev(rates)
+        sd = atl.math.stddev(rates)
 
         # sharpe ratio
         return er / sd

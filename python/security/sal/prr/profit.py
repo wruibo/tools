@@ -16,31 +16,32 @@ def all(mtx, datecol, navcol):
     results['total'] = total(mtx, navcol)
 
     results['average'] = {
-        'year': average(mtx, datecol, navcol, dtl.xyear),
-        'quarter': average(mtx, datecol, navcol, dtl.xquarter),
-        'month': average(mtx, datecol, navcol, dtl.xmonth),
-        'week': average(mtx, datecol, navcol, dtl.xweek)
+        'year': average(mtx, datecol, navcol, dtl.time.year),
+        'quarter': average(mtx, datecol, navcol, dtl.time.quarter),
+        'month': average(mtx, datecol, navcol, dtl.time.month),
+        'week': average(mtx, datecol, navcol, dtl.time.week)
     }
 
     results['compound'] = {
-        'year': compound(mtx, datecol, navcol, dtl.xyear),
-        'quarter': compound(mtx, datecol, navcol, dtl.xquarter),
-        'month': compound(mtx, datecol, navcol, dtl.xmonth),
-        'week': compound(mtx, datecol, navcol, dtl.xweek)
+        'year': compound(mtx, datecol, navcol, dtl.time.year),
+        'quarter': compound(mtx, datecol, navcol, dtl.time.quarter),
+        'month': compound(mtx, datecol, navcol, dtl.time.month),
+        'week': compound(mtx, datecol, navcol, dtl.time.week)
     }
 
     results['rolling'] = {
-        'year': rolling(mtx, datecol, navcol, dtl.xyear),
-        'quarter': rolling(mtx, datecol, navcol, dtl.xquarter),
-        'month': rolling(mtx, datecol, navcol, dtl.xmonth),
-        'week': rolling(mtx, datecol, navcol, dtl.xweek)
+        'natural': rolling(mtx, datecol, navcol),
+        'year': rolling(mtx, datecol, navcol, dtl.time.year),
+        'quarter': rolling(mtx, datecol, navcol, dtl.time.quarter),
+        'month': rolling(mtx, datecol, navcol, dtl.time.month),
+        'week': rolling(mtx, datecol, navcol, dtl.time.week)
     }
 
     results['recent'] = {
-        'year': recent(mtx, datecol, navcol, dtl.xyear),
-        'quarter': recent(mtx, datecol, navcol, dtl.xquarter),
-        'month': recent(mtx, datecol, navcol, dtl.xmonth),
-        'week': recent(mtx, datecol, navcol, dtl.xweek)
+        'year': recent(mtx, datecol, navcol, dtl.time.year),
+        'quarter': recent(mtx, datecol, navcol, dtl.time.quarter),
+        'month': recent(mtx, datecol, navcol, dtl.time.month),
+        'week': recent(mtx, datecol, navcol, dtl.time.week)
     }
 
     return results
@@ -66,7 +67,7 @@ def average(mtx, datecol, navcol, periodcls):
     :param periodcls: class, period want to compute average return rate
     :return: float, average return rate measure by specified period
     """
-    if not issubclass(periodcls, dtl.xperiod):
+    if not issubclass(periodcls, dtl.time.date):
         raise "invalid period for compute average return rate."
 
     # first compute the total return rate and days used for the return
@@ -88,7 +89,7 @@ def compound(mtx, datecol, navcol, periodcls):
     :param periodcls: class, period want to compute compound return rate
     :return: float, compound return rate measure by specified period
     """
-    if not issubclass(periodcls, dtl.xperiod):
+    if not issubclass(periodcls, dtl.time.date):
         raise "invalid period for compute compound return rate."
 
     # first compute the total return rate and days used for the return
@@ -111,7 +112,7 @@ def rolling(mtx, datecol, navcol, periodcls=None, annualdays=None):
     :param annualdays: int, annual days assume for return, normally use 365 days/year
     :return: array, rate array
     """
-    if not issubclass(periodcls, dtl.xperiod):
+    if periodcls is not None and not issubclass(periodcls, dtl.time.date):
         raise "invalid period for compute rolling return rates."
 
     # rolling return result, [[period, return rate], ...]
@@ -130,7 +131,7 @@ def rolling(mtx, datecol, navcol, periodcls=None, annualdays=None):
             days = abs(curr_date-last_date)
             absrate = (curr_nav-last_nav)/last_nav
 
-            dayrange = dtl.xrangeday(last_date, curr_date)
+            dayrange = dtl.time.daterange(last_date, curr_date)
             annualrate = pow(1+absrate, annualdays/days)-1 if annualdays is not None else absrate
 
             results[dayrange] = annualrate
@@ -138,7 +139,7 @@ def rolling(mtx, datecol, navcol, periodcls=None, annualdays=None):
             last_date, last_nav = curr_date, curr_nav
     else: # specified period of the input date
         # split matrix by specified period
-        pmtx = atl.matrix.split(mtx, periodcls, datecol)
+        pmtx = dtl.matrix.split(mtx, periodcls, datecol)
 
         # compute return of each period, period_return = (period_last_nav-last_period's_last_nav)/last_period's_last_nav
         begin_nav = None
@@ -171,14 +172,14 @@ def recent(mtx, datecol, navcol, periodcls, periods=1, annualdays=None):
     :param annualdays: int, annual days assume for return, normally use 365 days/year
     :return: dict, rate array
     """
-    if not issubclass(periodcls, dtl.xperiod):
+    if not issubclass(periodcls, dtl.time.date):
         raise "invalid period for compute recent return rates."
 
     # today
-    today = dtl.xdate()
+    today = dtl.time.date(dtl.time.date.today())
 
     # recent begin and end date
-    recent_begin_date = today.back(periodcls, periods)
+    recent_begin_date = today - periodcls.delta(periods)
     # begin & end date/nav for recent days
     begin_date, begin_nav, end_date, end_nav = None, None, None, None
 

@@ -35,6 +35,33 @@ def pretty(objs, level=0):
     return pstr
 
 
+def replace(objs, new, *olds):
+    """
+        replace specified old values in objects to new value
+    :param objs: string or tuple, list, dict with string values
+    :param new: object, new value
+    :param olds: list or tuple, old value
+    :return: objs, replace results
+    """
+    if isinstance(objs, tuple):
+        lst = []
+        for obj in objs:
+            lst.append(replace(obj, new, *olds))
+        return tuple(lst)
+    elif isinstance(objs, list):
+        lst = []
+        for obj in objs:
+            lst.append(replace(obj, new, *olds))
+        return lst
+    elif isinstance(objs, dict):
+        dct = {}
+        for key, value in objs:
+            dct[key] = replace(value, new, *olds)
+        return dct
+    else:
+        return new if objs in olds else objs
+
+
 def rfill(str, ch, num):
     """
         fill string's right place with character

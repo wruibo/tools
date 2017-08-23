@@ -1,7 +1,6 @@
 """
-    array process methods, array like:
-        [v1, v2, ..., vn]
-    is an length with n elements array
+    extend the math algorithms, including:
+    1. normal interpolation algorithms
 """
 import math
 
@@ -9,24 +8,18 @@ import math
 def avg(arr):
     """
         compute average of array values
-    :param values: list, list of array values
+    :param arr: list, list of array values
     :return: float, average of array values
     """
-    if len(arr) == 0:
-        raise "empty input array has no average value."
-
     return float(sum(arr)) / len(arr)
 
 
 def var(arr):
     """
         compute variance of array values
-    :param values: list, list of array values
+    :param arr: list, list of array values
     :return: float, variance of array values
     """
-    if len(arr) == 0:
-        raise "empty input array has no variance value."
-
     # use average value of values as the expect value
     expect_value = avg(arr)
 
@@ -40,50 +33,48 @@ def var(arr):
 def stddev(arr):
     '''
         compute standard deviation of array values
-    :param values: list, list of array values
+    :param arr: list, list of array values
     :return: float, standard deviation of array values
     '''
-    if len(arr) == 0:
-        raise "empty input array has no standard deviation value."
-
     return math.sqrt(var(arr))
 
 
 def cov(arr1, arr2):
     """
-        compute the covariance of array arr1 and arr2
+        compute the covariance of array a1 and a2
     :param arr1: list, list of input data values
     :param arr2: list, list of input data values
-    :return: float, covariance of array arr1 and arr2
+    :return: float, covariance of array a1 and a2
     """
     if len(arr1) != len(arr2):
-        raise "covariance needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2))
+        raise Exception("covariance needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2)))
 
     expect_value1 = avg(arr1)
     expect_value2 = avg(arr1)
 
-    sum, num, idx = 0.0, len(arr1), 0
-    while idx < num:
+    sum = 0.0
+    idx = num = len(arr1)
+    while idx > 0:
+        idx -= 1
         sum += (arr1[idx]-expect_value1)*(arr1[idx]-expect_value2)
-        idx += 1
 
     return sum / (num-1)
 
 
 def cor(arr1, arr2):
     """
-        compute the correlation of array arr1 and arr2, using pearson correlation algorithm
+        compute the correlation of array a1 and a2, using pearson correlation algorithm
      :param arr1: list, list of input data values
      :param arr2: list, list of input data values
      :return:
     """
     if len(arr1) != len(arr2):
-        raise "correlation needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2))
+        raise ("correlation needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2)))
 
-    # compute covariance of arr1 and arr2
+    # compute covariance of a1 and a2
     cov12 = cov(arr1, arr2)
 
-    # compute the standard deviation of arr1, arr2
+    # compute the standard deviation of a1, a2
     stddev1 = stddev(arr1)
     stddev2 = stddev(arr2)
 
@@ -97,12 +88,12 @@ def add(arr, withval):
     :param withval: list or value, which will be subtract with
     :return: array
     """
+
     result = []
 
     if isinstance(withval, list) or isinstance(withval, tuple):
         if len(withval) != len(arr):
-            raise "array add array need the same length."
-
+            raise Exception("array add array need the same length.")
         for i in range(0, len(arr)):
             result.append(arr[i] + withval[i])
     else:
@@ -134,37 +125,28 @@ def sub(arr, withval):
     return result
 
 
-def multi(arr, withval=None):
+def multi(arr, withval):
     """
         multiple data in array with other values
     :param arr: array
     :param withval: array, object or None
     :return: multiple result
     """
-    if withval is None: # multiple each data in array
-        result = None
-        for elmt in arr:
-            if result is None:
-                result = elmt
-            else:
-                result *= elmt
-        return result
-    else: #multiple array data with other values
-        result = []
+    result = []
 
-        if isinstance(withval, list) or isinstance(withval, tuple):
-            if len(withval) != len(arr):
-                raise "array multiple array need the same length."
-            for i in range(0, len(arr)):
-                result.append(arr[i]*withval[i])
+    if isinstance(withval, list) or isinstance(withval, tuple):
+        if len(withval) != len(arr):
+            raise "array multiple array need the same length."
+        for i in range(0, len(arr)):
+            result.append(arr[i]*withval[i])
+    else:
+        if isinstance(arr, list) or isinstance(arr, tuple):
+            for elmt in arr:
+                result.append(elmt*withval)
         else:
-            if isinstance(arr, list) or isinstance(arr, tuple):
-                for elmt in arr:
-                    result.append(elmt*withval)
-            else:
-                result = arr*withval
+            result = arr*withval
 
-        return result
+    return result
 
 
 def divide(arr, withval):
@@ -189,32 +171,34 @@ def divide(arr, withval):
     return result
 
 
-def to1dim(arr):
+def sum(arr):
     """
-        change the multi-dimension array @arr to one-dimension, e.g.:
-    input:
-        [
-            [1, 2, 3],
-            [4, 5, 6],
-            [[7], [8], [9, 10]]
-        ]
-    output:
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    :param arr: list, multi dimension array
-    :return: list, one dimension array
+        compute sum of data in array
+    :param arr: array
+    :return: product result
     """
-    if not (isinstance(arr, list) or isinstance(arr, tuple)):
-        return [arr]
-
-    results = []
-
-    for elm in arr:
-        if (isinstance(arr, list) or isinstance(arr, tuple)):
-            results.extend(to1dim(elm))
+    result = None
+    for elmt in arr:
+        if result is None:
+            result = elmt
         else:
-            results.append(elm)
+            result += elmt
+    return result
 
-    return results
+
+def product(arr):
+    """
+        compute product of data in array
+    :param arr: array
+    :return: product result
+    """
+    result = None
+    for elmt in arr:
+        if result is None:
+            result = elmt
+        else:
+            result *= elmt
+    return result
 
 
 def combine(arr, num):
@@ -320,20 +304,3 @@ def combines(*arrs):
             results = tmpresults
 
     return results
-
-
-
-if __name__ == "__main__":
-    arr = [i for i in range(1, 6)]
-    arrs = [arr for i in range(1, 4)]
-
-    print(combine(arr, 3))
-    print(permute(arr, 3))
-
-    results = combines(*arrs)
-    print(results)
-
-    print(len(to1dim(results)))
-
-    print(multi(1, 2))
-    print(multi((2, 0.5), (2, 0.5)))

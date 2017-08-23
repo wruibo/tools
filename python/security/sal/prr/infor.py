@@ -20,18 +20,18 @@ def all(mtx, datecol, astcol, bmkcol):
     """
     results = {
         "interpolate":{
-            'day':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xday),
-            'week': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xweek),
-            'month':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xmonth),
-            'quarter': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xquarter),
-            'year': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.xyear),
+            'day':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.day),
+            'week': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.week),
+            'month':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.month),
+            'quarter': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.quarter),
+            'year': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.year),
         },
         "original":{
-            'day':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xday),
-            'week': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xweek),
-            'month':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xmonth),
-            'quarter': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xquarter),
-            'year': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.xyear),
+            'day':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.day),
+            'week': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.week),
+            'month':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.month),
+            'quarter': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.quarter),
+            'year': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.year),
         }
     }
 
@@ -61,9 +61,9 @@ def inforatio(mtx, datecol, astcol, bmkcol, interpfunc=None, periodcls=None):
         bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
 
         # excess return compare with benchmark
-        erprofits = atl.array.sub(astprofits, bmkprofits)
+        erprofits = atl.math.sub(astprofits, bmkprofits)
 
         # compute information ratio
-        return atl.array.avg(erprofits) / atl.array.stddev(erprofits)
+        return atl.math.avg(erprofits) / atl.math.stddev(erprofits)
     except:
         return None

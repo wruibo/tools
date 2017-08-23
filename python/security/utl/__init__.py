@@ -1,11 +1,10 @@
 """
     untility toolkit library
 """
-import utl.fd
-import utl.hash
-import utl.date
-import utl.xtime
-import utl.string
+from . import fd
+from . import hash
+from . import time
+from . import string
 
 
 

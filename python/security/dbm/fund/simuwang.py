@@ -62,4 +62,4 @@ class loader:
         name = json_data.get('title')[0]
 
         # extract fund data from json content
-        return atl.matrix.transpose([dtl.xdates(json_data.get('categories'),"%Y-%m-%d"), dtl.floats(json_data.get('nav_list')), dtl.floats(json_data.get('nav_list'))])
+        return dtl.matrix.transpose([dtl.xdates(json_data.get('categories'),"%Y-%m-%d"), dtl.floats(json_data.get('nav_list')), dtl.floats(json_data.get('nav_list'))])

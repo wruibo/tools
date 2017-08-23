@@ -1,29 +1,29 @@
 """
-    stock data from cninfo, web site:
-    http://www.cninfo.com.cn/
+    stock data from sse, web site:
+    http://www.sse.com.cn/
 """
-import dbm, atl, dtl, time
+import dbm, dtl, time
 
 
-class cninfo:
+class sse:
     """
-        stock data request from www.cninfo.com.cn
+        stock data request from www.sse.com.cn
     """
-    # access headers for www.cninfo.com.cn
+    # access headers for www.sse.com.cn
     _headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate",
         "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Mobile Safari/537.36",
-        "Host": "www.cninfo.com.cn",
-        "Referer": "http://www.cninfo.com.cn/cninfo-new/index",
+        "Host": "www.sse.com.cn",
+        "Referer": "http://www.sse.com.cn/cninfo-new/index",
     }
 
     def __init__(self):
         pass
 
-    def _profit(self, market, code, starty=None, endy=None):
+    def profit(self, market, code, starty=None, endy=None):
         """
-            get profit data from remote
+            assets and liabilities of company
         :param market: str, sz or sh
         :param code: str, code of company in stock market
         :param starty: int, start year for profit
@@ -51,39 +51,21 @@ class cninfo:
         csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
 
         # parse csv data
-        records = None
+        profits = None
         for name, csv in csvs:
             is_header = True
             for row in csv:
-                if records is None:
-                    records = [row]
+                if profits is None:
+                    profits = [row]
 
                 if is_header:
                     is_header = False
                     continue
 
-                records.append(row)
-
-        records = dtl.matrix.transpose(records[1:])
-
-        return records
-
-    def profit(self, market, code, starty=None, endy=None):
-        """
-
-        :param market:
-        :param code:
-        :param starty:
-        :param endy:
-        :return:
-        """
-
-        records = self._profit(market, code, starty, endy)
-        profit = dtl.stock.finance.profit(date=records[5], total=records[19], operating=records[23], net=records[32])
+                profits.append(row)
 
         # return parse result for profit
-        return profit
-
+        return profits
 
     def asset(self, market, code, starty=None, endy=None):
         """
