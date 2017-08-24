@@ -55,7 +55,7 @@ def all(mtx, datecol, navcol, risk_free_rate):
     return results
 
 
-def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls, interp_func=None):
+def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.month, interp_func=None):
     """
         compute sharpe ratio, default without interpolation
     :param mtx: matrix, nav data
