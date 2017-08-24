@@ -1,7 +1,7 @@
 """
     portfolio construction algorithm
 """
-import atl, math
+import atl, dtl, math
 
 
 def simulate(navs, times, stepval=0.2, maxsteps=None):

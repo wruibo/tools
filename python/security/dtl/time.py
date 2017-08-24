@@ -87,13 +87,33 @@ class Date(datetime.date):
     def days(self):
         return 1
 
+    @classmethod
+    def today(cls):
+      return Date(super(Date, cls).today())
+
     @staticmethod
     def delta(days):
         return DayDelta(days)
 
     @staticmethod
-    def unitdays():
+    def unit_days():
         return 1
+
+    @staticmethod
+    def working_days():
+        return 1
+
+    @staticmethod
+    def trading_days():
+        return 1
+
+    @staticmethod
+    def yearly_units():
+        return 365
+
+    @staticmethod
+    def yearly_trading_units():
+        return 252
 
 
 class Time(datetime.time):
@@ -252,8 +272,24 @@ class Year(Date):
         return YearDelta(years)
 
     @staticmethod
-    def unitdays():
+    def unit_days():
         return 365
+
+    @staticmethod
+    def working_days():
+        return 252
+
+    @staticmethod
+    def trading_days():
+        return 252
+
+    @staticmethod
+    def yearly_units():
+        return 1
+
+    @staticmethod
+    def yearly_trading_units():
+        return 1
 
 
 class Quarter(Date):
@@ -350,8 +386,24 @@ class Quarter(Date):
         return QuarterDelta(quarters)
 
     @staticmethod
-    def unitdays():
+    def unit_days():
         return 90
+
+    @staticmethod
+    def working_days():
+        return 66
+
+    @staticmethod
+    def trading_days():
+        return 66
+
+    @staticmethod
+    def yearly_units():
+        return 4
+
+    @staticmethod
+    def yearly_trading_units():
+        return 4
 
 
 class Month(Date):
@@ -422,8 +474,24 @@ class Month(Date):
         return MonthDelta(months)
 
     @staticmethod
-    def unitdays():
+    def unit_days():
         return 30
+
+    @staticmethod
+    def working_days():
+        return 22
+
+    @staticmethod
+    def trading_days():
+        return 22
+
+    @staticmethod
+    def yearly_units():
+        return 12
+
+    @staticmethod
+    def yearly_trading_units():
+        return 12
 
 
 class Week(Date):
@@ -492,8 +560,24 @@ class Week(Date):
         return WeekDelta(weeks)
 
     @staticmethod
-    def unitdays():
+    def unit_days():
         return 7
+
+    @staticmethod
+    def working_days():
+        return 5
+
+    @staticmethod
+    def trading_days():
+        return 5
+
+    @staticmethod
+    def yearly_units():
+        return 52
+
+    @staticmethod
+    def yearly_trading_units():
+        return 52
 
 
 class Day(Date):
@@ -561,9 +645,24 @@ class Day(Date):
         return DayDelta(days)
 
     @staticmethod
-    def unitdays():
+    def unit_days():
         return 1
 
+    @staticmethod
+    def working_days():
+        return 1
+
+    @staticmethod
+    def trading_days():
+        return 1
+
+    @staticmethod
+    def yearly_units():
+        return 365
+
+    @staticmethod
+    def yearly_trading_units():
+        return 252
 
 class TimeDelta(datetime.timedelta):
     """
@@ -619,7 +718,8 @@ year = Year
 quarter = Quarter
 month = Month
 week = Week
-daterange=DateRange
+daterange = DateRange
+
 
 if __name__ == "__main__":
     m = Month(2016, 8)

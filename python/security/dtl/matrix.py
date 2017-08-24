@@ -333,6 +333,21 @@ def split(mtx, bycls, oncol):
     return result
 
 
+def select(mtx, cmp, oncol):
+    """
+        select rows from matrix by compare @cmp method on specified column @oncol
+    :param mtx: matrix
+    :param cmp: function
+    :param oncol: int, column number
+    :return: matrix
+    """
+    resmtx = []
+    for row in mtx:
+        if cmp(row[oncol-1]):
+            resmtx.append(row)
+    return resmtx
+
+
 class Matrix(list):
     """
         matrix class

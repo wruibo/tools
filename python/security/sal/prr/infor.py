@@ -9,7 +9,7 @@
 import sal, atl, dtl
 
 
-def all(mtx, datecol, astcol, bmkcol):
+def test(mtx, datecol, astcol, bmkcol):
     """
         compute all information ratio values for portfolio
     :param mtx:
@@ -20,50 +20,129 @@ def all(mtx, datecol, astcol, bmkcol):
     """
     results = {
         "interpolate":{
-            'day':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.day),
-            'week': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.week),
-            'month':inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.month),
-            'quarter': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.quarter),
-            'year': inforatio(mtx, datecol, astcol, bmkcol, atl.interp.linear, dtl.time.year),
+            'day':inforatio(mtx, datecol, astcol, bmkcol, dtl.time.day, atl.interp.linear),
+            'week': inforatio(mtx, datecol, astcol, bmkcol, dtl.time.week, atl.interp.linear),
+            'month':inforatio(mtx, datecol, astcol, bmkcol, dtl.time.month, atl.interp.linear),
+            'quarter': inforatio(mtx, datecol, astcol, bmkcol, dtl.time.quarter, atl.interp.linear),
+            'year': inforatio(mtx, datecol, astcol, bmkcol, dtl.time.year, atl.interp.linear),
         },
         "original":{
-            'day':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.day),
-            'week': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.week),
-            'month':inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.month),
-            'quarter': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.quarter),
-            'year': inforatio(mtx, datecol, astcol, bmkcol, None, dtl.time.year),
+            'day':inforatio(mtx, datecol, astcol, bmkcol, dtl.time.day),
+            'week': inforatio(mtx, datecol, astcol, bmkcol, dtl.time.week),
+            'month':inforatio(mtx, datecol, astcol, bmkcol, dtl.time.month),
+            'quarter': inforatio(mtx, datecol, astcol, bmkcol, dtl.time.quarter),
+            'year': inforatio(mtx, datecol, astcol, bmkcol, dtl.time.year),
         }
     }
 
     return results
 
 
-def inforatio(mtx, datecol, astcol, bmkcol, interpfunc=None, periodcls=None):
+def all(mtx, datecol, astcol, bmkcol):
+    """
+        compute all information ratio values for portfolio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :return:
+    """
+    results = {
+        "total": inforatio(mtx, datecol, astcol, bmkcol),
+        "rolling":{
+            "year":rolling(mtx, datecol, astcol, bmkcol, dtl.time.year)
+        },
+        "recent":{
+            "year":recent(mtx, datecol, astcol, bmkcol, dtl.time.year, [1, 2, 3, 4, 5])
+        }
+    }
+
+    return results
+
+
+def inforatio(mtx, datecol, astcol, bmkcol, sample_period_cls=dtl.time.month, interp_func=None):
     """
         compute information ratio for asset
     :param mtx: matrix
     :param datecol: int, date column number
     :param astcol: int, asset value column number
     :param bmkcol: int, benchmark value column number
-    :param interp: bool, interpolation on date
-    :param periodcls: class, period want to compute information ratio
-    :param annualdays: int, days of 1 year
-
+    :param sample_period_cls: class, period want to compute information ratio
+    :param interp_func: bool, interpolation on date
     :return: float, beta factor of asset
     """
     try:
         # interpolate the asset&benchmark values
-        if interpfunc is not None:
-            mtx, datecol, astcol, bmkcol = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
+        if interp_func is not None:
+            mtx, datecol, astcol, bmkcol = interp_func(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
 
         # compute year profit for time revenue
-        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls).values())
-        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
+        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
+        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
+
+        # compound return rate for specified period
+        astexp = sal.prr.profit.compound(mtx, datecol, astcol, sample_period_cls)
+        bmkexp = sal.prr.profit.compound(mtx, datecol, bmkcol, sample_period_cls)
 
         # excess return compare with benchmark
         erprofits = atl.math.sub(astprofits, bmkprofits)
 
         # compute information ratio
-        return atl.math.avg(erprofits) / atl.math.stddev(erprofits)
+        return astexp-bmkexp / atl.math.stddev(erprofits)
+    except:
+        return None
+
+
+def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+    """
+        compute rolling information ratio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :param rolling_period_cls:
+    :param sample_period_cls:
+    :param interp_func:
+    :return:
+    """
+    try:
+        # split matrix by specified period
+        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+
+        # compute rolling period beta
+        results = {}
+        for prd, navs in pmtx.items():
+            results[prd] = inforatio(navs, datecol, astcol, bmkcol, sample_period_cls, interp_func)
+
+        return results
+    except:
+        return None
+
+
+def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+    """
+        compute recent information ratio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :param rolling_period_cls:
+    :param sample_period_cls:
+    :param interp_func:
+    :return:
+    """
+    try:
+        results = {}
+        for period in periods:
+            end_date = dtl.time.date.today()
+            begin_date = end_date - recent_period_cls.delta(period)
+            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+
+            key = dtl.time.daterange(begin_date, end_date)
+            value = inforatio(pmtx, datecol, astcol, bmkcol, sample_period_cls, interp_func)
+
+            results[key] = value
+
+        return results
     except:
         return None

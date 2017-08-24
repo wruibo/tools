@@ -4,7 +4,7 @@
 import atl, dtl
 
 
-def all(mtx, datecol, navcol):
+def test(mtx, datecol, navcol):
     """
         compute all return rate
     :param mtx:
@@ -47,6 +47,32 @@ def all(mtx, datecol, navcol):
     return results
 
 
+def all(mtx, datecol, navcol):
+    """
+        compute all return rate
+    :param mtx:
+    :param navcol:
+    :return:
+    """
+    results = {
+        "total": total(mtx, navcol),
+        "average": {
+            "year": average(mtx, datecol, navcol, dtl.time.year)
+        },
+        "compound": {
+            "year": compound(mtx, datecol, navcol, dtl.time.year)
+        },
+        "rolling": {
+            "year": rolling(mtx, datecol, navcol, dtl.time.year)
+        },
+        "recent": {
+            "year": recent(mtx, datecol, navcol, dtl.time.year, [1, 2, 3, 4, 5])
+        }
+    }
+
+    return results
+
+
 def total(mtx, navcol):
     """
         compute total return rate
@@ -75,7 +101,7 @@ def average(mtx, datecol, navcol, periodcls):
     total_used_days = abs(mtx[0][datecol-1] - mtx[-1][datecol-1])
 
     # then compute the average return rate by specified period
-    avg_return_rate = total_return_rate*periodcls.unitdays()/total_used_days
+    avg_return_rate = total_return_rate*periodcls.unit_days()/total_used_days
 
     return avg_return_rate
 
@@ -97,7 +123,7 @@ def compound(mtx, datecol, navcol, periodcls):
     total_used_days = abs(mtx[0][datecol-1] - mtx[-1][datecol-1])
 
     # then compute the compund return rate by specified period
-    cmpd_return_rate = pow(1+total_return_rate, periodcls.unitdays()/total_used_days) - 1
+    cmpd_return_rate = pow(1+total_return_rate, periodcls.unit_days()/total_used_days) - 1
 
     return cmpd_return_rate
 
@@ -161,7 +187,7 @@ def rolling(mtx, datecol, navcol, periodcls=None, annualdays=None):
     return results
 
 
-def recent(mtx, datecol, navcol, periodcls, periods=1, annualdays=None):
+def recent(mtx, datecol, navcol, periodcls, periods=[1], annualdays=None):
     """
         compute recent return rates based on the matrix data
     :param mtx: matrix
@@ -175,25 +201,33 @@ def recent(mtx, datecol, navcol, periodcls, periods=1, annualdays=None):
     if not issubclass(periodcls, dtl.time.date):
         raise "invalid period for compute recent return rates."
 
-    # today
-    today = dtl.time.date(dtl.time.date.today())
+    results = {}
 
-    # recent begin and end date
-    recent_begin_date = today - periodcls.delta(periods)
-    # begin & end date/nav for recent days
-    begin_date, begin_nav, end_date, end_nav = None, None, None, None
+    for period in periods:
+        # today
+        last_end_date = dtl.time.date.today()
 
-    # get the begin & end date/nav from input data
-    for row in mtx:
-        if row[datecol-1] < recent_begin_date:
-            begin_date, begin_nav = row[datecol-1], row[navcol-1]
+        # recent begin and end date
+        first_begin_date = last_end_date - periodcls.delta(period)
 
-        if row[datecol-1] >= recent_begin_date:
-            end_date, end_nav = row[datecol-1], row[navcol-1]
+        # begin & end date/nav for recent days
+        begin_date, begin_nav, end_date, end_nav = mtx[0][datecol-1], mtx[0][navcol-1], mtx[-1][datecol-1], mtx[-1][navcol-1]
 
-    # compute return rate for current days
-    if end_nav is not None and begin_nav is not None:
-        absrate = (end_nav-begin_nav)/begin_nav
-        return pow(1+absrate, annualdays/(periods*periodcls.unitdays())) - 1 if annualdays is not None else absrate
-    else:
-        return None
+        # get the begin & end date/nav from input data
+        for row in mtx:
+            if row[datecol-1] < first_begin_date:
+                begin_date, begin_nav = row[datecol-1], row[navcol-1]
+
+            if row[datecol-1] >= first_begin_date:
+                end_date, end_nav = row[datecol-1], row[navcol-1]
+
+        # compute return rate for current days
+        absret = (end_nav-begin_nav)/begin_nav
+        rctret = pow(1+absret, annualdays/(periods*periodcls.unit_days())) - 1 if annualdays is not None else absret
+
+        # date range
+        rangedate = dtl.time.daterange(first_begin_date, last_end_date)
+
+        results[rangedate] = rctret
+
+    return results

@@ -17,7 +17,7 @@ or
 import dtl
 
 
-def all(mtx, ncol=None):
+def test(mtx, ncol=None):
     """
         compute all max drawdown indicators
     :param mtx: matrix or array
@@ -31,6 +31,37 @@ def all(mtx, ncol=None):
     }
 
     return results
+
+
+def all(mtx, datecol, ncol):
+    """
+        compute all max drawdown indicators
+    :param mtx: matrix or array
+    :param ncol: int or None, which column in matrix want to compute drawdown indicator
+    :return: dict
+    """
+
+    results = {
+        "total": max_drawdown(mtx, ncol),
+        "rolling": {
+            "year": rolling(mtx, datecol, ncol, dtl.time.year)
+        },
+        "recent": {
+            "year": recent(mtx, datecol, ncol, dtl.time.year, [1, 2, 3, 4, 5])
+        }
+    }
+
+    return results
+
+
+def trend(mtx, ncol=None):
+    """
+        mdd trend
+    :param mtx:
+    :param ncol:
+    :return:
+    """
+    return max_drawdown_trends(mtx, ncol)
 
 
 def slow_max_drawdown(mtx, ncol=None):
@@ -161,3 +192,55 @@ def max_drawdown_trends(mtx, ncol=None):
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
     return fast_max_drawdown_trends(mtx, ncol)
+
+
+def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
+    """
+        compute rolling mdd by specified period
+    :param mtx:
+    :param datecol:
+    :param navcol:
+    :param rolling_period_cls:
+    :return:
+    """
+    try:
+        # split matrix by specified period
+        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+
+        # compute rolling period beta
+        results = {}
+        for prd, navs in pmtx.items():
+            results[prd] = max_drawdown(navs, navcol)
+
+        return results
+    except:
+        return None
+
+
+def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1]):
+    """
+        compute recent mdd by sepcified period
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :param rolling_period_cls:
+    :param sample_period_cls:
+    :param interp_func:
+    :return:
+    """
+    try:
+        results = {}
+        for period in periods:
+            end_date = dtl.time.date.today()
+            begin_date = end_date - recent_period_cls.delta(period)
+            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+
+            key = dtl.time.daterange(begin_date, end_date)
+            value = max_drawdown(pmtx, navcol)
+
+            results[key] = value
+
+        return results
+    except:
+        return None

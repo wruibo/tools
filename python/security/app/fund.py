@@ -31,17 +31,17 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
 
     result = AnalysisResult(code)
 
-    result.ret = sal.prr.profitall(fundnavs, 1, 2)
+    result.ret = sal.prr.profit.all(fundnavs, 1, 2)
 
-    result.mdd = sal.prr.mddall(fundnavs, 2)
-    result.beta = sal.prr.betaall(fundbmkbvals, 1, 2, 3)
-    result.sharpe = sal.prr.sharpeall(fundnavs, 1, 2, rfr)
-    result.calmar = sal.prr.calmarall(fundnavs, 1, 2)
-    result.jensen = sal.prr.jensenall(fundbmkbvals, 1, 2, 3, rfr)
-    result.treynor = sal.prr.treynorall(fundbmkbvals, 1, 2, 3, rfr)
-    result.sortino = sal.prr.sortinoall(fundnavs, 1, 2, rfr)
-    result.information_ratio = sal.prr.inforatioall(fundbmkbvals, 1, 2, 3)
-    result.volatility = sal.prr.volatility(fundnavs, 1, 2)
+    result.mdd = sal.prr.mdd.all(fundnavs, 1, 2)
+    result.beta = sal.prr.beta.all(fundbmkbvals, 1, 2, 3)
+    result.sharpe = sal.prr.sharpe.all(fundnavs, 1, 2, rfr)
+    result.calmar = sal.prr.calmar.all(fundnavs, 1, 2)
+    result.jensen = sal.prr.jensen.all(fundbmkbvals, 1, 2, 3, rfr)
+    result.treynor = sal.prr.treynor.all(fundbmkbvals, 1, 2, 3, rfr)
+    result.sortino = sal.prr.sortino.all(fundnavs, 1, 2, rfr)
+    result.information_ratio = sal.prr.infor.all(fundbmkbvals, 1, 2, 3)
+    result.volatility = sal.prr.volatility.all(fundnavs, 1, 2)
 
     return result
 

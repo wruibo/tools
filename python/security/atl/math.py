@@ -56,7 +56,7 @@ def cov(arr1, arr2):
     idx = num = len(arr1)
     while idx > 0:
         idx -= 1
-        sum += (arr1[idx]-expect_value1)*(arr1[idx]-expect_value2)
+        sum += (arr1[idx]-expect_value1)*(arr2[idx]-expect_value2)
 
     return sum / (num-1)
 

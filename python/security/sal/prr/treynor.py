@@ -26,7 +26,29 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     return results
 
 
-def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, periodcls=None):
+def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
+    """
+        compute all jensen values for portfolio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :return:
+    """
+    results = {
+        "total": treynor(mtx, datecol, astcol, bmkcol, risk_free_rate),
+        "rolling":{
+            "year":rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, dtl.time.year)
+        },
+        "recent":{
+            "year":recent(mtx, datecol, astcol, bmkcol, risk_free_rate, dtl.time.year, periods=[1, 2, 3, 4, 5])
+        }
+    }
+
+    return results
+
+
+def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=dtl.time.month, interp_func=None):
     """
         compute treynor ratio for asset
     :param mtx: matrix
@@ -41,21 +63,81 @@ def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, interpfunc=None, perio
     """
     try:
         # interpolate the asset&benchmark values
-        if interpfunc is not None:
-            mtx, datecol, astcol, bmkcol = interpfunc(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
+        if interp_func is not None:
+            mtx, datecol, astcol, bmkcol = interp_func(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
 
         # compute year profit for time revenue
-        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, periodcls).values())
-        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, periodcls).values())
+        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
+        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
 
         # period compound return rate for specified period
-        astexp = sal.prr.profit.compound(mtx, datecol, astcol, periodcls)
-        rfrexp = pow((1+risk_free_rate), periodcls.unitdays()/dtl.time.year.unitdays()) - 1.0
+        astexp = sal.prr.profit.compound(mtx, datecol, astcol, sample_period_cls)
+
+        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/dtl.time.year.unit_days()) - 1.0
 
         # compute asset beta factor
         astbeta = atl.math.cov(astprofits, bmkprofits) / atl.math.var(bmkprofits)
 
         # treynor ratio
-        return (astexp - rfrexp) / astbeta
+        tr = (astexp - rfrexp) / astbeta
+
+        return tr
+    except:
+        return None
+
+
+def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+    """
+        compute rolling information ratio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :param rolling_period_cls:
+    :param sample_period_cls:
+    :param interp_func:
+    :return:
+    """
+    try:
+        # split matrix by specified period
+        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+
+        # compute rolling period beta
+        results = {}
+        for prd, navs in pmtx.items():
+            results[prd] = treynor(navs, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func)
+
+        return results
+    except:
+        return None
+
+
+def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+    """
+        compute recent jensen ratio
+    :param mtx:
+    :param datecol:
+    :param astcol:
+    :param bmkcol:
+    :param risk_free_rate:
+    :param recent_period_cls:
+    :param periods:
+    :param sample_period_cls:
+    :param interp_func:
+    :return:
+    """
+    try:
+        results = {}
+        for period in periods:
+            end_date = dtl.time.date.today()
+            begin_date = end_date - recent_period_cls.delta(period)
+            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+
+            key = dtl.time.daterange(begin_date, end_date)
+            value = treynor(pmtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func)
+
+            results[key] = value
+
+        return results
     except:
         return None
