@@ -14,7 +14,7 @@ def avg(arr):
     return float(sum(arr)) / len(arr)
 
 
-def var(arr):
+def var(arr, sample=True):
     """
         compute variance of array values
     :param arr: list, list of array values
@@ -23,23 +23,23 @@ def var(arr):
     # use average value of values as the expect value
     expect_value = avg(arr)
 
-    sum = 0.0
+    sum, num = 0.0, len(arr)
     for value in arr:
         sum += (value-expect_value)**2
 
-    return sum / (len(arr)-1)
+    return sum / (num-1) if sample else sum / num
 
 
-def stddev(arr):
+def stddev(arr, sample=True):
     '''
         compute standard deviation of array values
     :param arr: list, list of array values
     :return: float, standard deviation of array values
     '''
-    return math.sqrt(var(arr))
+    return math.sqrt(var(arr, sample))
 
 
-def cov(arr1, arr2):
+def cov(arr1, arr2, sample=True):
     """
         compute the covariance of array a1 and a2
     :param arr1: list, list of input data values
@@ -58,10 +58,10 @@ def cov(arr1, arr2):
         idx -= 1
         sum += (arr1[idx]-expect_value1)*(arr2[idx]-expect_value2)
 
-    return sum / (num-1)
+    return sum / (num-1) if sample else sum / num
 
 
-def cor(arr1, arr2):
+def cor(arr1, arr2, sample=True):
     """
         compute the correlation of array a1 and a2, using pearson correlation algorithm
      :param arr1: list, list of input data values
@@ -72,11 +72,11 @@ def cor(arr1, arr2):
         raise ("correlation needs 2 length equal arrays, input array is %d and %d." % (len(arr1), len(arr2)))
 
     # compute covariance of a1 and a2
-    cov12 = cov(arr1, arr2)
+    cov12 = cov(arr1, arr2, sample)
 
     # compute the standard deviation of a1, a2
-    stddev1 = stddev(arr1)
-    stddev2 = stddev(arr2)
+    stddev1 = stddev(arr1, sample)
+    stddev2 = stddev(arr2, sample)
 
     return cov12/(stddev1*stddev2)
 

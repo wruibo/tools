@@ -57,13 +57,17 @@ def all(mtx, datecol, navcol):
     results = {
         "total": total(mtx, navcol),
         "average": {
-            "year": average(mtx, datecol, navcol, dtl.time.year)
+            "year": average(mtx, datecol, navcol, dtl.time.year),
+            "quarter": average(mtx, datecol, navcol, dtl.time.quarter),
+            "month": average(mtx, datecol, navcol, dtl.time.month)
         },
         "compound": {
             "year": compound(mtx, datecol, navcol, dtl.time.year)
         },
         "rolling": {
-            "year": rolling(mtx, datecol, navcol, dtl.time.year)
+            "year": rolling(mtx, datecol, navcol, dtl.time.year),
+            "quarter": rolling(mtx, datecol, navcol, dtl.time.quarter),
+            "month": rolling(mtx, datecol, navcol, dtl.time.month)
         },
         "recent": {
             "year": recent(mtx, datecol, navcol, dtl.time.year, [1, 2, 3, 4, 5])

@@ -57,7 +57,7 @@ def all(mtx, datecol, astcol, bmkcol):
     return results
 
 
-def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=None, interp_func=None):
+def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=dtl.time.month, interp_func=None):
     """
         compute beta factor for asset
     :param mtx: matrix
@@ -83,7 +83,7 @@ def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=None, interp_func=None)
         return None
 
 
-def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, sample_period_cls=None, interp_func=None):
+def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
     """
         compute rolling beta factor
     :param mtx:
@@ -109,7 +109,7 @@ def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, samp
         return None
 
 
-def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=None, interp_func=None):
+def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
     """
         compute recent beta factor
     :param mtx:

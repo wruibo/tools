@@ -50,7 +50,7 @@ def linear(mtx, basecol, step, *cols):
             x= x0+j*step
             ys, xx0 = [], x-x0
             for k in range(0, len(y0s)):
-                y = y0s[k] + int(((y1s[k]-y0s[k])/x10) * xx0)
+                y = y0s[k] + ((y1s[k]-y0s[k])/x10) * xx0
                 ys.append(y)
             interpmtx.append(ys)
 

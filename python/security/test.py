@@ -10,6 +10,7 @@ if __name__ == "__main__":
 
     #result = app.fund.analyse("1019482", 0.014)
     #result = app.fund.analyse("1005096", 0.014)
-    result = app.fund.analyse("1025925", 0.014)
+    #result = app.fund.analyse("1025925", 0.014)
+    result = app.fund.analyse("1000143", 0.014)
     #result = app.fund.analyse("1000502", 0.014)
     print(result)

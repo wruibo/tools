@@ -43,7 +43,7 @@ def all(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        "total": sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.day, atl.interp.linear),
+        "total": sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.month, atl.interp.linear),
         "rolling": {
             "year": rolling(mtx, datecol, navcol, risk_free_rate, dtl.time.year, dtl.time.day, atl.interp.linear)
         },
@@ -71,7 +71,7 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mont
             mtx, datecol, navcol = interp_func(mtx, datecol, 1, datecol, navcol), 1, 2
 
         # return rates for specified period
-        returns = list(sal.prr.profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
+        profits = list(sal.prr.profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
 
         # period compound return rate for specified period
         astexp = sal.prr.profit.compound(mtx, datecol, navcol, sample_period_cls)
@@ -83,7 +83,7 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mont
         er = astexp - rfrexp
 
         # calculate the asset revenue standard deviation
-        sd = atl.math.stddev(returns)
+        sd = atl.math.stddev(profits)
 
         # sharpe ratio
         sp = er / sd
