@@ -10,7 +10,9 @@
     :param rf: float, interval risk free return rate, same interval with @revenues
     :return: float, sharpe ratio fo the assets
 """
-import atl, sal, dtl
+import utl
+
+from . import profit
 
 
 def test(mtx, datecol, navcol, risk_free_rate):
@@ -23,11 +25,11 @@ def test(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.day, atl.interp.linear),
-        'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.week, atl.interp.linear),
-        'monthly':sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.month, atl.interp.linear),
-        'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.quarter, atl.interp.linear),
-        'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.year, atl.interp.linear)
+        'daily':sharpe(mtx, datecol, navcol, risk_free_rate, utl.date.day, utl.math.interp.linear),
+        'weekly': sharpe(mtx, datecol, navcol, risk_free_rate, utl.date.week, utl.math.interp.linear),
+        'monthly':sharpe(mtx, datecol, navcol, risk_free_rate, utl.date.month, utl.math.interp.linear),
+        'quarterly': sharpe(mtx, datecol, navcol, risk_free_rate, utl.date.quarter, utl.math.interp.linear),
+        'yearly': sharpe(mtx, datecol, navcol, risk_free_rate, utl.date.year, utl.math.interp.linear)
     }
 
     return results
@@ -43,19 +45,19 @@ def all(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        "total": sharpe(mtx, datecol, navcol, risk_free_rate, dtl.time.month, atl.interp.linear),
+        "total": sharpe(mtx, datecol, navcol, risk_free_rate, utl.date.month, utl.math.interp.linear),
         "rolling": {
-            "year": rolling(mtx, datecol, navcol, risk_free_rate, dtl.time.year, dtl.time.day, atl.interp.linear)
+            "year": rolling(mtx, datecol, navcol, risk_free_rate, utl.date.year, utl.date.day, utl.math.interp.linear)
         },
         "recent": {
-            "year": recent(mtx, datecol, navcol, risk_free_rate, dtl.time.year, [1, 2, 3, 4, 5], dtl.time.day, atl.interp.linear)
+            "year": recent(mtx, datecol, navcol, risk_free_rate, utl.date.year, [1, 2, 3, 4, 5], utl.date.day, utl.math.interp.linear)
         }
     }
 
     return results
 
 
-def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.month, interp_func=None):
+def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute sharpe ratio, default without interpolation
     :param mtx: matrix, nav data
@@ -71,19 +73,19 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mont
             mtx, datecol, navcol = interp_func(mtx, datecol, 1, datecol, navcol), 1, 2
 
         # return rates for specified period
-        profits = list(sal.prr.profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
+        profits = list(profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
 
         # period compound return rate for specified period
-        astexp = sal.prr.profit.compound(mtx, datecol, navcol, sample_period_cls)
+        astexp = profit.compound(mtx, datecol, navcol, sample_period_cls)
 
         # risk free return of the period
-        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/dtl.time.year.unit_days()) - 1.0
+        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/utl.date.year.unit_days()) - 1.0
 
         # compute the asset excess expect return over the risk free asset return
         er = astexp - rfrexp
 
         # calculate the asset revenue standard deviation
-        sd = atl.math.stddev(profits)
+        sd = utl.math.stat.stddev(profits)
 
         # sharpe ratio
         sp = er / sd
@@ -95,7 +97,7 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mont
         return None
 
 
-def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute rolling sharpe ratio
     :param mtx:
@@ -108,7 +110,7 @@ def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=dtl.time.ye
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -120,7 +122,7 @@ def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=dtl.time.ye
         return None
 
 
-def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
     """
         compute recent sharpe ratio
     :param mtx:
@@ -136,11 +138,11 @@ def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=dtl.time.year
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = sharpe(pmtx, datecol, astcol, risk_free_rate, sample_period_cls, interp_func)
 
             results[key] = value

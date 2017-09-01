@@ -2,7 +2,9 @@
     volatility in finance, which is the degree of variation of price, formula:
         volatility(R) = standard-deviation(R)
 """
-import sal, atl, dtl
+import utl
+
+from . import profit
 
 
 def all(mtx, datecol, navcol):
@@ -16,17 +18,17 @@ def all(mtx, datecol, navcol):
     results = {
         "total": volatility(mtx, datecol, navcol),
         "rolling":{
-            "year":rolling(mtx, datecol, navcol, dtl.time.year)
+            "year":rolling(mtx, datecol, navcol, utl.date.year)
         },
         "recent":{
-            "year":recent(mtx, datecol, navcol, dtl.time.year, periods=[1, 2, 3, 4, 5])
+            "year":recent(mtx, datecol, navcol, utl.date.year, periods=[1, 2, 3, 4, 5])
         }
     }
 
     return results
 
 
-def volatility(mtx, datecol, navcol, sample_period_cls=dtl.time.month, interp_func=None):
+def volatility(mtx, datecol, navcol, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute volatility for specified asset navs
     :param mtx: matrix
@@ -40,15 +42,15 @@ def volatility(mtx, datecol, navcol, sample_period_cls=dtl.time.month, interp_fu
         mtx, datecol, navcol = interp_func(mtx, datecol, 1, datecol, navcol), 1, 2
 
     # profits
-    profits = list(sal.prr.profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
+    profits = list(profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
 
     # volatility
-    v = atl.math.stddev(profits)
+    v = utl.math.stat.stddev(profits)
 
     return v
 
 
-def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+def rolling(mtx, datecol, navcol, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute rolling calmar by specified period
     :param mtx:
@@ -59,7 +61,7 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year, sample_perio
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -71,7 +73,7 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year, sample_perio
         return None
 
 
-def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+def recent(mtx, datecol, navcol, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
     """
         compute recent beta factor
     :param mtx:
@@ -86,11 +88,11 @@ def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1], s
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = volatility(pmtx, datecol, navcol, sample_period_cls, interp_func)
 
             results[key] = value

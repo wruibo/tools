@@ -38,7 +38,7 @@ class vendor:
 
 
 # current source vendor for fund data
-_vendor = vendor.cfq
+_vendor = vendor.smpp
 
 
 def source(vdr=None):

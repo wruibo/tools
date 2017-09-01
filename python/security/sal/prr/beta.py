@@ -2,7 +2,8 @@
     beta factor in CAMP model, formula:
        AssetsBetaFactor = Cov(AssetsRevenues, MarketRevenues)/Variance(MarketRevenues)
 """
-import atl, dtl, sal
+import utl
+from . import profit
 
 
 def test(mtx, datecol, astcol, bmkcol):
@@ -16,18 +17,18 @@ def test(mtx, datecol, astcol, bmkcol):
     """
     results = {
         "interpolate":{
-            'day':beta(mtx, datecol, astcol, bmkcol, dtl.time.day, atl.interp.linear),
-            'week': beta(mtx, datecol, astcol, bmkcol, dtl.time.week, atl.interp.linear),
-            'month':beta(mtx, datecol, astcol, bmkcol, dtl.time.month, atl.interp.linear),
-            'quarter': beta(mtx, datecol, astcol, bmkcol, dtl.time.quarter, atl.interp.linear),
-            'year': beta(mtx, datecol, astcol, bmkcol, dtl.time.year, atl.interp.linear),
+            'day':beta(mtx, datecol, astcol, bmkcol, utl.date.day, utl.math.interp.linear),
+            'week': beta(mtx, datecol, astcol, bmkcol, utl.date.week, utl.math.interp.linear),
+            'month':beta(mtx, datecol, astcol, bmkcol, utl.date.month, utl.math.interp.linear),
+            'quarter': beta(mtx, datecol, astcol, bmkcol, utl.date.quarter, utl.math.interp.linear),
+            'year': beta(mtx, datecol, astcol, bmkcol, utl.date.year, utl.math.interp.linear),
         },
         "original":{
-            'day': beta(mtx, datecol, astcol, bmkcol, dtl.time.day, None),
-            'week': beta(mtx, datecol, astcol, bmkcol, dtl.time.week, None),
-            'month': beta(mtx, datecol, astcol, bmkcol, dtl.time.month, None),
-            'quarter': beta(mtx, datecol, astcol, bmkcol, dtl.time.quarter, None),
-            'year': beta(mtx, datecol, astcol, bmkcol, dtl.time.year, None),
+            'day': beta(mtx, datecol, astcol, bmkcol, utl.date.day, None),
+            'week': beta(mtx, datecol, astcol, bmkcol, utl.date.week, None),
+            'month': beta(mtx, datecol, astcol, bmkcol, utl.date.month, None),
+            'quarter': beta(mtx, datecol, astcol, bmkcol, utl.date.quarter, None),
+            'year': beta(mtx, datecol, astcol, bmkcol, utl.date.year, None),
         }
     }
 
@@ -46,18 +47,18 @@ def all(mtx, datecol, astcol, bmkcol):
     results = {
         "total": beta(mtx, datecol, astcol, bmkcol),
         "rolling": {
-            "year":rolling(mtx, datecol, astcol, bmkcol, dtl.time.year, dtl.time.month, atl.interp.linear),
+            "year":rolling(mtx, datecol, astcol, bmkcol, utl.date.year, utl.date.month, utl.math.interp.linear),
         },
 
         "recent": {
-            "year":recent(mtx, datecol, astcol, bmkcol, dtl.time.year, [1, 2, 3, 4, 5], dtl.time.month, atl.interp.linear)
+            "year":recent(mtx, datecol, astcol, bmkcol, utl.date.year, [1, 2, 3, 4, 5], utl.date.month, utl.math.interp.linear)
         }
     }
 
     return results
 
 
-def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=dtl.time.month, interp_func=None):
+def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute beta factor for asset
     :param mtx: matrix
@@ -74,16 +75,16 @@ def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=dtl.time.month, interp_
             mtx, datecol, astcol, bmkcol = interp_func(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
 
         # compute year profit for time revenue
-        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
-        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
+        astprofits = list(profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
+        bmkprofits = list(profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
 
         # compute beta factor
-        return atl.math.cov(astprofits, bmkprofits) / atl.math.var(bmkprofits)
+        return utl.math.math.cov(astprofits, bmkprofits) / utl.math.math.var(bmkprofits)
     except:
         return None
 
 
-def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute rolling beta factor
     :param mtx:
@@ -97,7 +98,7 @@ def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, samp
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -109,7 +110,7 @@ def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=dtl.time.year, samp
         return None
 
 
-def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
     """
         compute recent beta factor
     :param mtx:
@@ -124,11 +125,11 @@ def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=dtl.time.year, period
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = beta(pmtx, datecol, astcol, bmkcol, sample_period_cls, interp_func)
 
             results[key] = value

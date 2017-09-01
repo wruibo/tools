@@ -5,7 +5,9 @@
         { rp | rp in Rp and rp<rfr}
 
 """
-import sal, atl, dtl
+import utl
+
+from . import profit
 
 
 def test(mtx, datecol, navcol, risk_free_rate):
@@ -18,11 +20,11 @@ def test(mtx, datecol, navcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':sortino(mtx, datecol, navcol, risk_free_rate, dtl.time.day, atl.interp.linear),
-        'weekly': sortino(mtx, datecol, navcol, risk_free_rate, dtl.time.week, atl.interp.linear),
-        'monthly':sortino(mtx, datecol, navcol, risk_free_rate, dtl.time.month, atl.interp.linear),
-        'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, dtl.time.quarter, atl.interp.linear),
-        'yearly': sortino(mtx, datecol, navcol, risk_free_rate, dtl.time.year, atl.interp.linear)
+        'daily':sortino(mtx, datecol, navcol, risk_free_rate, utl.date.day, utl.math.interp.linear),
+        'weekly': sortino(mtx, datecol, navcol, risk_free_rate, utl.date.week, utl.math.interp.linear),
+        'monthly':sortino(mtx, datecol, navcol, risk_free_rate, utl.date.month, utl.math.interp.linear),
+        'quarterly': sortino(mtx, datecol, navcol, risk_free_rate, utl.date.quarter, utl.math.interp.linear),
+        'yearly': sortino(mtx, datecol, navcol, risk_free_rate, utl.date.year, utl.math.interp.linear)
     }
 
     return results
@@ -40,17 +42,17 @@ def all(mtx, datecol, navcol, risk_free_rate):
     results = {
         "total": sortino(mtx, datecol, navcol, risk_free_rate),
         "rolling": {
-            "year": rolling(mtx, datecol, navcol, risk_free_rate, dtl.time.year)
+            "year": rolling(mtx, datecol, navcol, risk_free_rate, utl.date.year)
         },
         "recent": {
-            "year": recent(mtx, datecol, navcol, risk_free_rate, dtl.time.year, [1, 2, 3, 4, 5])
+            "year": recent(mtx, datecol, navcol, risk_free_rate, utl.date.year, [1, 2, 3, 4, 5])
         }
     }
 
     return results
 
 
-def sortino(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.month, interp_func=None):
+def sortino(mtx, datecol, navcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute sortino ratio, default without interpolation
     :param mtx: matrix, nav data
@@ -67,11 +69,11 @@ def sortino(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mon
             mtx, datecol, navcol = interp_func(mtx, datecol, 1, datecol, navcol), 1, 2
 
         # compute year return rate based on the nav
-        rates = list(sal.prr.profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
+        rates = list(profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
 
         # period compound return rate for specified period
-        astexp = sal.prr.profit.compound(mtx, datecol, navcol, sample_period_cls)
-        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/dtl.time.year.unit_days()) - 1.0
+        astexp = profit.compound(mtx, datecol, navcol, sample_period_cls)
+        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/utl.date.year.unit_days()) - 1.0
 
         # compute the asset excess expect return over the risk free asset return
         er = astexp- rfrexp
@@ -83,7 +85,7 @@ def sortino(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mon
             if rate < rfrexp: drates.append(rate)
 
         # calculate the asset revenue standard deviation
-        sd = atl.math.stddev(drates)
+        sd = utl.math.stat.stddev(drates)
 
         # sortino ratio
         sn = er / sd
@@ -94,7 +96,7 @@ def sortino(mtx, datecol, navcol, risk_free_rate, sample_period_cls=dtl.time.mon
         return None
 
 
-def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute rolling sharpe ratio
     :param mtx:
@@ -107,7 +109,7 @@ def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=dtl.time.ye
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -119,7 +121,7 @@ def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=dtl.time.ye
         return None
 
 
-def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
     """
         compute recent sharpe ratio
     :param mtx:
@@ -135,11 +137,11 @@ def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=dtl.time.year
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = sortino(pmtx, datecol, astcol, risk_free_rate, sample_period_cls, interp_func)
 
             results[key] = value

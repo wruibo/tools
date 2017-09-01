@@ -3,7 +3,9 @@
     AssetsTreynorRatio = (ExpectAssetsRevenue - RiskFreeReturnRate) / AssetsBetaFactor
 """
 
-import atl, sal, dtl
+import utl
+
+from . import profit
 
 
 def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
@@ -16,11 +18,11 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     :return:
     """
     results = {
-        'daily':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.day),
-        'weekly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.week),
-        'monthly':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.month),
-        'quarterly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.quarter),
-        'yearly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, atl.interp.linear, dtl.time.year)
+        'daily':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.math.interp.linear, utl.date.day),
+        'weekly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.math.interp.linear, utl.date.week),
+        'monthly':treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.math.interp.linear, utl.date.month),
+        'quarterly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.math.interp.linear, utl.date.quarter),
+        'yearly': treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.math.interp.linear, utl.date.year)
     }
 
     return results
@@ -38,17 +40,17 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     results = {
         "total": treynor(mtx, datecol, astcol, bmkcol, risk_free_rate),
         "rolling":{
-            "year":rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, dtl.time.year)
+            "year":rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.date.year)
         },
         "recent":{
-            "year":recent(mtx, datecol, astcol, bmkcol, risk_free_rate, dtl.time.year, periods=[1, 2, 3, 4, 5])
+            "year":recent(mtx, datecol, astcol, bmkcol, risk_free_rate, utl.date.year, periods=[1, 2, 3, 4, 5])
         }
     }
 
     return results
 
 
-def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=dtl.time.month, interp_func=None):
+def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute treynor ratio for asset
     :param mtx: matrix
@@ -67,16 +69,16 @@ def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=dtl.
             mtx, datecol, astcol, bmkcol = interp_func(mtx, datecol, 1, datecol, astcol, bmkcol), 1, 2, 3
 
         # compute year profit for time revenue
-        astprofits = list(sal.prr.profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
-        bmkprofits = list(sal.prr.profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
+        astprofits = list(profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
+        bmkprofits = list(profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
 
         # period compound return rate for specified period
-        astexp = sal.prr.profit.compound(mtx, datecol, astcol, sample_period_cls)
+        astexp = profit.compound(mtx, datecol, astcol, sample_period_cls)
 
-        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/dtl.time.year.unit_days()) - 1.0
+        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/utl.date.year.unit_days()) - 1.0
 
         # compute asset beta factor
-        astbeta = atl.math.cov(astprofits, bmkprofits) / atl.math.var(bmkprofits)
+        astbeta = utl.math.stat.cov(astprofits, bmkprofits) / utl.math.stat.var(bmkprofits)
 
         # treynor ratio
         tr = (astexp - rfrexp) / astbeta
@@ -86,7 +88,7 @@ def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=dtl.
         return None
 
 
-def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=dtl.time.year, sample_period_cls=dtl.time.month, interp_func=None):
+def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
     """
         compute rolling information ratio
     :param mtx:
@@ -100,7 +102,7 @@ def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=dtl
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -112,7 +114,7 @@ def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=dtl
         return None
 
 
-def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=dtl.time.year, periods=[1], sample_period_cls=dtl.time.month, interp_func=None):
+def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
     """
         compute recent jensen ratio
     :param mtx:
@@ -129,11 +131,11 @@ def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=dtl.t
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = treynor(pmtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func)
 
             results[key] = value

@@ -1,0 +1,6 @@
+"""
+    stock
+"""
+
+class Stock:
+    pass

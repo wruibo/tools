@@ -3,7 +3,9 @@
     calmar(asset) = compound-year-expect-asset-return / max-drawdown-asset-return
 """
 
-import sal, atl, dtl
+import utl
+
+from . import mdd, profit
 
 
 def test(mtx, datecol, navcol):
@@ -32,10 +34,10 @@ def all(mtx, datecol, navcol):
     results = {
         "total": calmar(mtx, datecol, navcol),
         "rolling":{
-            "year":rolling(mtx, datecol, navcol, dtl.time.year)
+            "year":rolling(mtx, datecol, navcol, utl.date.year)
         },
         "recent":{
-            "year":recent(mtx, datecol, navcol, dtl.time.year, periods=[1, 2, 3, 4, 5])
+            "year":recent(mtx, datecol, navcol, utl.date.year, periods=[1, 2, 3, 4, 5])
         }
     }
 
@@ -52,18 +54,18 @@ def calmar(mtx, datecol, navcol):
     """
     try:
         # calculate the max drawdown of asset price
-        mdd = sal.prr.mdd.max_drawdown(mtx, navcol)
+        maxdd = mdd.max_drawdown(mtx, navcol)
 
         # compund annual return rates
-        compound_annual_return_rates = sal.prr.profit.compound(mtx, datecol, navcol, dtl.time.year)
+        compound_annual_return_rates = profit.compound(mtx, datecol, navcol, utl.date.year)
 
         # calmar ratio
-        return compound_annual_return_rates/-mdd
+        return compound_annual_return_rates/-maxdd
     except:
         return None
 
 
-def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
+def rolling(mtx, datecol, navcol, rolling_period_cls=utl.date.year):
     """
         compute rolling calmar by specified period
     :param mtx:
@@ -74,7 +76,7 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -86,7 +88,7 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
         return None
 
 
-def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1]):
+def recent(mtx, datecol, navcol, recent_period_cls=utl.date.year, periods=[1]):
     """
         compute recent beta factor
     :param mtx:
@@ -101,11 +103,11 @@ def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1]):
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = calmar(pmtx, datecol, navcol)
 
             results[key] = value

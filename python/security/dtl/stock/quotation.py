@@ -1,3 +1,0 @@
-"""
-    quotation data structure
-"""

@@ -1,0 +1,6 @@
+"""
+    frame
+"""
+
+class Frame:
+    pass

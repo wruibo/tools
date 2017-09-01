@@ -14,7 +14,7 @@ or
     array:
     [x0, x1, x2, ..., xn]
 """
-import dtl
+import utl
 
 
 def test(mtx, ncol=None):
@@ -44,10 +44,10 @@ def all(mtx, datecol, ncol):
     results = {
         "total": max_drawdown(mtx, ncol),
         "rolling": {
-            "year": rolling(mtx, datecol, ncol, dtl.time.year)
+            "year": rolling(mtx, datecol, ncol, utl.date.year)
         },
         "recent": {
-            "year": recent(mtx, datecol, ncol, dtl.time.year, [1, 2, 3, 4, 5])
+            "year": recent(mtx, datecol, ncol, utl.date.year, [1, 2, 3, 4, 5])
         }
     }
 
@@ -72,7 +72,7 @@ def slow_max_drawdown(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
-    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = utl.math.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     pmax, vmax, pmin, vmin, drawdown = None, None, None, None, None
 
@@ -97,7 +97,7 @@ def fast_max_drawdown(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: [max-drawdown, pos max, value max, pos min, value min] of the list
     """
-    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = utl.math.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     pmax, vmax, pmin, vmin, drawdown = None, None, None, None, None
     ipos, ivalue, jpos, jvalue, ijdrawdown = None, None, None, None, None
@@ -139,7 +139,7 @@ def slow_max_drawdown_trends(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
-    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = utl.math.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     dd, j = [], 0
     while j<len(arr):
@@ -160,7 +160,7 @@ def fast_max_drawdown_trends(mtx, ncol=None):
     :param ncol: int, which column in matrix want to compute
     :return: list, [max-drawdown0, max-drawdown1, ....]
     """
-    arr = dtl.matrix.subcol(mtx, ncol) if ncol is not None else mtx
+    arr = utl.math.matrix.subcol(mtx, ncol) if ncol is not None else mtx
 
     dd, j, maxi, maxv = [], 0, 0, arr[0]
     while j<len(arr):
@@ -194,7 +194,7 @@ def max_drawdown_trends(mtx, ncol=None):
     return fast_max_drawdown_trends(mtx, ncol)
 
 
-def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
+def rolling(mtx, datecol, navcol, rolling_period_cls=utl.date.year):
     """
         compute rolling mdd by specified period
     :param mtx:
@@ -205,7 +205,7 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
     """
     try:
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, rolling_period_cls, datecol)
+        pmtx = utl.math.matrix.split(mtx, rolling_period_cls, datecol)
 
         # compute rolling period beta
         results = {}
@@ -217,7 +217,7 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=dtl.time.year):
         return None
 
 
-def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1]):
+def recent(mtx, datecol, navcol, recent_period_cls=utl.date.year, periods=[1]):
     """
         compute recent mdd by sepcified period
     :param mtx:
@@ -232,11 +232,11 @@ def recent(mtx, datecol, navcol, recent_period_cls=dtl.time.year, periods=[1]):
     try:
         results = {}
         for period in periods:
-            end_date = dtl.time.date.today()
+            end_date = utl.date.date.today()
             begin_date = end_date - recent_period_cls.delta(period)
-            pmtx = dtl.matrix.select(mtx, lambda x: x>=begin_date, datecol)
+            pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
-            key = dtl.time.daterange(begin_date, end_date)
+            key = utl.date.daterange(begin_date, end_date)
             value = max_drawdown(pmtx, navcol)
 
             results[key] = value

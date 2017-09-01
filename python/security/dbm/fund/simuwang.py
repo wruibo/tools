@@ -15,7 +15,7 @@ class context:
         "Accept-Encoding": "gzip, deflate",
         "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Mobile Safari/537.36",
         "Host": "dc.simuwang.com",
-        "Cookie": "regsms=1489648164000; guest_id=1489648267; stat_sessid=fdp2bsh98e99i5peod9tdl6687; PHPSESSID=57f1cro7l9jtjq8365jshta8u3; PHPSESSID=65t6tfkegng9dkgjoejbhks6o6; had_quiz_183906=1499061360000; http_tK_cache=49886aa55e8bd6f5d517dff95b091bfdfa5c8c9c; cur_ck_time=1499243625; ck_request_key=0Hl7pvad%2F3KjpqcZnyKi1skj8cK4P2tiAfX4bgLu580%3D; passport=183906%09u_464246026497%09A19RUQ8AVlUPBwAGAlJZWVZWVwdQVwJQAFJRBA0EVAY%3Dca1c8e9b4c; rz_u_p=d41d8cd98f00b204e9800998ecf8427e%3Du_464246026497; rz_rem_u_p=xweZIQNnUe1WsOPckXHPJTkIbbUkr9a%2B7nrx3MRBXWo%3D%24YXbAptyqBXD0LrGBP9wY4t%2FYfuCiYkjq16HL2GKS1Nk%3D; Hm_lvt_c3f6328a1a952e922e996c667234cdae=1496893693,1498549384; Hm_lpvt_c3f6328a1a952e922e996c667234cdae=1499247294; rz_token_6658=b000f401ffead9f87ae62d5ee17a8eab.1499247293; passportmall=UwcHDFZWbxdsAFAFCg0DBlcCDAEB827c2e5f9b; autologin_status=0",
+        "Cookie": "regsms=1489648164000; guest_id=1489648267; PHPSESSID=8a438266a0f5v80vofmjvqsir3; stat_sessid=an73u6hiq1jdisk9jl43ehkaq4; cur_ck_time=1503905488; ck_request_key=N0cxI8j0ySArlHaTA6KzhjmBWyGIfSCAr7ECXGJ7OEQ%3D; http_tK_cache=761574bdd2f48eb02637c4a3a503b8d6e16f7b2c; passport=183906%09u_464246026497%09A19RUQ8AVlUPBwAGAlJZWVZWVwdQVwJQAFJRBA0EVAY%3Dca1c8e9b4c; rz_u_p=d41d8cd98f00b204e9800998ecf8427e%3Du_464246026497; rz_rem_u_p=xweZIQNnUe1WsOPckXHPJTkIbbUkr9a%2B7nrx3MRBXWo%3D%24YXbAptyqBXD0LrGBP9wY4t%2FYfuCiYkjq16HL2GKS1Nk%3D; PHPSESSID=4mqk2jfauv9it8r71lu8u445t3; had_quiz_183906=1503905491000; rz_token_6658=994e945ad73e12273506d34344be16b6.1503909454; autologin_status=0; passportmall=UwcHDFZWbxdsAFAFCg0DBlcCDAEB827c2e5f9b; Hm_lvt_c3f6328a1a952e922e996c667234cdae=1502869164,1503909454; Hm_lpvt_c3f6328a1a952e922e996c667234cdae=1503909500",
 
     }
 
@@ -62,4 +62,4 @@ class loader:
         name = json_data.get('title')[0]
 
         # extract fund data from json content
-        return dtl.matrix.transpose([dtl.xdates(json_data.get('categories'),"%Y-%m-%d"), dtl.floats(json_data.get('nav_list')), dtl.floats(json_data.get('nav_list'))])
+        return dtl.matrix.transpose([dtl.cast.cast(json_data.get('categories'), dtl.time.date, "%Y-%m-%d"), dtl.cast.floats(json_data.get('nav_list')), dtl.cast.floats(json_data.get('nav_list'))])
