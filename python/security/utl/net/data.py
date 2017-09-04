@@ -158,6 +158,7 @@ class Data:
 
         return self
 
+
 if __name__ == "__main__":
     path = "/Users/polly/Downloads/sz_fzb_000001_2015_2017.zip"
     dao = Data(open(path, 'rb').read())

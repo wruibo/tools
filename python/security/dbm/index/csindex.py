@@ -2,7 +2,7 @@
     index from zhong zheng index, site:
         http://www.csindex.com.cn/
 """
-import dtl, dbm
+import utl
 
 
 class context:
@@ -59,7 +59,7 @@ class loader:
             url = context.url("price-daily") % (self._code)
 
             # get xml content from url
-            dom = dbm.core.rda.http(url, headers=context.headers()).xget().xml().data
+            dom = utl.net.http.client(url, headers=context.headers()).xget().xml().data
             #dom = dbm.rqst.getxml(url, headers=context.headers())
 
             # parse index daily records
@@ -67,7 +67,7 @@ class loader:
             elmts = dom.getElementsByTagName("smbol")
             for elmt in elmts:
                 # parse each record
-                date = dtl.time.date(elmt.getAttribute("tdd"), "%Y%m%d") if elmt.hasAttribute("tdd") else None
+                date = utl.date.date(elmt.getAttribute("tdd"), "%Y%m%d") if elmt.hasAttribute("tdd") else None
                 open = float(elmt.getAttribute("op")) if elmt.hasAttribute("op") else None
                 close = float(elmt.getAttribute("ep")) if elmt.hasAttribute("ep") else None
                 high = float(elmt.getAttribute("hp")) if elmt.hasAttribute("hp") else None

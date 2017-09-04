@@ -93,7 +93,7 @@ class _Client:
                 _cache.saveb(self._key, content)
 
             # return dao object
-            return _data.Data.data(content)
+            return _data.Data(content)
         else:
             raise Exception("request failed for %s %s, url: %s" % (resp.status_code, resp.reason, self._url))
 
@@ -105,7 +105,7 @@ class _Client:
         # get from cache first
         if _Client.cache():
             content = _cache.takeb(self._key, maxage)
-            if content is not None: return _data.Data.data(content)
+            if content is not None: return _data.Data(content)
 
         # request content from remote url
         resp = _requests.post(self._url, self._data, self._json, **self._kwargs)
@@ -119,7 +119,7 @@ class _Client:
                 _cache.saveb(self._key, content)
 
             # return dao object
-            return _data.Data.data(content)
+            return _data.Data(content)
         else:
             raise Exception("request failed for %s %s, url: %s" % (resp.status_code, resp.reason, self._url))
 
@@ -131,7 +131,7 @@ class _Client:
         # get from cache first
         if _Client.cache():
             content = _cache.take(self._key, maxage)
-            if content is not None: return _data.Data.data(content)
+            if content is not None: return _data.Data(content)
 
         # request content from remote url
         resp = _requests.get(self._url, self._params, **self._kwargs)
@@ -145,7 +145,7 @@ class _Client:
                 _cache.save(self._key, content)
 
             # return dao object
-            return _data.Data.data(content)
+            return _data.Data(content)
         else:
             raise Exception("request failed for %s %s, url: %s" % (resp.status_code, resp.reason, self._url))
 
@@ -157,7 +157,7 @@ class _Client:
         # get from cache first
         if _Client.cache():
             content = _cache.take(self._key, maxage)
-            if content is not None: return _data.Data.data(content)
+            if content is not None: return _data.Data(content)
 
         # request content from remote url
         resp = _requests.post(self._url, self._data, self._json, **self._kwargs)
@@ -171,7 +171,7 @@ class _Client:
                 _cache.save(self._key, content)
 
             # return dao object
-            return _data.Data.data(content)
+            return _data.Data(content)
         else:
             raise Exception("request failed for %s %s, url: %s" % (resp.status_code, resp.reason, self._url))
 

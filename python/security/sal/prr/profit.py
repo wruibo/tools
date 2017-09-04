@@ -169,7 +169,7 @@ def rolling(mtx, datecol, navcol, periodcls=None, annualdays=None):
             last_date, last_nav = curr_date, curr_nav
     else: # specified period of the input date
         # split matrix by specified period
-        pmtx = dtl.matrix.split(mtx, periodcls, datecol)
+        pmtx = utl.math.matrix.split(mtx, periodcls, datecol)
 
         # compute return of each period, period_return = (period_last_nav-last_period's_last_nav)/last_period's_last_nav
         begin_nav = None

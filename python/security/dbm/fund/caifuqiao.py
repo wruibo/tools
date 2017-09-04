@@ -2,7 +2,7 @@
     fund data from caifuqiao, site:
         http://beidou.aokebaer.com/
 """
-import atl, dtl, dbm
+import utl
 
 
 class context:
@@ -53,7 +53,7 @@ class loader:
         url =  context.url("nav") % str(self._code)
 
         # get json data from url
-        json_data = dbm.core.rda.http(url, headers=context.headers()).xpost().json().data
+        json_data = utl.net.http.client(url, headers=context.headers()).xpost().json().data
         #json_data = dbm.rqst.pgetjson(url, headers=context.headers())
 
         # extract results
@@ -61,6 +61,6 @@ class loader:
 
         # extract fund data from json content
         for record in json_data['data']['list']:
-            results.append([dtl.time.date(record['value_date'], '%Y-%m-%d'), float(record['net_value']), float(record['total_value'])])
-        return dtl.matrix.hflip(results)
+            results.append([utl.date.date(record['value_date'], '%Y-%m-%d'), float(record['net_value']), float(record['total_value'])])
+        return utl.math.matrix.hflip(results)
 

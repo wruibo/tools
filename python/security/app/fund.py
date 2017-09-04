@@ -1,7 +1,7 @@
 """
     application for fund
 """
-import dbm, sal, dtl, utl, atl
+import dbm, sal, utl
 
 
 def source(vdr):
@@ -22,11 +22,11 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
     :return: dict, analyse results
     """
     # list data [[date, nav],...] for specified fund
-    fundnavs = dtl.matrix.transpose(dtl.matrix.subcols(dbm.fund.nav(code), 1, 3))
+    fundnavs = utl.math.matrix.transpose(utl.math.matrix.subcols(dbm.fund.nav(code), 1, 3))
     # list data [[date, price], ...] for selected benchmark
-    bcmkvals = dtl.matrix.transpose(dtl.matrix.subcols(dbm.bcmk.hushen300.daily(), 1, 3))
+    bcmkvals = utl.math.matrix.transpose(utl.math.matrix.subcols(dbm.bcmk.hushen300.daily(), 1, 3))
     # list data [[date, fund-nav, benchmark-price], ... ]
-    fundbmkbvals = dtl.matrix.transpose(dtl.matrix.subcols(dtl.matrix.join(fundnavs, bcmkvals, 1, 1), 1, 2, 4))
+    fundbmkbvals = utl.math.matrix.transpose(utl.math.matrix.subcols(utl.math.matrix.join(fundnavs, bcmkvals, 1, 1), 1, 2, 4))
 
     result = AnalysisResult(code)
 
