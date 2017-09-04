@@ -1,4 +1,4 @@
-import dbm, atl, dtl
+import dbm
 
 
 def source(vdr=None):
@@ -31,10 +31,10 @@ def analyse(market, code, starty=None, endy=None):
     :return:
     """
     results = {
-        "profit": dbm.stock.finance.profit(market, code, starty, endy),
-        "asset": dbm.stock.finance.asset(market, code, starty, endy),
+        "income": dbm.stock.finance.income(market, code, starty, endy),
+        "balance": dbm.stock.finance.balance(market, code, starty, endy),
         "cashflow": dbm.stock.finance.cashflow(market, code, starty, endy),
-        "quotation": dbm.stock.quotation.daily(market, code, starty, endy)
+        "quotation_daily": dbm.stock.quotation.daily(market, code, starty, endy)
     }
 
     return results
@@ -52,7 +52,7 @@ def display(market, code, starty=None, endy=None):
     import matplotlib.pyplot as plt
 
     # get profits
-    profits = dbm.stock.finance.profit(market, code , starty, endy)
+    profits = dbm.stock.finance.income(market, code , starty, endy)
 
     plt.figure(figsize=(16, 8))
     plt.title("profit")

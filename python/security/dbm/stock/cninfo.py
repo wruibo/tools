@@ -2,15 +2,15 @@
     stock data from cninfo, web site:
     http://www.cninfo.com.cn/
 """
-from .dao import Dao
+import utl, time
 
 
-class CNInfo(Dao):
+class context:
     """
-        stock data request from www.cninfo.com.cn
+        context data for access caifuqiao
     """
     # access headers for www.cninfo.com.cn
-    _headers = {
+    _cninfo_access_headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate",
         "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Mobile Safari/537.36",
@@ -18,10 +18,34 @@ class CNInfo(Dao):
         "Referer": "http://www.cninfo.com.cn/cninfo-new/index",
     }
 
-    def __init__(self):
-        pass
 
-    def _profit(self, market, code, starty=None, endy=None):
+    _cninfo_data_urls = {
+        # net asset value url
+        "finance_income": "http://www.cninfo.com.cn/cninfo-new/data/download",
+        "finance_balance": "http://www.cninfo.com.cn/cninfo-new/data/download",
+        "finance_cashflow": "http://www.cninfo.com.cn/cninfo-new/data/download",
+        "quotation_daily": "http://www.cninfo.com.cn/cninfo-new/data/download"
+
+    }
+
+    @staticmethod
+    def headers():
+        return context._cninfo_access_headers
+
+    @staticmethod
+    def url(url):
+        return context._cninfo_data_urls.get(url)
+
+
+class loader:
+    """
+        stock data request from www.cninfo.com.cn
+    """
+    def __init__(self, market, code):
+        self._market = market
+        self._code = code
+
+    def finance_income(self, starty=None, endy=None):
         """
             get profit data from remote
         :param market: str, sz or sh
@@ -35,57 +59,38 @@ class CNInfo(Dao):
         if endy is None: endy = time.gmtime().tm_year
 
         # url for profit on website
-        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+        url = context.url("finance_income")
 
         # post form data
         form_data = {
-            "market": market,
+            "market": self._market,
             "type": "lrb",
-            "code": code,
-            "orgid": "gs%s%s" % (market, code),
+            "code": self._code,
+            "orgid": "gs%s%s" % (self._market, self._code),
             "minYear": str(starty),
             "maxYear": str(endy)
         }
 
         # get csv data from url
-        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+        csvs = utl.net.http.client(url, data=form_data, headers=context.headers()).post().unzip().decodes('gb2312').csvs().data
 
         # parse csv data
-        records = None
+        incomes = None
         for name, csv in csvs:
             is_header = True
             for row in csv:
-                if records is None:
-                    records = [row]
+                if incomes is None:
+                    incomes = [row]
 
                 if is_header:
                     is_header = False
                     continue
 
-                records.append(row)
+                incomes.append(row)
 
-        records = dtl.matrix.transpose(records[1:])
+        return incomes[1:]
 
-        return records
-
-    def profit(self, market, code, starty=None, endy=None):
-        """
-
-        :param market:
-        :param code:
-        :param starty:
-        :param endy:
-        :return:
-        """
-
-        records = self._profit(market, code, starty, endy)
-        profit = dtl.stock.finance.profit(date=records[5], total=records[19], operating=records[23], net=records[32])
-
-        # return parse result for profit
-        return profit
-
-
-    def asset(self, market, code, starty=None, endy=None):
+    def finance_balance(self, starty=None, endy=None):
         """
             assets and liabilities of company
         :param market: str, sz or sh
@@ -99,39 +104,39 @@ class CNInfo(Dao):
         if endy is None: endy = time.gmtime().tm_year
 
         # url for profit on website
-        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+        url = context.url("finance_balance")
 
         # post form data
         form_data = {
-            "market": market,
+            "market": self._market,
             "type": "fzb",
-            "code": code,
-            "orgid": "gs%s%s" % (market, code),
+            "code": self._code,
+            "orgid": "gs%s%s" % (self._market, self._code),
             "minYear": str(starty),
             "maxYear": str(endy)
         }
 
         # get csv data from url
-        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+        csvs = utl.net.http.client(url, data=form_data, headers=context.headers()).post().unzip().decodes('gb2312').csvs().data
 
         # parse csv data
-        assets = None
+        balances = None
         for name, csv in csvs:
             is_header = True
             for row in csv:
-                if assets is None:
-                    assets = [row]
+                if balances is None:
+                    balances = [row]
 
                 if is_header:
                     is_header = False
                     continue
 
-                assets.append(row)
+                balances.append(row)
 
         # return parse result for profit
-        return assets
+        return balances
 
-    def cashflow(self, market, code, starty=None, endy=None):
+    def finance_cashflow(self, starty=None, endy=None):
         """
             cash flow of company
         :param market: str, sz or sh
@@ -145,20 +150,20 @@ class CNInfo(Dao):
         if endy is None: endy = time.gmtime().tm_year
 
         # url for cash flow on website
-        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+        url = context.url("finance_cashflow")
 
         # post form data
         form_data = {
-            "market": market,
+            "market": self._market,
             "type": "llb",
-            "code": code,
-            "orgid": "gs%s%s" % (market, code),
+            "code": self._code,
+            "orgid": "gs%s%s" % (self._market, self._code),
             "minYear": str(starty),
             "maxYear": str(endy)
         }
 
         # get csv data from url
-        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+        csvs = utl.net.http.client(url, data=form_data, headers=context.headers()).post().unzip().decodes('gb2312').csvs().data
 
         # parse csv data
         cashflows = None
@@ -177,7 +182,7 @@ class CNInfo(Dao):
         # return parse result for cash flow
         return cashflows
 
-    def quotation_daily(self, market, code, starty=None, endy=None):
+    def quotation_daily(self, starty=None, endy=None):
         """
             daily quotation of company
         :param market: str, sz or sh
@@ -191,20 +196,20 @@ class CNInfo(Dao):
         if endy is None: endy = time.gmtime().tm_year
 
         # url for cash flow on website
-        url = "http://www.cninfo.com.cn/cninfo-new/data/download"
+        url = context.url("quotation_daily")
 
         # post form data
         form_data = {
-            "market": market,
+            "market": self._market,
             "type": "hq",
-            "code": code,
-            "orgid": "gs%s%s" % (market, code),
+            "code": self._code,
+            "orgid": "gs%s%s" % (self._market, self._code),
             "minYear": str(starty),
             "maxYear": str(endy)
         }
 
         # get csv data from url
-        csvs = dbm.core.rda.http(url, data=form_data, headers=self._headers).post().unzip().decodes('gb2312').csvs().data
+        csvs = utl.net.http.client(url, data=form_data, headers=context.headers()).post().unzip().decodes('gb2312').csvs().data
 
         # parse csv data
         quotations = None
@@ -225,17 +230,17 @@ class CNInfo(Dao):
 
 
 if __name__ == "__main__":
-    profits = cninfo().profit('sz', '000001', 0, 2017)
-    assets = cninfo().asset('sz', '000001', 0, 2017)
-    cashflows = cninfo().cashflow('sz', '000001', 0, 2017)
-    quotations = cninfo().quotation_daily('sz', '000001', 0, 2017)
+    incomes = loader('sz', '000001').finance_income(0, 2017)
+    balances = loader('sz', '000001').finance_balance(0, 2017)
+    cashflows = loader('sz', '000001').finance_cashflow(0, 2017)
+    quotations = loader('sz', '000001').quotation_daily(0, 2017)
 
-    print("profits-")
-    for row in profits:
+    print("income statement-")
+    for row in incomes:
         print(row)
 
-    print("assets-")
-    for row in assets:
+    print("balance sheet-")
+    for row in balances:
         print(row)
 
     print("cashflows-")
