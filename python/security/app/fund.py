@@ -4,13 +4,8 @@
 import dbm, sal, utl
 
 
-def source(vdr):
-    """
-        change fund's data source
-    :param code: str, data source code
-    :return:
-    """
-    dbm.fund.source(vdr)
+vendor = dbm.fund.vendor
+source = dbm.fund.source
 
 
 def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
@@ -22,11 +17,11 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
     :return: dict, analyse results
     """
     # list data [[date, nav],...] for specified fund
-    fundnavs = utl.math.matrix.transpose(utl.math.matrix.subcols(dbm.fund.nav(code), 1, 3))
+    fundnavs = utl.math.matrix.subcols(dbm.fund.nav(code), 1, 3)
     # list data [[date, price], ...] for selected benchmark
-    bcmkvals = utl.math.matrix.transpose(utl.math.matrix.subcols(dbm.bcmk.hushen300.daily(), 1, 3))
+    bcmkvals = utl.math.matrix.subcols(dbm.bcmk.hushen300.daily(), 1, 3)
     # list data [[date, fund-nav, benchmark-price], ... ]
-    fundbmkbvals = utl.math.matrix.transpose(utl.math.matrix.subcols(utl.math.matrix.join(fundnavs, bcmkvals, 1, 1), 1, 2, 4))
+    fundbmkbvals = utl.math.matrix.subcols(utl.math.matrix.join(fundnavs, bcmkvals, 1, 1), 1, 2, 4)
 
     result = AnalysisResult(code)
 
@@ -41,6 +36,8 @@ def analyse(code, rfr, bmk=dbm.bcmk.hushen300):
     result.sortino = sal.prr.sortino.all(fundnavs, 1, 2, rfr)
     result.information_ratio = sal.prr.infor.all(fundbmkbvals, 1, 2, 3)
     result.volatility = sal.prr.volatility.all(fundnavs, 1, 2)
+    result.var = sal.prr.var.all(fundnavs, 1, 2)
+
 
     return result
 
@@ -63,6 +60,7 @@ class AnalysisResult:
         self.sortino = None
         self.information_ratio = None
         self.volatility = None
+        self.var = None
 
     def __str__(self):
         res = {
@@ -76,7 +74,8 @@ class AnalysisResult:
             "treynor":self.treynor,
             "sortnio":self.sortino,
             "information ratio":self.information_ratio,
-            "volatility": self.volatility
+            "volatility": self.volatility,
+            "var":self.var
         }
 
         return utl.string.pretty(res, 0)

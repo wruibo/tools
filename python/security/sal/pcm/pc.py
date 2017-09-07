@@ -1,7 +1,7 @@
 """
     portfolio construction algorithm
 """
-import atl, dtl, math
+import utl, math
 
 
 def simulate(navs, times, stepval=0.2, maxsteps=None):
@@ -45,7 +45,7 @@ def simulate(navs, times, stepval=0.2, maxsteps=None):
         navs = tmpnavs
 
     # combine after invested times
-    combine_result = atl.math.combines(*[navs for i in range(0, times)])
+    combine_result = utl.math.random.combines(*[navs for i in range(0, times)])
 
     # generate nav probability distribution set
     prset, maxnav = [], None
@@ -56,7 +56,7 @@ def simulate(navs, times, stepval=0.2, maxsteps=None):
                 if mnavpr is None:
                     mnavpr = navpr
                     continue
-                mnavpr = atl.math.multi(mnavpr, navpr)
+                mnavpr = utl.math.array.multi(mnavpr, navpr)
 
             # normalize the probability base on 1
             mnavpr = [mnavpr[0], mnavpr[1]]
@@ -105,7 +105,7 @@ def simulate_to_plot(*funds):
     num = 1 # fund number from 1
     for navs in funds:
         result, prset = simulate(navs, times, stepval, maxsteps)
-        x, y = dtl.matrix.subcol(result, 1), dtl.matrix.subcol(result, 2)
+        x, y = utl.math.matrix.subcol(result, 1), utl.math.matrix.subcol(result, 2)
         plt.plot(x, y, label="$Fund%d-%s$" % (num, str(navs)))
         num += 1
 

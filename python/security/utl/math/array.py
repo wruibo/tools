@@ -75,6 +75,25 @@ def similar(arr1, arr2):
     return False
 
 
+def maxval(arr, useabs=False):
+    """
+        get max value in array
+    :param arr: array
+    :return:  max value
+    """
+    maxv = None
+    for val in arr:
+        if maxv is None:
+            maxv = maxval(val, useabs) if isarray(val) else abs(val) if useabs else val
+            continue
+
+        cval = maxval(val, useabs) if isarray(val) else abs(val) if useabs else val
+
+        if cval>maxv:
+            maxv = cval
+    return maxv
+
+
 def add(arr, withval):
     """
         add array data with specified value or another array
@@ -217,6 +236,27 @@ def product(arr):
         else:
             result *= product(item)
     return result
+
+
+def normalize(arr, referval=None):
+    """
+        normalize values in array
+    :param arr: array
+    :param referval: float, reference value for normalization
+    :return:
+    """
+    if referval is None:
+        referval = maxval(arr, True)
+
+    newarr = []
+
+    for val in arr:
+        if isarray(val):
+            newarr.append(normalize(val, referval))
+        else:
+            newarr.append(val/referval)
+
+    return newarr
 
 
 def strip(arr):

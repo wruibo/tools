@@ -62,7 +62,7 @@ def all(mtx, datecol, astcol, bmkcol):
     return results
 
 
-def inforatio(mtx, datecol, astcol, bmkcol, sample_period_cls=utl.date.month, interp_func=None):
+def inforatio(mtx, datecol, astcol, bmkcol, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute information ratio for asset
     :param mtx: matrix
@@ -90,12 +90,17 @@ def inforatio(mtx, datecol, astcol, bmkcol, sample_period_cls=utl.date.month, in
         erprofits = utl.math.array.sub(astprofits, bmkprofits)
 
         # compute information ratio
-        return astexp-bmkexp / utl.math.stat.stddev(erprofits)
+        ir = (astexp-bmkexp) / utl.math.stat.stddev(erprofits)
+
+        # annualize information ratio if wanted
+        ir = ir*pow(sample_period_cls.yearly_units(), 0.5) if annualize else ir
+
+        return ir
     except:
         return None
 
 
-def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
+def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute rolling information ratio
     :param mtx:
@@ -114,14 +119,14 @@ def rolling(mtx, datecol, astcol, bmkcol, rolling_period_cls=utl.date.year, samp
         # compute rolling period beta
         results = {}
         for prd, navs in pmtx.items():
-            results[prd] = inforatio(navs, datecol, astcol, bmkcol, sample_period_cls, interp_func)
+            results[prd] = inforatio(navs, datecol, astcol, bmkcol, sample_period_cls, interp_func, annualize)
 
         return results
     except:
         return None
 
 
-def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
+def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute recent information ratio
     :param mtx:
@@ -141,7 +146,7 @@ def recent(mtx, datecol, astcol, bmkcol, recent_period_cls=utl.date.year, period
             pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
             key = utl.date.daterange(begin_date, end_date)
-            value = inforatio(pmtx, datecol, astcol, bmkcol, sample_period_cls, interp_func)
+            value = inforatio(pmtx, datecol, astcol, bmkcol, sample_period_cls, interp_func, annualize)
 
             results[key] = value
 

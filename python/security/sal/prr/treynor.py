@@ -72,16 +72,14 @@ def treynor(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=utl.
         astprofits = list(profit.rolling(mtx, datecol, astcol, sample_period_cls).values())
         bmkprofits = list(profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
 
-        # period compound return rate for specified period
-        astexp = profit.compound(mtx, datecol, astcol, sample_period_cls)
-
-        rfrexp = pow((1+risk_free_rate), sample_period_cls.unit_days()/utl.date.year.unit_days()) - 1.0
+        # annualized compound return rate
+        astexp = profit.compound(mtx, datecol, astcol, utl.date.year)
 
         # compute asset beta factor
         astbeta = utl.math.stat.cov(astprofits, bmkprofits) / utl.math.stat.var(bmkprofits)
 
         # treynor ratio
-        tr = (astexp - rfrexp) / astbeta
+        tr = (astexp - risk_free_rate) / astbeta
 
         return tr
     except:

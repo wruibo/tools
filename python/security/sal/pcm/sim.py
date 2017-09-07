@@ -1,7 +1,7 @@
 """
     portfolio construction algorithm
 """
-import math
+import math, matplotlib.pyplot as plt
 
 
 def combines(*arrs):
@@ -198,7 +198,6 @@ def simulate_to_plot(*funds):
     times, stepval, maxsteps = 5, 0.2, None
 
     # prepare the plot
-    import matplotlib.pyplot as plt
     plt.figure(figsize=(16, 8))
     plt.title("portfolio simulate: invest times(%d), step by(%s), max step(%s)" % (times, str(stepval), str(maxsteps)))
     plt.xlabel("return" )

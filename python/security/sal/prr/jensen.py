@@ -48,7 +48,7 @@ def all(mtx, datecol, astcol, bmkcol, risk_free_rate):
     return results
 
 
-def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None):
+def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute jensen ratio of asset
     :param mtx: matrix
@@ -81,12 +81,17 @@ def jensen(mtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls=utl.d
         astbeta = utl.math.stat.cov(astprofits, bmkprofits) / utl.math.stat.var(bmkprofits)
 
         # jensen ratio
-        return astexp - (rfrexp + astbeta * (bmkexp - rfrexp))
+        jr = astexp - (rfrexp + astbeta * (bmkexp - rfrexp))
+
+        # annualize jensen if wanted
+        jr = pow(1 + jr, sample_period_cls.yearly_units()) - 1 if annualize else jr
+
+        return jr
     except:
         return None
 
 
-def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
+def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute rolling information ratio
     :param mtx:
@@ -105,14 +110,14 @@ def rolling(mtx, datecol, astcol, bmkcol, risk_free_rate, rolling_period_cls=utl
         # compute rolling period beta
         results = {}
         for prd, navs in pmtx.items():
-            results[prd] = jensen(navs, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func)
+            results[prd] = jensen(navs, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func, annualize)
 
         return results
     except:
         return None
 
 
-def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
+def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute recent jensen ratio
     :param mtx:
@@ -134,7 +139,7 @@ def recent(mtx, datecol, astcol, bmkcol, risk_free_rate, recent_period_cls=utl.d
             pmtx = utl.matrix.stat.select(mtx, lambda x: x>=begin_date, datecol)
 
             key = utl.date.daterange(begin_date, end_date)
-            value = jensen(pmtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func)
+            value = jensen(pmtx, datecol, astcol, bmkcol, risk_free_rate, sample_period_cls, interp_func, annualize)
 
             results[key] = value
 

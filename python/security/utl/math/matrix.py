@@ -89,6 +89,16 @@ def similar(mtx1, mtx2):
     return False
 
 
+def maxval(mtx, useabs=False):
+    """
+        get the max value in matrix
+    :param mtx: matrix
+    :param useabs: boolean, use absolute value
+    :return: max value
+    """
+    return array.maxval(mtx, useabs)
+
+
 def add(mtx, withval):
     """
         add matrix data with specified value or another matrix
@@ -145,6 +155,16 @@ def product(mtx):
     :return: product result
     """
     return array.product(mtx)
+
+
+def normalize(mtx, refer=None):
+    """
+        normalize values in matrix
+    :param mtx: matrix
+    :param refer: float, reference value for normalize
+    :return:
+    """
+    return array.normalize(mtx, refer)
 
 
 def dimension(mtx):
@@ -251,7 +271,7 @@ def subcols(mtx, *nums):
             col.append(row[num-1])
         cols.append(col)
 
-    return cols
+    return transpose(cols)
 
 
 def subcol(mtx, num):
@@ -261,8 +281,10 @@ def subcol(mtx, num):
     :param num: int, column number
     :return: array
     """
-    return subcols(mtx, num)[0]
-
+    col = []
+    for row in mtx:
+        col.append(row[num-1])
+    return col
 
 def submtx(mtx, rows=None, cols=None):
     """

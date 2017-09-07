@@ -28,7 +28,7 @@ def all(mtx, datecol, navcol):
     return results
 
 
-def volatility(mtx, datecol, navcol, sample_period_cls=utl.date.month, interp_func=None):
+def volatility(mtx, datecol, navcol, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute volatility for specified asset navs
     :param mtx: matrix
@@ -45,12 +45,15 @@ def volatility(mtx, datecol, navcol, sample_period_cls=utl.date.month, interp_fu
     profits = list(profit.rolling(mtx, datecol, navcol, sample_period_cls).values())
 
     # volatility
-    v = utl.math.stat.stddev(profits)
+    vt = utl.math.stat.stddev(profits)
 
-    return v
+    # annualize
+    vt = vt * pow(sample_period_cls.yearly_units(), 0.5) if annualize else vt
+
+    return vt
 
 
-def rolling(mtx, datecol, navcol, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
+def rolling(mtx, datecol, navcol, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute rolling calmar by specified period
     :param mtx:
@@ -66,14 +69,14 @@ def rolling(mtx, datecol, navcol, rolling_period_cls=utl.date.year, sample_perio
         # compute rolling period beta
         results = {}
         for prd, navs in pmtx.items():
-            results[prd] = volatility(navs, datecol, navcol, sample_period_cls, interp_func)
+            results[prd] = volatility(navs, datecol, navcol, sample_period_cls, interp_func, annualize)
 
         return results
     except:
         return None
 
 
-def recent(mtx, datecol, navcol, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
+def recent(mtx, datecol, navcol, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute recent beta factor
     :param mtx:
@@ -93,7 +96,7 @@ def recent(mtx, datecol, navcol, recent_period_cls=utl.date.year, periods=[1], s
             pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
             key = utl.date.daterange(begin_date, end_date)
-            value = volatility(pmtx, datecol, navcol, sample_period_cls, interp_func)
+            value = volatility(pmtx, datecol, navcol, sample_period_cls, interp_func, annualize)
 
             results[key] = value
 

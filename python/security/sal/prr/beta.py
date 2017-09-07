@@ -79,7 +79,7 @@ def beta(mtx, datecol, astcol, bmkcol, sample_period_cls=utl.date.month, interp_
         bmkprofits = list(profit.rolling(mtx, datecol, bmkcol, sample_period_cls).values())
 
         # compute beta factor
-        return utl.math.math.cov(astprofits, bmkprofits) / utl.math.math.var(bmkprofits)
+        return utl.math.stat.cov(astprofits, bmkprofits) / utl.math.stat.var(bmkprofits)
     except:
         return None
 

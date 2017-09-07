@@ -57,7 +57,7 @@ def all(mtx, datecol, navcol, risk_free_rate):
     return results
 
 
-def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None):
+def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute sharpe ratio, default without interpolation
     :param mtx: matrix, nav data
@@ -90,14 +90,16 @@ def sharpe(mtx, datecol, navcol, risk_free_rate, sample_period_cls=utl.date.mont
         # sharpe ratio
         sp = er / sd
 
-        # normalize if wanted
+        # annualize if wanted
+        sp = sp*pow(sample_period_cls.yearly_units(), 0.5) if annualize else sp
+
         return sp
 
     except:
         return None
 
 
-def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None):
+def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=utl.date.year, sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute rolling sharpe ratio
     :param mtx:
@@ -115,14 +117,14 @@ def rolling(mtx, datecol, astcol, risk_free_rate, rolling_period_cls=utl.date.ye
         # compute rolling period beta
         results = {}
         for prd, navs in pmtx.items():
-            results[prd] = sharpe(navs, datecol, astcol, risk_free_rate, sample_period_cls, interp_func)
+            results[prd] = sharpe(navs, datecol, astcol, risk_free_rate, sample_period_cls, interp_func, annualize)
 
         return results
     except:
         return None
 
 
-def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None):
+def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=utl.date.year, periods=[1], sample_period_cls=utl.date.month, interp_func=None, annualize=True):
     """
         compute recent sharpe ratio
     :param mtx:
@@ -143,7 +145,7 @@ def recent(mtx, datecol, astcol, risk_free_rate, recent_period_cls=utl.date.year
             pmtx = utl.math.matrix.select(mtx, lambda x: x>=begin_date, datecol)
 
             key = utl.date.daterange(begin_date, end_date)
-            value = sharpe(pmtx, datecol, astcol, risk_free_rate, sample_period_cls, interp_func)
+            value = sharpe(pmtx, datecol, astcol, risk_free_rate, sample_period_cls, interp_func, annualize)
 
             results[key] = value
 
