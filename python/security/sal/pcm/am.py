@@ -5,8 +5,17 @@ import utl
 
 
 class Asset:
-    def __init__(self):
-        pass
+    def __init__(self, name, prices):
+        self._name = name
+        self._prices = prices
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def prices(self):
+        return self._prices
 
 
 class AllocationModel:
